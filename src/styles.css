@@ -141,7 +141,7 @@ main {
   grid-row: 1 / span 2;
   width: min(80vw, 100%);
   justify-self: end;
-  height: calc(100vh - (var(--shell-pad) * 2));
+  align-self: stretch;
   min-height: 0;
 }
 
