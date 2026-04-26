@@ -41,6 +41,10 @@ Use the sketch selector and Regenerate button to quickly explore variations.
 3. Adjust parameters at the top first, then refactor once the idea works.
 4. Save strong outputs as PNGs and curate your favorite series.
 
+## Sketch contract
+
+The sketch contract is enforced in code by [src/sketches/defineSketch.js](src/sketches/defineSketch.js). App-shell changes should primarily touch shared helpers such as `src/sketches/canvas-size.js` and `src/sketches/responsive-canvas.js`, while each sketch only owns its own drawing logic and theme-aware styling.
+
 ## Next ideas to add
 
 - Reaction diffusion

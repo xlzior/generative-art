@@ -52,7 +52,10 @@ function mountSketch(sketchId) {
   }
 
   currentSketch = sketch.id;
-  currentP5 = new p5((p) => sketch.factory(p, currentTheme), canvasContainerEl);
+  currentP5 = new p5(
+    (p) => sketch.create({ p, theme: currentTheme }),
+    canvasContainerEl,
+  );
   document.title = `Generative Art - ${sketch.title}`;
 }
 
