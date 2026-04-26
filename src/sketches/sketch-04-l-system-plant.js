@@ -1,4 +1,5 @@
 import { attachResponsiveCanvas } from "./responsive-canvas.js";
+import { getSketchPalette } from "./palettes.js";
 
 export default function lSystemPlant(p, theme = "light") {
   const rules = {
@@ -8,9 +9,7 @@ export default function lSystemPlant(p, theme = "light") {
   let sentence = "F";
   let turn = 22.5;
   let segment = 92;
-  const isDark = theme === "dark";
-  const backgroundColor = isDark ? "#060B0D" : "#F4F4F5";
-  const strokeColor = isDark ? "#6EE7B7" : "#14532D";
+  const colors = getSketchPalette("l-system-plant", theme);
 
   function iterate(steps) {
     for (let i = 0; i < steps; i += 1) {
@@ -38,9 +37,9 @@ export default function lSystemPlant(p, theme = "light") {
   });
 
   p.draw = () => {
-    p.background(backgroundColor);
+    p.background(colors.background);
     p.translate(p.width * 0.5, p.height - 8);
-    p.stroke(strokeColor);
+    p.stroke(colors.stroke);
     p.strokeWeight(1);
 
     for (const ch of sentence) {

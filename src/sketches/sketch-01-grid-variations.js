@@ -1,11 +1,11 @@
 import { attachResponsiveCanvas } from "./responsive-canvas.js";
+import { getSketchPalette } from "./palettes.js";
 
 export default function gridVariations(p, theme = "light") {
   const cellSize = 38;
   const baseMargin = 36;
   let palette;
-  const isDark = theme === "dark";
-  const backgroundColor = isDark ? "#070B12" : "#FCFBF7";
+  const colors = getSketchPalette("grid-variations", theme);
 
   function getGridLayout() {
     const innerWidth = Math.max(0, p.width - baseMargin * 2);
@@ -27,9 +27,7 @@ export default function gridVariations(p, theme = "light") {
     onSetup: () => {
       p.noLoop();
       p.angleMode(p.DEGREES);
-      palette = isDark
-        ? ["#7DD3FC", "#5EEAD4", "#86EFAC", "#FDE68A", "#FDBA74"]
-        : ["#0F172A", "#0369A1", "#15803D", "#CA8A04", "#B45309"];
+      palette = colors.strokes;
       p.strokeWeight(1.4);
     },
     onResize: () => {
@@ -38,7 +36,7 @@ export default function gridVariations(p, theme = "light") {
   });
 
   p.draw = () => {
-    p.background(backgroundColor);
+    p.background(colors.background);
     const { cols, rows, startX, startY } = getGridLayout();
 
     for (let row = 0; row < rows; row += 1) {

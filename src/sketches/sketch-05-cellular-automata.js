@@ -1,10 +1,9 @@
 import { attachResponsiveCanvas } from "./responsive-canvas.js";
+import { getSketchPalette } from "./palettes.js";
 
 export default function cellularAutomata(p, theme = "light") {
   const cell = 8;
-  const isDark = theme === "dark";
-  const backgroundColor = isDark ? [9, 9, 11] : [248, 250, 252];
-  const cellColor = isDark ? [110, 231, 183] : [5, 150, 105];
+  const colors = getSketchPalette("cellular-automata", theme);
   let cols;
   let rows;
   let board;
@@ -46,12 +45,12 @@ export default function cellularAutomata(p, theme = "light") {
   });
 
   p.draw = () => {
-    p.background(...backgroundColor);
+    p.background(...colors.background);
 
     for (let y = 0; y < rows; y += 1) {
       for (let x = 0; x < cols; x += 1) {
         if (board[y][x] === 1) {
-          p.fill(...cellColor);
+          p.fill(...colors.cell);
           p.rect(x * cell, y * cell, cell - 1, cell - 1);
         }
       }
