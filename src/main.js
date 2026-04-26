@@ -38,6 +38,27 @@ let currentP5 = null;
 let currentTheme = "light";
 const paramsBySketch = new Map();
 
+function getSketchById(sketchId) {
+  return sketches.find((entry) => entry.id === sketchId);
+}
+
+function resolveInitialSketch() {
+  const params = new URLSearchParams(window.location.search);
+  const sketchFromUrl = params.get("sketch");
+
+  if (sketchFromUrl && getSketchById(sketchFromUrl)) {
+    return sketchFromUrl;
+  }
+
+  return sketches[0].id;
+}
+
+function writeSketchToUrl(sketchId) {
+  const url = new URL(window.location.href);
+  url.searchParams.set("sketch", sketchId);
+  window.history.replaceState({}, "", url);
+}
+
 function cloneDefaults(sketch) {
   return Object.fromEntries(
     Object.entries(sketch.defaults).map(([key, value]) => [key, Number(value)]),
@@ -129,8 +150,8 @@ function populateSketches() {
 }
 
 function mountSketch(sketchId, options = {}) {
-  const { redrawControls = true } = options;
-  const sketch = sketches.find((entry) => entry.id === sketchId);
+  const { redrawControls = true, updateUrl = true } = options;
+  const sketch = getSketchById(sketchId);
   if (!sketch) {
     return;
   }
@@ -146,6 +167,9 @@ function mountSketch(sketchId, options = {}) {
   }
 
   currentSketch = sketch.id;
+  if (updateUrl) {
+    writeSketchToUrl(currentSketch);
+  }
   currentP5 = new p5(
     (p) => sketch.create({ p, theme: currentTheme, params }),
     canvasContainerEl,
@@ -261,6 +285,7 @@ async function saveCurrentParamsAsDefaults() {
 
 applyTheme(resolveInitialTheme());
 populateSketches();
+currentSketch = resolveInitialSketch();
 mountSketch(currentSketch);
 
 selectEl.value = currentSketch;
