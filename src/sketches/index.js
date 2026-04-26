@@ -1,13 +1,25 @@
-import gridVariations from "./sketch-01-grid-variations.js";
-import flowFieldParticles from "./sketch-02-flow-field-particles.js";
-import fractalTree from "./sketch-03-fractal-tree.js";
-import lSystemPlant from "./sketch-04-l-system-plant.js";
-import cellularAutomata from "./sketch-05-cellular-automata.js";
+const sketchModules = Object.entries(
+  import.meta.glob("./sketch-*.js", { eager: true }),
+)
+  .map(([path, module]) => {
+    if (!module || typeof module.default !== "object") {
+      throw new TypeError(
+        `Sketch module at ${path} must export a default sketch object.`,
+      );
+    }
 
-export const sketches = [
-  gridVariations,
-  flowFieldParticles,
-  fractalTree,
-  lSystemPlant,
-  cellularAutomata,
-];
+    return module.default;
+  })
+  .sort((a, b) => a.id.localeCompare(b.id));
+
+const seenIds = new Set();
+
+for (const sketch of sketchModules) {
+  if (seenIds.has(sketch.id)) {
+    throw new Error(`Duplicate sketch id detected: ${sketch.id}`);
+  }
+
+  seenIds.add(sketch.id);
+}
+
+export const sketches = sketchModules;
