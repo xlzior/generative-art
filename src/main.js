@@ -7,6 +7,7 @@ const saveFrameEl = document.getElementById("save-frame");
 const themeToggleEl = document.getElementById("theme-toggle");
 const resetParamsEl = document.getElementById("reset-params");
 const saveDefaultsEl = document.getElementById("save-defaults");
+const saveStatusEl = document.getElementById("save-status");
 const paramsListEl = document.getElementById("params-list");
 const canvasContainerEl = document.getElementById("canvas-container");
 const prefersDark = window.matchMedia("(prefers-color-scheme: dark)");
@@ -144,7 +145,12 @@ async function saveCurrentParamsAsDefaults() {
 
   saveDefaultsEl.disabled = true;
   const previousLabel = saveDefaultsEl.textContent;
+  const previousTitle = saveDefaultsEl.title;
   saveDefaultsEl.textContent = "Saving...";
+  saveDefaultsEl.title = "";
+  if (saveStatusEl) {
+    saveStatusEl.textContent = "Saving defaults...";
+  }
 
   try {
     const response = await fetch("/__sketch-defaults", {
@@ -156,21 +162,52 @@ async function saveCurrentParamsAsDefaults() {
     });
 
     if (!response.ok) {
-      const message = await response.text();
-      throw new Error(message || "Failed to persist defaults");
+      let message = "Failed to persist defaults";
+      const contentType = response.headers.get("content-type") || "";
+
+      if (contentType.includes("application/json")) {
+        const payload = await response.json();
+        message = payload?.message || message;
+      } else {
+        const text = await response.text();
+        if (text) {
+          message = text;
+        }
+      }
+
+      if (response.status === 404) {
+        message =
+          "Save endpoint not available. Run with pnpm dev or pnpm preview.";
+      }
+
+      throw new Error(message);
     }
 
     sketch.defaults = { ...params };
     saveDefaultsEl.textContent = "Saved";
+    saveDefaultsEl.title = "";
+    if (saveStatusEl) {
+      saveStatusEl.textContent = `Saved ${sketch.defaultsFile}`;
+    }
     window.setTimeout(() => {
       saveDefaultsEl.textContent = previousLabel;
+      saveDefaultsEl.title = previousTitle;
+      if (saveStatusEl) {
+        saveStatusEl.textContent = "";
+      }
     }, 1000);
   } catch (error) {
     console.error(error);
+    const message = error instanceof Error ? error.message : "Save Failed";
     saveDefaultsEl.textContent = "Save Failed";
+    saveDefaultsEl.title = message;
+    if (saveStatusEl) {
+      saveStatusEl.textContent = message;
+    }
     window.setTimeout(() => {
       saveDefaultsEl.textContent = previousLabel;
-    }, 1200);
+      saveDefaultsEl.title = previousTitle;
+    }, 1600);
   } finally {
     window.setTimeout(() => {
       saveDefaultsEl.disabled = false;

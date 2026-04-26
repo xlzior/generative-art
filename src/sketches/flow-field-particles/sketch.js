@@ -3,7 +3,7 @@ import { defineSketch } from "../../utils/defineSketch.js";
 
 export default defineSketch({
   id: "flow-field-particles",
-  title: "02 Flow Field Particles",
+  title: "Flow Field Particles",
   description: "Particle trails following a noise-driven vector field.",
   parameters: [
     { key: "particleCount", label: "Particles", min: 100, max: 5000, step: 50 },

@@ -3,7 +3,7 @@ import { defineSketch } from "../../utils/defineSketch.js";
 
 export default defineSketch({
   id: "cellular-automata",
-  title: "05 Cellular Automata",
+  title: "Cellular Automata",
   description: "A Game of Life variant with periodic reseeding.",
   parameters: [
     { key: "cellSize", label: "Cell Size", min: 3, max: 20, step: 1 },

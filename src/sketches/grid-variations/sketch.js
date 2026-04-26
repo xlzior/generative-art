@@ -3,7 +3,7 @@ import { defineSketch } from "../../utils/defineSketch.js";
 
 export default defineSketch({
   id: "grid-variations",
-  title: "01 Grid Variations",
+  title: "Grid Variations",
   description: "Controlled randomness on a geometric grid.",
   parameters: [
     { key: "cellSize", label: "Cell Size", min: 16, max: 96, step: 1 },

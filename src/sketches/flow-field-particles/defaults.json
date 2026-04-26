@@ -4,7 +4,7 @@
   "noiseScale": 0.0025,
   "ttlMin": 100,
   "ttlMax": 280,
-  "strokeWeight": 0.65,
+  "strokeWeight": 2.4,
   "trailAlpha": 12,
   "strokeAlpha": 90
 }

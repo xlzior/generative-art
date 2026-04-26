@@ -3,7 +3,7 @@ import { defineSketch } from "../../utils/defineSketch.js";
 
 export default defineSketch({
   id: "l-system-plant",
-  title: "04 L-System Plant",
+  title: "L-System Plant",
   description: "String-rewriting fractal grown with turtle graphics.",
   parameters: [
     { key: "turn", label: "Turn", min: 5, max: 45, step: 0.5 },

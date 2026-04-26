@@ -193,6 +193,13 @@ button:hover {
   font-size: 0.85rem;
 }
 
+#save-status {
+  margin: 0;
+  min-height: 1.1rem;
+  font-size: 0.78rem;
+  color: var(--eyebrow-ink);
+}
+
 main {
   grid-column: 2;
   grid-row: 1 / span 2;

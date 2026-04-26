@@ -40,58 +40,81 @@ export default defineConfig({
     {
       name: "save-sketch-defaults",
       configureServer(server) {
-        server.middlewares.use("/__sketch-defaults", async (req, res, next) => {
-          if (req.method !== "POST") {
-            return next();
-          }
-
-          try {
-            const { defaultsFile, defaults } = await readJsonBody(req);
-
-            if (
-              typeof defaultsFile !== "string" ||
-              defaultsFile.trim() === ""
-            ) {
-              throw new Error("defaultsFile is required");
-            }
-
-            if (!defaults || typeof defaults !== "object") {
-              throw new Error("defaults must be an object");
-            }
-
-            for (const value of Object.values(defaults)) {
-              if (!Number.isFinite(value)) {
-                throw new Error("defaults values must be numeric");
-              }
-            }
-
-            const outputPath = path.resolve(sketchesRoot, defaultsFile);
-
-            if (
-              !isWithinSketchesRoot(outputPath) ||
-              path.basename(outputPath) !== "defaults.json"
-            ) {
-              throw new Error("Invalid defaults file path");
-            }
-
-            await fs.writeFile(
-              outputPath,
-              `${JSON.stringify(defaults, null, 2)}\n`,
-              "utf8",
-            );
-
-            res.statusCode = 200;
-            res.setHeader("Content-Type", "application/json");
-            res.end(JSON.stringify({ ok: true }));
-          } catch (error) {
-            res.statusCode = 400;
-            res.setHeader("Content-Type", "application/json");
-            res.end(JSON.stringify({ ok: false, message: error.message }));
-          }
-
-          return undefined;
-        });
+        server.middlewares.use(
+          "/__sketch-defaults",
+          createSaveDefaultsHandler(),
+        );
+      },
+      configurePreviewServer(server) {
+        server.middlewares.use(
+          "/__sketch-defaults",
+          createSaveDefaultsHandler(),
+        );
       },
     },
   ],
 });
+
+function createSaveDefaultsHandler() {
+  return async (req, res, next) => {
+    if (req.method !== "POST") {
+      return next();
+    }
+
+    try {
+      const { defaultsFile, defaults } = await readJsonBody(req);
+
+      if (typeof defaultsFile !== "string" || defaultsFile.trim() === "") {
+        throw new Error("defaultsFile is required");
+      }
+
+      if (!defaults || typeof defaults !== "object") {
+        throw new Error("defaults must be an object");
+      }
+
+      for (const value of Object.values(defaults)) {
+        if (!Number.isFinite(value)) {
+          throw new Error("defaults values must be numeric");
+        }
+      }
+
+      const outputPath = path.resolve(sketchesRoot, defaultsFile);
+
+      if (
+        !isWithinSketchesRoot(outputPath) ||
+        path.basename(outputPath) !== "defaults.json"
+      ) {
+        throw new Error("Invalid defaults file path");
+      }
+
+      await fs.writeFile(
+        outputPath,
+        `${JSON.stringify(defaults, null, 2)}\n`,
+        "utf8",
+      );
+
+      res.statusCode = 200;
+      res.setHeader("Content-Type", "application/json");
+      res.end(JSON.stringify({ ok: true }));
+    } catch (error) {
+      const statusCode =
+        error &&
+        typeof error === "object" &&
+        "code" in error &&
+        error.code === "EACCES"
+          ? 403
+          : 400;
+      res.statusCode = statusCode;
+      res.setHeader("Content-Type", "application/json");
+      res.end(
+        JSON.stringify({
+          ok: false,
+          message:
+            error instanceof Error ? error.message : "Failed to save defaults",
+        }),
+      );
+    }
+
+    return undefined;
+  };
+}
