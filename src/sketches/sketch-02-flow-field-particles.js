@@ -1,12 +1,14 @@
 import { attachResponsiveCanvas } from "./responsive-canvas.js";
-import { getSketchPalette } from "./palettes.js";
 
 export default function flowFieldParticles(p, theme = "light") {
   const particleCount = 1200;
   const stepSize = 1.2;
   const noiseScale = 0.0025;
   const angleScale = p.TWO_PI * 1.8;
-  const colors = getSketchPalette("flow-field-particles", theme);
+  const isDark = theme === "dark";
+  const backgroundColor = isDark ? [11, 13, 14] : [248, 250, 252];
+  const trailFade = isDark ? [11, 13, 14, 12] : [248, 250, 252, 10];
+  const strokeColor = isDark ? [220, 227, 231, 90] : [15, 23, 42, 62];
   let particles = [];
 
   function spawnParticle() {
@@ -20,18 +22,18 @@ export default function flowFieldParticles(p, theme = "light") {
 
   attachResponsiveCanvas(p, {
     onSetup: () => {
-      p.background(...colors.background);
+      p.background(...backgroundColor);
       p.strokeWeight(0.65);
       particles = Array.from({ length: particleCount }, spawnParticle);
     },
     onResize: () => {
-      p.background(...colors.background);
+      p.background(...backgroundColor);
       particles = Array.from({ length: particleCount }, spawnParticle);
     },
   });
 
   p.draw = () => {
-    p.fill(...colors.trailFade);
+    p.fill(...trailFade);
     p.noStroke();
     p.rect(0, 0, p.width, p.height);
 
@@ -45,7 +47,7 @@ export default function flowFieldParticles(p, theme = "light") {
       const vx = Math.cos(angle) * stepSize;
       const vy = Math.sin(angle) * stepSize;
 
-      p.stroke(...colors.stroke);
+      p.stroke(...strokeColor);
       p.line(part.x, part.y, part.x + vx, part.y + vy);
 
       part.x += vx;

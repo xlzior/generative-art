@@ -1,10 +1,11 @@
 import { attachResponsiveCanvas } from "./responsive-canvas.js";
-import { getSketchPalette } from "./palettes.js";
 
 export default function fractalTree(p, theme = "light") {
   const maxDepth = 10;
   let baseLength = 120;
-  const colors = getSketchPalette("fractal-tree", theme);
+  const isDark = theme === "dark";
+  const backgroundColor = isDark ? "#0A0E15" : "#FCFBF7";
+  const strokeColor = isDark ? "#E2E8F0" : "#1C1917";
 
   function branch(x, y, length, angle, depth) {
     if (depth <= 0 || length < 2) {
@@ -30,8 +31,8 @@ export default function fractalTree(p, theme = "light") {
   });
 
   p.draw = () => {
-    p.background(colors.background);
-    p.stroke(colors.stroke);
+    p.background(backgroundColor);
+    p.stroke(strokeColor);
     p.strokeWeight(1.15);
     baseLength = p.height * 0.23;
 
