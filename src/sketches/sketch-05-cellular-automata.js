@@ -1,3 +1,5 @@
+import { getCanvasSize } from "./canvas-size.js";
+
 export default function cellularAutomata(p, theme = "light") {
   const cell = 8;
   const isDark = theme === "dark";
@@ -6,20 +8,6 @@ export default function cellularAutomata(p, theme = "light") {
   let cols;
   let rows;
   let board;
-
-  function getCanvasSize() {
-    const container = document.getElementById("canvas-container");
-    return {
-      width: Math.max(
-        320,
-        Math.floor(container?.clientWidth ?? window.innerWidth),
-      ),
-      height: Math.max(
-        320,
-        Math.floor(container?.clientHeight ?? window.innerHeight),
-      ),
-    };
-  }
 
   function randomBoard() {
     return Array.from({ length: rows }, () =>

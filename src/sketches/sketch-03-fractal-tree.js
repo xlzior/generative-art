@@ -1,23 +1,11 @@
+import { getCanvasSize } from "./canvas-size.js";
+
 export default function fractalTree(p, theme = "light") {
   const maxDepth = 10;
   let baseLength = 120;
   const isDark = theme === "dark";
   const backgroundColor = isDark ? "#0A0E15" : "#FCFBF7";
   const strokeColor = isDark ? "#E2E8F0" : "#1C1917";
-
-  function getCanvasSize() {
-    const container = document.getElementById("canvas-container");
-    return {
-      width: Math.max(
-        320,
-        Math.floor(container?.clientWidth ?? window.innerWidth),
-      ),
-      height: Math.max(
-        320,
-        Math.floor(container?.clientHeight ?? window.innerHeight),
-      ),
-    };
-  }
 
   function branch(x, y, length, angle, depth) {
     if (depth <= 0 || length < 2) {

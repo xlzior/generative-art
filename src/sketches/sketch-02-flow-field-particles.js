@@ -1,3 +1,5 @@
+import { getCanvasSize } from "./canvas-size.js";
+
 export default function flowFieldParticles(p, theme = "light") {
   const particleCount = 1200;
   const stepSize = 1.2;
@@ -8,20 +10,6 @@ export default function flowFieldParticles(p, theme = "light") {
   const trailFade = isDark ? [11, 13, 14, 12] : [248, 250, 252, 10];
   const strokeColor = isDark ? [220, 227, 231, 90] : [15, 23, 42, 62];
   let particles = [];
-
-  function getCanvasSize() {
-    const container = document.getElementById("canvas-container");
-    return {
-      width: Math.max(
-        320,
-        Math.floor(container?.clientWidth ?? window.innerWidth),
-      ),
-      height: Math.max(
-        320,
-        Math.floor(container?.clientHeight ?? window.innerHeight),
-      ),
-    };
-  }
 
   function spawnParticle() {
     return {

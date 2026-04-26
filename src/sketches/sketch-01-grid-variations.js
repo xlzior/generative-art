@@ -1,3 +1,5 @@
+import { getCanvasSize } from "./canvas-size.js";
+
 export default function gridVariations(p, theme = "light") {
   const cellSize = 38;
   const baseMargin = 36;
@@ -18,20 +20,6 @@ export default function gridVariations(p, theme = "light") {
       rows,
       startX: (p.width - gridWidth) * 0.5,
       startY: (p.height - gridHeight) * 0.5,
-    };
-  }
-
-  function getCanvasSize() {
-    const container = document.getElementById("canvas-container");
-    return {
-      width: Math.max(
-        320,
-        Math.floor(container?.clientWidth ?? window.innerWidth),
-      ),
-      height: Math.max(
-        320,
-        Math.floor(container?.clientHeight ?? window.innerHeight),
-      ),
     };
   }
 

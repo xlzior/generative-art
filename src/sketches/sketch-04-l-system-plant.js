@@ -1,3 +1,5 @@
+import { getCanvasSize } from "./canvas-size.js";
+
 export default function lSystemPlant(p, theme = "light") {
   const rules = {
     F: "FF+[+F-F-F]-[-F+F+F]",
@@ -9,20 +11,6 @@ export default function lSystemPlant(p, theme = "light") {
   const isDark = theme === "dark";
   const backgroundColor = isDark ? "#060B0D" : "#F4F4F5";
   const strokeColor = isDark ? "#6EE7B7" : "#14532D";
-
-  function getCanvasSize() {
-    const container = document.getElementById("canvas-container");
-    return {
-      width: Math.max(
-        320,
-        Math.floor(container?.clientWidth ?? window.innerWidth),
-      ),
-      height: Math.max(
-        320,
-        Math.floor(container?.clientHeight ?? window.innerHeight),
-      ),
-    };
-  }
 
   function iterate(steps) {
     for (let i = 0; i < steps; i += 1) {
