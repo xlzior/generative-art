@@ -1,8 +1,12 @@
-export default function flowFieldParticles(p) {
+export default function flowFieldParticles(p, theme = "light") {
   const particleCount = 1200;
   const stepSize = 1.2;
   const noiseScale = 0.0025;
   const angleScale = p.TWO_PI * 1.8;
+  const isDark = theme === "dark";
+  const backgroundColor = isDark ? [11, 13, 14] : [248, 250, 252];
+  const trailFade = isDark ? [11, 13, 14, 12] : [248, 250, 252, 10];
+  const strokeColor = isDark ? [220, 227, 231, 90] : [15, 23, 42, 62];
   let particles = [];
 
   function getCanvasSize() {
@@ -31,7 +35,7 @@ export default function flowFieldParticles(p) {
   p.setup = () => {
     const { width, height } = getCanvasSize();
     p.createCanvas(width, height);
-    p.background("#0B0D0E");
+    p.background(...backgroundColor);
     p.strokeWeight(0.65);
     particles = Array.from({ length: particleCount }, spawnParticle);
   };
@@ -39,12 +43,12 @@ export default function flowFieldParticles(p) {
   p.windowResized = () => {
     const { width, height } = getCanvasSize();
     p.resizeCanvas(width, height);
-    p.background("#0B0D0E");
+    p.background(...backgroundColor);
     particles = Array.from({ length: particleCount }, spawnParticle);
   };
 
   p.draw = () => {
-    p.fill(11, 13, 14, 12);
+    p.fill(...trailFade);
     p.noStroke();
     p.rect(0, 0, p.width, p.height);
 
@@ -58,7 +62,7 @@ export default function flowFieldParticles(p) {
       const vx = Math.cos(angle) * stepSize;
       const vy = Math.sin(angle) * stepSize;
 
-      p.stroke(220, 227, 231, 90);
+      p.stroke(...strokeColor);
       p.line(part.x, part.y, part.x + vx, part.y + vy);
 
       part.x += vx;

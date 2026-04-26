@@ -1,7 +1,9 @@
-export default function gridVariations(p) {
+export default function gridVariations(p, theme = "light") {
   const cellSize = 38;
   const margin = 36;
   let palette;
+  const isDark = theme === "dark";
+  const backgroundColor = isDark ? "#070B12" : "#FCFBF7";
 
   function getCanvasSize() {
     const container = document.getElementById("canvas-container");
@@ -22,7 +24,9 @@ export default function gridVariations(p) {
     p.createCanvas(width, height);
     p.noLoop();
     p.angleMode(p.DEGREES);
-    palette = ["#0F172A", "#0369A1", "#15803D", "#CA8A04", "#B45309"];
+    palette = isDark
+      ? ["#7DD3FC", "#5EEAD4", "#86EFAC", "#FDE68A", "#FDBA74"]
+      : ["#0F172A", "#0369A1", "#15803D", "#CA8A04", "#B45309"];
     p.strokeWeight(1.4);
   };
 
@@ -33,7 +37,7 @@ export default function gridVariations(p) {
   };
 
   p.draw = () => {
-    p.background("#FCFBF7");
+    p.background(backgroundColor);
 
     for (let y = margin; y < p.height - margin; y += cellSize) {
       for (let x = margin; x < p.width - margin; x += cellSize) {

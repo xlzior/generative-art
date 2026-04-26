@@ -5,8 +5,25 @@
   --panel: rgba(255, 255, 255, 0.7);
   --stroke: rgba(20, 20, 20, 0.18);
   --accent: #0f766e;
+  --ui-surface: rgba(255, 255, 255, 0.9);
+  --ui-surface-hover: rgba(255, 255, 255, 1);
+  --muted-ink: rgba(0, 0, 0, 0.72);
+  --eyebrow-ink: rgba(0, 0, 0, 0.65);
   --shell-pad: 1rem;
   --sidebar-width: clamp(260px, 20vw, 360px);
+}
+
+:root[data-theme="dark"] {
+  --bg-1: #0f1723;
+  --bg-2: #05080f;
+  --ink: #e2e8f0;
+  --panel: rgba(15, 23, 35, 0.8);
+  --stroke: rgba(148, 163, 184, 0.25);
+  --accent: #2dd4bf;
+  --ui-surface: rgba(15, 23, 35, 0.88);
+  --ui-surface-hover: rgba(30, 41, 59, 0.95);
+  --muted-ink: rgba(226, 232, 240, 0.78);
+  --eyebrow-ink: rgba(203, 213, 225, 0.74);
 }
 
 * {
@@ -54,7 +71,7 @@ header {
   letter-spacing: 0.2em;
   text-transform: uppercase;
   font-size: 0.74rem;
-  color: rgba(0, 0, 0, 0.65);
+  color: var(--eyebrow-ink);
 }
 
 h1 {
@@ -65,7 +82,7 @@ h1 {
 .subtitle {
   max-width: 60ch;
   margin: 0.5rem 0 0;
-  color: rgba(0, 0, 0, 0.72);
+  color: var(--muted-ink);
 }
 
 .controls {
@@ -92,7 +109,8 @@ button {
   border-radius: 10px;
   border: 1px solid var(--stroke);
   padding: 0.6rem 0.8rem;
-  background: rgba(255, 255, 255, 0.9);
+  color: var(--ink);
+  background: var(--ui-surface);
 }
 
 button {
@@ -104,7 +122,18 @@ button {
 
 button:hover {
   transform: translateY(-1px);
-  border-color: rgba(0, 0, 0, 0.35);
+  border-color: var(--accent);
+  background: var(--ui-surface-hover);
+}
+
+#theme-toggle {
+  margin-top: 0.3rem;
+  border-color: color-mix(in srgb, var(--accent), var(--stroke) 70%);
+}
+
+#theme-toggle[aria-pressed="true"] {
+  background: color-mix(in srgb, var(--accent), transparent 82%);
+  border-color: var(--accent);
 }
 
 main {

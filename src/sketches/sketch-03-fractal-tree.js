@@ -1,6 +1,9 @@
-export default function fractalTree(p) {
+export default function fractalTree(p, theme = "light") {
   const maxDepth = 10;
   let baseLength = 120;
+  const isDark = theme === "dark";
+  const backgroundColor = isDark ? "#0A0E15" : "#FCFBF7";
+  const strokeColor = isDark ? "#E2E8F0" : "#1C1917";
 
   function getCanvasSize() {
     const container = document.getElementById("canvas-container");
@@ -43,8 +46,8 @@ export default function fractalTree(p) {
   };
 
   p.draw = () => {
-    p.background("#FCFBF7");
-    p.stroke("#1C1917");
+    p.background(backgroundColor);
+    p.stroke(strokeColor);
     p.strokeWeight(1.15);
     baseLength = p.height * 0.23;
 

@@ -1,4 +1,4 @@
-export default function lSystemPlant(p) {
+export default function lSystemPlant(p, theme = "light") {
   const rules = {
     F: "FF+[+F-F-F]-[-F+F+F]",
   };
@@ -6,6 +6,9 @@ export default function lSystemPlant(p) {
   let sentence = "F";
   let turn = 22.5;
   let segment = 92;
+  const isDark = theme === "dark";
+  const backgroundColor = isDark ? "#060B0D" : "#F4F4F5";
+  const strokeColor = isDark ? "#6EE7B7" : "#14532D";
 
   function getCanvasSize() {
     const container = document.getElementById("canvas-container");
@@ -50,9 +53,9 @@ export default function lSystemPlant(p) {
   };
 
   p.draw = () => {
-    p.background("#F4F4F5");
+    p.background(backgroundColor);
     p.translate(p.width * 0.5, p.height - 8);
-    p.stroke("#14532D");
+    p.stroke(strokeColor);
     p.strokeWeight(1);
 
     for (const ch of sentence) {
