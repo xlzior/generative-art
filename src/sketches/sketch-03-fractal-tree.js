@@ -2,6 +2,20 @@ export default function fractalTree(p) {
   const maxDepth = 10;
   let baseLength = 120;
 
+  function getCanvasSize() {
+    const container = document.getElementById("canvas-container");
+    return {
+      width: Math.max(
+        320,
+        Math.floor(container?.clientWidth ?? window.innerWidth),
+      ),
+      height: Math.max(
+        320,
+        Math.floor(container?.clientHeight ?? window.innerHeight),
+      ),
+    };
+  }
+
   function branch(x, y, length, angle, depth) {
     if (depth <= 0 || length < 2) {
       return;
@@ -17,9 +31,15 @@ export default function fractalTree(p) {
   }
 
   p.setup = () => {
-    const size = Math.min(window.innerWidth - 32, 1000);
-    p.createCanvas(size, size * 0.68);
+    const { width, height } = getCanvasSize();
+    p.createCanvas(width, height);
     p.noLoop();
+  };
+
+  p.windowResized = () => {
+    const { width, height } = getCanvasSize();
+    p.resizeCanvas(width, height);
+    p.redraw();
   };
 
   p.draw = () => {

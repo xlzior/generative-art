@@ -4,6 +4,20 @@ export default function cellularAutomata(p) {
   let rows;
   let board;
 
+  function getCanvasSize() {
+    const container = document.getElementById("canvas-container");
+    return {
+      width: Math.max(
+        320,
+        Math.floor(container?.clientWidth ?? window.innerWidth),
+      ),
+      height: Math.max(
+        320,
+        Math.floor(container?.clientHeight ?? window.innerHeight),
+      ),
+    };
+  }
+
   function randomBoard() {
     return Array.from({ length: rows }, () =>
       Array.from({ length: cols }, () => (p.random() < 0.3 ? 1 : 0)),
@@ -26,14 +40,21 @@ export default function cellularAutomata(p) {
   }
 
   p.setup = () => {
-    const width = Math.min(window.innerWidth - 32, 1000);
-    const height = Math.floor(width * 0.68);
+    const { width, height } = getCanvasSize();
     p.createCanvas(width, height);
     cols = Math.floor(p.width / cell);
     rows = Math.floor(p.height / cell);
     board = randomBoard();
     p.frameRate(12);
     p.noStroke();
+  };
+
+  p.windowResized = () => {
+    const { width, height } = getCanvasSize();
+    p.resizeCanvas(width, height);
+    cols = Math.floor(p.width / cell);
+    rows = Math.floor(p.height / cell);
+    board = randomBoard();
   };
 
   p.draw = () => {

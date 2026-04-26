@@ -5,6 +5,20 @@ export default function flowFieldParticles(p) {
   const angleScale = p.TWO_PI * 1.8;
   let particles = [];
 
+  function getCanvasSize() {
+    const container = document.getElementById("canvas-container");
+    return {
+      width: Math.max(
+        320,
+        Math.floor(container?.clientWidth ?? window.innerWidth),
+      ),
+      height: Math.max(
+        320,
+        Math.floor(container?.clientHeight ?? window.innerHeight),
+      ),
+    };
+  }
+
   function spawnParticle() {
     return {
       x: p.random(p.width),
@@ -15,10 +29,17 @@ export default function flowFieldParticles(p) {
   }
 
   p.setup = () => {
-    const size = Math.min(window.innerWidth - 32, 1100);
-    p.createCanvas(size, size * 0.68);
+    const { width, height } = getCanvasSize();
+    p.createCanvas(width, height);
     p.background("#0B0D0E");
     p.strokeWeight(0.65);
+    particles = Array.from({ length: particleCount }, spawnParticle);
+  };
+
+  p.windowResized = () => {
+    const { width, height } = getCanvasSize();
+    p.resizeCanvas(width, height);
+    p.background("#0B0D0E");
     particles = Array.from({ length: particleCount }, spawnParticle);
   };
 

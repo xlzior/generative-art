@@ -7,6 +7,20 @@ export default function lSystemPlant(p) {
   let turn = 22.5;
   let segment = 92;
 
+  function getCanvasSize() {
+    const container = document.getElementById("canvas-container");
+    return {
+      width: Math.max(
+        320,
+        Math.floor(container?.clientWidth ?? window.innerWidth),
+      ),
+      height: Math.max(
+        320,
+        Math.floor(container?.clientHeight ?? window.innerHeight),
+      ),
+    };
+  }
+
   function iterate(steps) {
     for (let i = 0; i < steps; i += 1) {
       let next = "";
@@ -19,11 +33,20 @@ export default function lSystemPlant(p) {
   }
 
   p.setup = () => {
-    const size = Math.min(window.innerWidth - 32, 1000);
-    p.createCanvas(size, size * 0.7);
+    const { width, height } = getCanvasSize();
+    p.createCanvas(width, height);
     p.angleMode(p.DEGREES);
     p.noLoop();
     iterate(4);
+  };
+
+  p.windowResized = () => {
+    const { width, height } = getCanvasSize();
+    p.resizeCanvas(width, height);
+    sentence = "F";
+    segment = 92;
+    iterate(4);
+    p.redraw();
   };
 
   p.draw = () => {

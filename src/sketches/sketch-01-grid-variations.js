@@ -3,13 +3,33 @@ export default function gridVariations(p) {
   const margin = 36;
   let palette;
 
+  function getCanvasSize() {
+    const container = document.getElementById("canvas-container");
+    return {
+      width: Math.max(
+        320,
+        Math.floor(container?.clientWidth ?? window.innerWidth),
+      ),
+      height: Math.max(
+        320,
+        Math.floor(container?.clientHeight ?? window.innerHeight),
+      ),
+    };
+  }
+
   p.setup = () => {
-    const size = Math.min(window.innerWidth - 32, 980);
-    p.createCanvas(size, size * 0.7);
+    const { width, height } = getCanvasSize();
+    p.createCanvas(width, height);
     p.noLoop();
     p.angleMode(p.DEGREES);
     palette = ["#0F172A", "#0369A1", "#15803D", "#CA8A04", "#B45309"];
     p.strokeWeight(1.4);
+  };
+
+  p.windowResized = () => {
+    const { width, height } = getCanvasSize();
+    p.resizeCanvas(width, height);
+    p.redraw();
   };
 
   p.draw = () => {
