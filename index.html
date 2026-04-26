@@ -26,18 +26,57 @@
       <section class="controls" aria-label="Sketch controls">
         <label for="sketch-select">Sketch</label>
         <select id="sketch-select"></select>
-        <button id="regenerate" type="button">Regenerate</button>
-        <button id="save-frame" type="button">Save PNG</button>
+        <button id="regenerate" type="button">
+          <span class="button-content">
+            <i
+              class="button-icon"
+              data-lucide="refresh-cw"
+              aria-hidden="true"
+            ></i>
+            <span>Regenerate</span>
+          </span>
+        </button>
+        <button id="save-frame" type="button">
+          <span class="button-content">
+            <i
+              class="button-icon"
+              data-lucide="download"
+              aria-hidden="true"
+            ></i>
+            <span>Save PNG</span>
+          </span>
+        </button>
         <button id="theme-toggle" type="button" aria-pressed="false">
-          Dark Mode
+          <span class="button-content">
+            <i class="button-icon" data-lucide="moon" aria-hidden="true"></i>
+            <span id="theme-toggle-label">Dark Mode</span>
+          </span>
         </button>
 
         <section class="params-panel" aria-label="Sketch parameters">
           <p class="params-heading">Parameters</p>
           <div id="params-list"></div>
           <div class="params-actions">
-            <button id="reset-params" type="button">Reset To Defaults</button>
-            <button id="save-defaults" type="button">Save As Default</button>
+            <button id="reset-params" type="button">
+              <span class="button-content">
+                <i
+                  class="button-icon"
+                  data-lucide="rotate-ccw"
+                  aria-hidden="true"
+                ></i>
+                <span>Reset To Defaults</span>
+              </span>
+            </button>
+            <button id="save-defaults" type="button">
+              <span class="button-content">
+                <i
+                  class="button-icon"
+                  data-lucide="save"
+                  aria-hidden="true"
+                ></i>
+                <span id="save-defaults-label">Save As Default</span>
+              </span>
+            </button>
           </div>
           <p id="save-status" aria-live="polite"></p>
         </section>

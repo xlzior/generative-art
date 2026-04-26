@@ -1,17 +1,37 @@
 import p5 from "p5";
+import {
+  createIcons,
+  Download,
+  Moon,
+  RefreshCw,
+  RotateCcw,
+  Save,
+} from "lucide";
 import { sketches } from "./sketches/index.js";
 
 const selectEl = document.getElementById("sketch-select");
 const regenerateEl = document.getElementById("regenerate");
 const saveFrameEl = document.getElementById("save-frame");
 const themeToggleEl = document.getElementById("theme-toggle");
+const themeToggleLabelEl = document.getElementById("theme-toggle-label");
 const resetParamsEl = document.getElementById("reset-params");
 const saveDefaultsEl = document.getElementById("save-defaults");
+const saveDefaultsLabelEl = document.getElementById("save-defaults-label");
 const saveStatusEl = document.getElementById("save-status");
 const paramsListEl = document.getElementById("params-list");
 const canvasContainerEl = document.getElementById("canvas-container");
 const prefersDark = window.matchMedia("(prefers-color-scheme: dark)");
 const rootEl = document.documentElement;
+
+createIcons({
+  icons: {
+    Download,
+    Moon,
+    RefreshCw,
+    RotateCcw,
+    Save,
+  },
+});
 
 let currentSketch = sketches[0].id;
 let currentP5 = null;
@@ -92,7 +112,9 @@ function applyTheme(theme) {
 
   if (themeToggleEl) {
     const isDark = theme === "dark";
-    themeToggleEl.textContent = isDark ? "Light Mode" : "Dark Mode";
+    if (themeToggleLabelEl) {
+      themeToggleLabelEl.textContent = isDark ? "Light Mode" : "Dark Mode";
+    }
     themeToggleEl.setAttribute("aria-pressed", String(isDark));
   }
 }
@@ -144,9 +166,15 @@ async function saveCurrentParamsAsDefaults() {
   };
 
   saveDefaultsEl.disabled = true;
-  const previousLabel = saveDefaultsEl.textContent;
+  const previousLabel = saveDefaultsLabelEl
+    ? saveDefaultsLabelEl.textContent
+    : saveDefaultsEl.textContent;
   const previousTitle = saveDefaultsEl.title;
-  saveDefaultsEl.textContent = "Saving...";
+  if (saveDefaultsLabelEl) {
+    saveDefaultsLabelEl.textContent = "Saving...";
+  } else {
+    saveDefaultsEl.textContent = "Saving...";
+  }
   saveDefaultsEl.title = "";
   if (saveStatusEl) {
     saveStatusEl.textContent = "Saving defaults...";
@@ -184,13 +212,21 @@ async function saveCurrentParamsAsDefaults() {
     }
 
     sketch.defaults = { ...params };
-    saveDefaultsEl.textContent = "Saved";
+    if (saveDefaultsLabelEl) {
+      saveDefaultsLabelEl.textContent = "Saved";
+    } else {
+      saveDefaultsEl.textContent = "Saved";
+    }
     saveDefaultsEl.title = "";
     if (saveStatusEl) {
       saveStatusEl.textContent = `Saved ${sketch.defaultsFile}`;
     }
     window.setTimeout(() => {
-      saveDefaultsEl.textContent = previousLabel;
+      if (saveDefaultsLabelEl) {
+        saveDefaultsLabelEl.textContent = previousLabel;
+      } else {
+        saveDefaultsEl.textContent = previousLabel;
+      }
       saveDefaultsEl.title = previousTitle;
       if (saveStatusEl) {
         saveStatusEl.textContent = "";
@@ -199,13 +235,21 @@ async function saveCurrentParamsAsDefaults() {
   } catch (error) {
     console.error(error);
     const message = error instanceof Error ? error.message : "Save Failed";
-    saveDefaultsEl.textContent = "Save Failed";
+    if (saveDefaultsLabelEl) {
+      saveDefaultsLabelEl.textContent = "Save Failed";
+    } else {
+      saveDefaultsEl.textContent = "Save Failed";
+    }
     saveDefaultsEl.title = message;
     if (saveStatusEl) {
       saveStatusEl.textContent = message;
     }
     window.setTimeout(() => {
-      saveDefaultsEl.textContent = previousLabel;
+      if (saveDefaultsLabelEl) {
+        saveDefaultsLabelEl.textContent = previousLabel;
+      } else {
+        saveDefaultsEl.textContent = previousLabel;
+      }
       saveDefaultsEl.title = previousTitle;
     }, 1600);
   } finally {
