@@ -1,26 +1,32 @@
-import { attachResponsiveCanvas } from "../utils/responsive-canvas.js";
-import { defineSketch } from "../utils/defineSketch.js";
+import { attachResponsiveCanvas } from "../../utils/responsive-canvas.js";
+import { defineSketch } from "../../utils/defineSketch.js";
 
 export default defineSketch({
   id: "grid-variations",
   title: "01 Grid Variations",
   description: "Controlled randomness on a geometric grid.",
-  create({ p, theme = "light" }) {
-    const cellSize = 38;
-    const baseMargin = 36;
+  parameters: [
+    { key: "cellSize", label: "Cell Size", min: 16, max: 96, step: 1 },
+    { key: "margin", label: "Margin", min: 8, max: 120, step: 1 },
+    { key: "strokeWeight", label: "Stroke", min: 0.4, max: 4, step: 0.1 },
+  ],
+  create({ p, theme = "light", params }) {
     let palette;
     const isDark = theme === "dark";
     const backgroundColor = isDark ? "#070B12" : "#FCFBF7";
 
     function getGridLayout() {
-      const innerWidth = Math.max(0, p.width - baseMargin * 2);
-      const innerHeight = Math.max(0, p.height - baseMargin * 2);
+      const cellSize = Math.max(4, Math.floor(params.cellSize));
+      const margin = Math.max(0, params.margin);
+      const innerWidth = Math.max(0, p.width - margin * 2);
+      const innerHeight = Math.max(0, p.height - margin * 2);
       const cols = Math.max(1, Math.floor(innerWidth / cellSize));
       const rows = Math.max(1, Math.floor(innerHeight / cellSize));
       const gridWidth = cols * cellSize;
       const gridHeight = rows * cellSize;
 
       return {
+        cellSize,
         cols,
         rows,
         startX: (p.width - gridWidth) * 0.5,
@@ -35,7 +41,6 @@ export default defineSketch({
         palette = isDark
           ? ["#7DD3FC", "#5EEAD4", "#86EFAC", "#FDE68A", "#FDBA74"]
           : ["#0F172A", "#0369A1", "#15803D", "#CA8A04", "#B45309"];
-        p.strokeWeight(1.4);
       },
       onResize: () => {
         p.redraw();
@@ -44,7 +49,8 @@ export default defineSketch({
 
     p.draw = () => {
       p.background(backgroundColor);
-      const { cols, rows, startX, startY } = getGridLayout();
+      p.strokeWeight(params.strokeWeight);
+      const { cellSize, cols, rows, startX, startY } = getGridLayout();
 
       for (let row = 0; row < rows; row += 1) {
         for (let col = 0; col < cols; col += 1) {

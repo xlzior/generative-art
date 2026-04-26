@@ -5,6 +5,9 @@ const selectEl = document.getElementById("sketch-select");
 const regenerateEl = document.getElementById("regenerate");
 const saveFrameEl = document.getElementById("save-frame");
 const themeToggleEl = document.getElementById("theme-toggle");
+const resetParamsEl = document.getElementById("reset-params");
+const saveDefaultsEl = document.getElementById("save-defaults");
+const paramsListEl = document.getElementById("params-list");
 const canvasContainerEl = document.getElementById("canvas-container");
 const prefersDark = window.matchMedia("(prefers-color-scheme: dark)");
 const rootEl = document.documentElement;
@@ -12,6 +15,67 @@ const rootEl = document.documentElement;
 let currentSketch = sketches[0].id;
 let currentP5 = null;
 let currentTheme = "light";
+const paramsBySketch = new Map();
+
+function cloneDefaults(sketch) {
+  return Object.fromEntries(
+    Object.entries(sketch.defaults).map(([key, value]) => [key, Number(value)]),
+  );
+}
+
+function getParamsForSketch(sketch) {
+  if (!paramsBySketch.has(sketch.id)) {
+    paramsBySketch.set(sketch.id, cloneDefaults(sketch));
+  }
+
+  return paramsBySketch.get(sketch.id);
+}
+
+function formatParamValue(value) {
+  if (Number.isInteger(value)) {
+    return String(value);
+  }
+
+  return value
+    .toFixed(3)
+    .replace(/\.0+$/, "")
+    .replace(/(\.\d*?)0+$/, "$1");
+}
+
+function renderSketchParameters(sketch) {
+  const params = getParamsForSketch(sketch);
+  paramsListEl.innerHTML = "";
+
+  for (const parameter of sketch.parameters) {
+    const row = document.createElement("div");
+    row.className = "param-control";
+
+    const label = document.createElement("label");
+    label.setAttribute("for", `param-${sketch.id}-${parameter.key}`);
+    label.textContent = parameter.label;
+
+    const valueEl = document.createElement("span");
+    valueEl.className = "param-value";
+    valueEl.textContent = formatParamValue(params[parameter.key]);
+
+    const input = document.createElement("input");
+    input.type = "range";
+    input.id = `param-${sketch.id}-${parameter.key}`;
+    input.min = String(parameter.min);
+    input.max = String(parameter.max);
+    input.step = String(parameter.step ?? 1);
+    input.value = String(params[parameter.key]);
+
+    input.addEventListener("input", (event) => {
+      params[parameter.key] = Number(event.target.value);
+      valueEl.textContent = formatParamValue(params[parameter.key]);
+      mountSketch(currentSketch, { redrawControls: false });
+    });
+
+    row.append(label, valueEl, input);
+    paramsListEl.append(row);
+  }
+}
 
 function resolveInitialTheme() {
   const stored = window.localStorage.getItem("theme");
@@ -41,10 +105,17 @@ function populateSketches() {
   }
 }
 
-function mountSketch(sketchId) {
+function mountSketch(sketchId, options = {}) {
+  const { redrawControls = true } = options;
   const sketch = sketches.find((entry) => entry.id === sketchId);
   if (!sketch) {
     return;
+  }
+
+  const params = getParamsForSketch(sketch);
+
+  if (redrawControls) {
+    renderSketchParameters(sketch);
   }
 
   if (currentP5) {
@@ -53,10 +124,58 @@ function mountSketch(sketchId) {
 
   currentSketch = sketch.id;
   currentP5 = new p5(
-    (p) => sketch.create({ p, theme: currentTheme }),
+    (p) => sketch.create({ p, theme: currentTheme, params }),
     canvasContainerEl,
   );
   document.title = `Generative Art - ${sketch.title}`;
+}
+
+async function saveCurrentParamsAsDefaults() {
+  const sketch = sketches.find((entry) => entry.id === currentSketch);
+  if (!sketch) {
+    return;
+  }
+
+  const params = getParamsForSketch(sketch);
+  const payload = {
+    defaultsFile: sketch.defaultsFile,
+    defaults: params,
+  };
+
+  saveDefaultsEl.disabled = true;
+  const previousLabel = saveDefaultsEl.textContent;
+  saveDefaultsEl.textContent = "Saving...";
+
+  try {
+    const response = await fetch("/__sketch-defaults", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      const message = await response.text();
+      throw new Error(message || "Failed to persist defaults");
+    }
+
+    sketch.defaults = { ...params };
+    saveDefaultsEl.textContent = "Saved";
+    window.setTimeout(() => {
+      saveDefaultsEl.textContent = previousLabel;
+    }, 1000);
+  } catch (error) {
+    console.error(error);
+    saveDefaultsEl.textContent = "Save Failed";
+    window.setTimeout(() => {
+      saveDefaultsEl.textContent = previousLabel;
+    }, 1200);
+  } finally {
+    window.setTimeout(() => {
+      saveDefaultsEl.disabled = false;
+    }, 200);
+  }
 }
 
 applyTheme(resolveInitialTheme());
@@ -71,6 +190,20 @@ selectEl.addEventListener("change", (event) => {
 
 regenerateEl.addEventListener("click", () => {
   mountSketch(currentSketch);
+});
+
+resetParamsEl.addEventListener("click", () => {
+  const sketch = sketches.find((entry) => entry.id === currentSketch);
+  if (!sketch) {
+    return;
+  }
+
+  paramsBySketch.set(sketch.id, cloneDefaults(sketch));
+  mountSketch(currentSketch);
+});
+
+saveDefaultsEl.addEventListener("click", async () => {
+  await saveCurrentParamsAsDefaults();
 });
 
 if (themeToggleEl) {

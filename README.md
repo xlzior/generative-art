@@ -36,19 +36,28 @@ Use the sketch selector and Regenerate button to quickly explore variations.
 
 ## Sketchbook workflow
 
-1. Duplicate a sketch file under `src/sketches`.
-2. Add it to `src/sketches/index.js`.
-3. Adjust parameters at the top first, then refactor once the idea works.
-4. Save strong outputs as PNGs and curate your favorite series.
+1. Create a folder under `src/sketches/<sketch-name>`.
+2. Add `sketch.js` and `defaults.json` inside that folder.
+3. Export a default `defineSketch(...)` module from `sketch.js`.
+4. The app auto-discovers `./*/sketch.js`, so no manual registry entry is required.
+5. Save strong outputs as PNGs and curate your favorite series.
 
 ## Sketch contract
 
 The sketch contract is enforced in code by [src/utils/defineSketch.js](src/utils/defineSketch.js). App-shell changes should primarily touch shared helpers such as [src/utils/canvas-size.js](src/utils/canvas-size.js) and [src/utils/responsive-canvas.js](src/utils/responsive-canvas.js), while each sketch only owns its own drawing logic and theme-aware styling.
 
+Each sketch also defines numeric slider metadata (`parameters`) in `sketch.js`, while default values live in `defaults.json`.
+
 ## Folder split
 
 - `src/sketches` contains artwork modules and the sketch registry.
 - `src/utils` contains shared helpers used by sketches and shell wiring.
+
+## Parameters UI
+
+- The left panel renders sliders from each sketch's `parameters` array.
+- `Reset To Defaults` restores values from that sketch's `defaults.json`.
+- `Save As Default` writes updated defaults back to `src/sketches/<sketch>/defaults.json` through the local Vite dev server endpoint.
 
 ## Next ideas to add
 

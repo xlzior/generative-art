@@ -1,0 +1,7 @@
+{
+  "turn": 22.5,
+  "initialSegment": 92,
+  "iterations": 4,
+  "shrinkFactor": 0.56,
+  "strokeWeight": 1
+}

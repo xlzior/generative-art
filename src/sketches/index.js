@@ -1,6 +1,22 @@
-const sketchModules = Object.entries(
-  import.meta.glob("./sketch-*.js", { eager: true }),
-)
+const sketchEntries = Object.entries(
+  import.meta.glob("./*/sketch.js", { eager: true }),
+);
+
+const defaultsByFolder = Object.fromEntries(
+  Object.entries(
+    import.meta.glob("./*/defaults.json", { eager: true, import: "default" }),
+  )
+    .map(([path, defaults]) => {
+      const match = path.match(/^\.\/([^/]+)\/defaults\.json$/);
+      if (!match) {
+        return null;
+      }
+      return [match[1], defaults];
+    })
+    .filter(Boolean),
+);
+
+const sketchModules = sketchEntries
   .map(([path, module]) => {
     if (!module || typeof module.default !== "object") {
       throw new TypeError(
@@ -8,17 +24,47 @@ const sketchModules = Object.entries(
       );
     }
 
-    return module.default;
+    const folderMatch = path.match(/^\.\/([^/]+)\/sketch\.js$/);
+    if (!folderMatch) {
+      throw new TypeError(`Sketch module path has invalid shape: ${path}`);
+    }
+
+    const folder = folderMatch[1];
+    const defaults = defaultsByFolder[folder];
+    if (!defaults || typeof defaults !== "object") {
+      throw new TypeError(`Missing defaults.json for sketch folder: ${folder}`);
+    }
+
+    const sketch = module.default;
+    for (const parameter of sketch.parameters) {
+      if (!Object.prototype.hasOwnProperty.call(defaults, parameter.key)) {
+        throw new TypeError(
+          `Sketch ${sketch.id} defaults.json is missing key: ${parameter.key}`,
+        );
+      }
+
+      const defaultValue = defaults[parameter.key];
+      if (!Number.isFinite(defaultValue)) {
+        throw new TypeError(
+          `Sketch ${sketch.id} defaults.json key ${parameter.key} must be numeric.`,
+        );
+      }
+    }
+
+    return {
+      ...sketch,
+      defaults,
+      defaultsFile: `${folder}/defaults.json`,
+      filePath: path,
+    };
   })
-  .sort((a, b) => a.id.localeCompare(b.id));
+  .sort((a, b) => a.filePath.localeCompare(b.filePath));
 
 const seenIds = new Set();
-
 for (const sketch of sketchModules) {
   if (seenIds.has(sketch.id)) {
     throw new Error(`Duplicate sketch id detected: ${sketch.id}`);
   }
-
   seenIds.add(sketch.id);
 }
 

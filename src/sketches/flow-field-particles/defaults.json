@@ -1,0 +1,10 @@
+{
+  "particleCount": 1200,
+  "stepSize": 1.2,
+  "noiseScale": 0.0025,
+  "ttlMin": 100,
+  "ttlMax": 280,
+  "strokeWeight": 0.65,
+  "trailAlpha": 12,
+  "strokeAlpha": 90
+}

@@ -1,30 +1,45 @@
-import { attachResponsiveCanvas } from "../utils/responsive-canvas.js";
-import { defineSketch } from "../utils/defineSketch.js";
+import { attachResponsiveCanvas } from "../../utils/responsive-canvas.js";
+import { defineSketch } from "../../utils/defineSketch.js";
 
 export default defineSketch({
   id: "l-system-plant",
   title: "04 L-System Plant",
   description: "String-rewriting fractal grown with turtle graphics.",
-  create({ p, theme = "light" }) {
+  parameters: [
+    { key: "turn", label: "Turn", min: 5, max: 45, step: 0.5 },
+    {
+      key: "initialSegment",
+      label: "Initial Segment",
+      min: 20,
+      max: 180,
+      step: 1,
+    },
+    { key: "iterations", label: "Iterations", min: 1, max: 6, step: 1 },
+    { key: "shrinkFactor", label: "Shrink", min: 0.3, max: 0.8, step: 0.01 },
+    { key: "strokeWeight", label: "Stroke", min: 0.2, max: 3, step: 0.05 },
+  ],
+  create({ p, theme = "light", params }) {
     const rules = {
       F: "FF+[+F-F-F]-[-F+F+F]",
     };
 
     let sentence = "F";
-    let turn = 22.5;
-    let segment = 92;
+    let segment = params.initialSegment;
     const isDark = theme === "dark";
     const backgroundColor = isDark ? "#060B0D" : "#F4F4F5";
     const strokeColor = isDark ? "#6EE7B7" : "#14532D";
 
-    function iterate(steps) {
-      for (let i = 0; i < steps; i += 1) {
+    function rebuild() {
+      sentence = "F";
+      segment = params.initialSegment;
+      const iterations = Math.max(1, Math.floor(params.iterations));
+      for (let i = 0; i < iterations; i += 1) {
         let next = "";
         for (const ch of sentence) {
           next += rules[ch] || ch;
         }
         sentence = next;
-        segment *= 0.56;
+        segment *= params.shrinkFactor;
       }
     }
 
@@ -32,12 +47,10 @@ export default defineSketch({
       onSetup: () => {
         p.angleMode(p.DEGREES);
         p.noLoop();
-        iterate(4);
+        rebuild();
       },
       onResize: () => {
-        sentence = "F";
-        segment = 92;
-        iterate(4);
+        rebuild();
         p.redraw();
       },
     });
@@ -46,16 +59,16 @@ export default defineSketch({
       p.background(backgroundColor);
       p.translate(p.width * 0.5, p.height - 8);
       p.stroke(strokeColor);
-      p.strokeWeight(1);
+      p.strokeWeight(params.strokeWeight);
 
       for (const ch of sentence) {
         if (ch === "F") {
           p.line(0, 0, 0, -segment);
           p.translate(0, -segment);
         } else if (ch === "+") {
-          p.rotate(turn);
+          p.rotate(params.turn);
         } else if (ch === "-") {
-          p.rotate(-turn);
+          p.rotate(-params.turn);
         } else if (ch === "[") {
           p.push();
         } else if (ch === "]") {
