@@ -1,4 +1,4 @@
-import { getCanvasSize } from "./canvas-size.js";
+import { attachResponsiveCanvas } from "./responsive-canvas.js";
 
 export default function flowFieldParticles(p, theme = "light") {
   const particleCount = 1200;
@@ -20,20 +20,17 @@ export default function flowFieldParticles(p, theme = "light") {
     };
   }
 
-  p.setup = () => {
-    const { width, height } = getCanvasSize();
-    p.createCanvas(width, height);
-    p.background(...backgroundColor);
-    p.strokeWeight(0.65);
-    particles = Array.from({ length: particleCount }, spawnParticle);
-  };
-
-  p.windowResized = () => {
-    const { width, height } = getCanvasSize();
-    p.resizeCanvas(width, height);
-    p.background(...backgroundColor);
-    particles = Array.from({ length: particleCount }, spawnParticle);
-  };
+  attachResponsiveCanvas(p, {
+    onSetup: () => {
+      p.background(...backgroundColor);
+      p.strokeWeight(0.65);
+      particles = Array.from({ length: particleCount }, spawnParticle);
+    },
+    onResize: () => {
+      p.background(...backgroundColor);
+      particles = Array.from({ length: particleCount }, spawnParticle);
+    },
+  });
 
   p.draw = () => {
     p.fill(...trailFade);

@@ -1,4 +1,4 @@
-import { getCanvasSize } from "./canvas-size.js";
+import { attachResponsiveCanvas } from "./responsive-canvas.js";
 
 export default function lSystemPlant(p, theme = "light") {
   const rules = {
@@ -23,22 +23,19 @@ export default function lSystemPlant(p, theme = "light") {
     }
   }
 
-  p.setup = () => {
-    const { width, height } = getCanvasSize();
-    p.createCanvas(width, height);
-    p.angleMode(p.DEGREES);
-    p.noLoop();
-    iterate(4);
-  };
-
-  p.windowResized = () => {
-    const { width, height } = getCanvasSize();
-    p.resizeCanvas(width, height);
-    sentence = "F";
-    segment = 92;
-    iterate(4);
-    p.redraw();
-  };
+  attachResponsiveCanvas(p, {
+    onSetup: () => {
+      p.angleMode(p.DEGREES);
+      p.noLoop();
+      iterate(4);
+    },
+    onResize: () => {
+      sentence = "F";
+      segment = 92;
+      iterate(4);
+      p.redraw();
+    },
+  });
 
   p.draw = () => {
     p.background(backgroundColor);

@@ -1,4 +1,4 @@
-import { getCanvasSize } from "./canvas-size.js";
+import { attachResponsiveCanvas } from "./responsive-canvas.js";
 
 export default function fractalTree(p, theme = "light") {
   const maxDepth = 10;
@@ -21,17 +21,14 @@ export default function fractalTree(p, theme = "light") {
     branch(x2, y2, length * p.random(0.68, 0.78), angle + spread, depth - 1);
   }
 
-  p.setup = () => {
-    const { width, height } = getCanvasSize();
-    p.createCanvas(width, height);
-    p.noLoop();
-  };
-
-  p.windowResized = () => {
-    const { width, height } = getCanvasSize();
-    p.resizeCanvas(width, height);
-    p.redraw();
-  };
+  attachResponsiveCanvas(p, {
+    onSetup: () => {
+      p.noLoop();
+    },
+    onResize: () => {
+      p.redraw();
+    },
+  });
 
   p.draw = () => {
     p.background(backgroundColor);

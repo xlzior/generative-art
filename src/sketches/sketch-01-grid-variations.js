@@ -1,4 +1,4 @@
-import { getCanvasSize } from "./canvas-size.js";
+import { attachResponsiveCanvas } from "./responsive-canvas.js";
 
 export default function gridVariations(p, theme = "light") {
   const cellSize = 38;
@@ -23,22 +23,19 @@ export default function gridVariations(p, theme = "light") {
     };
   }
 
-  p.setup = () => {
-    const { width, height } = getCanvasSize();
-    p.createCanvas(width, height);
-    p.noLoop();
-    p.angleMode(p.DEGREES);
-    palette = isDark
-      ? ["#7DD3FC", "#5EEAD4", "#86EFAC", "#FDE68A", "#FDBA74"]
-      : ["#0F172A", "#0369A1", "#15803D", "#CA8A04", "#B45309"];
-    p.strokeWeight(1.4);
-  };
-
-  p.windowResized = () => {
-    const { width, height } = getCanvasSize();
-    p.resizeCanvas(width, height);
-    p.redraw();
-  };
+  attachResponsiveCanvas(p, {
+    onSetup: () => {
+      p.noLoop();
+      p.angleMode(p.DEGREES);
+      palette = isDark
+        ? ["#7DD3FC", "#5EEAD4", "#86EFAC", "#FDE68A", "#FDBA74"]
+        : ["#0F172A", "#0369A1", "#15803D", "#CA8A04", "#B45309"];
+      p.strokeWeight(1.4);
+    },
+    onResize: () => {
+      p.redraw();
+    },
+  });
 
   p.draw = () => {
     p.background(backgroundColor);

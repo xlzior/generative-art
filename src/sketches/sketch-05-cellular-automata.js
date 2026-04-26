@@ -1,4 +1,4 @@
-import { getCanvasSize } from "./canvas-size.js";
+import { attachResponsiveCanvas } from "./responsive-canvas.js";
 
 export default function cellularAutomata(p, theme = "light") {
   const cell = 8;
@@ -30,23 +30,20 @@ export default function cellularAutomata(p, theme = "light") {
     return total;
   }
 
-  p.setup = () => {
-    const { width, height } = getCanvasSize();
-    p.createCanvas(width, height);
-    cols = Math.floor(p.width / cell);
-    rows = Math.floor(p.height / cell);
-    board = randomBoard();
-    p.frameRate(12);
-    p.noStroke();
-  };
-
-  p.windowResized = () => {
-    const { width, height } = getCanvasSize();
-    p.resizeCanvas(width, height);
-    cols = Math.floor(p.width / cell);
-    rows = Math.floor(p.height / cell);
-    board = randomBoard();
-  };
+  attachResponsiveCanvas(p, {
+    onSetup: () => {
+      cols = Math.floor(p.width / cell);
+      rows = Math.floor(p.height / cell);
+      board = randomBoard();
+      p.frameRate(12);
+      p.noStroke();
+    },
+    onResize: () => {
+      cols = Math.floor(p.width / cell);
+      rows = Math.floor(p.height / cell);
+      board = randomBoard();
+    },
+  });
 
   p.draw = () => {
     p.background(...backgroundColor);
