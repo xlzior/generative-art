@@ -38,7 +38,9 @@ export function defineSketch(sketch) {
   }
 
   if (typeof create !== "function") {
-    throw new TypeError(`Sketch module ${id} must provide a create(context) function.`);
+    throw new TypeError(
+      `Sketch module ${id} must provide a create(context) function.`,
+    );
   }
 
   return Object.freeze(sketch);

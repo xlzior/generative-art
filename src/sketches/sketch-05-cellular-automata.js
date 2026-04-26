@@ -1,5 +1,5 @@
-import { attachResponsiveCanvas } from "./responsive-canvas.js";
-import { defineSketch } from "./defineSketch.js";
+import { attachResponsiveCanvas } from "../utils/responsive-canvas.js";
+import { defineSketch } from "../utils/defineSketch.js";
 
 export default defineSketch({
   id: "cellular-automata",

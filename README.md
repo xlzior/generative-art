@@ -43,7 +43,12 @@ Use the sketch selector and Regenerate button to quickly explore variations.
 
 ## Sketch contract
 
-The sketch contract is enforced in code by [src/sketches/defineSketch.js](src/sketches/defineSketch.js). App-shell changes should primarily touch shared helpers such as `src/sketches/canvas-size.js` and `src/sketches/responsive-canvas.js`, while each sketch only owns its own drawing logic and theme-aware styling.
+The sketch contract is enforced in code by [src/utils/defineSketch.js](src/utils/defineSketch.js). App-shell changes should primarily touch shared helpers such as [src/utils/canvas-size.js](src/utils/canvas-size.js) and [src/utils/responsive-canvas.js](src/utils/responsive-canvas.js), while each sketch only owns its own drawing logic and theme-aware styling.
+
+## Folder split
+
+- `src/sketches` contains artwork modules and the sketch registry.
+- `src/utils` contains shared helpers used by sketches and shell wiring.
 
 ## Next ideas to add
 
