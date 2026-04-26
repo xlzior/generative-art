@@ -1,0 +1,41 @@
+export default function gridVariations(p) {
+  const cellSize = 38;
+  const margin = 36;
+  let palette;
+
+  p.setup = () => {
+    const size = Math.min(window.innerWidth - 32, 980);
+    p.createCanvas(size, size * 0.7);
+    p.noLoop();
+    p.angleMode(p.DEGREES);
+    palette = ["#0F172A", "#0369A1", "#15803D", "#CA8A04", "#B45309"];
+    p.strokeWeight(1.4);
+  };
+
+  p.draw = () => {
+    p.background("#FCFBF7");
+
+    for (let y = margin; y < p.height - margin; y += cellSize) {
+      for (let x = margin; x < p.width - margin; x += cellSize) {
+        p.push();
+        p.translate(x + cellSize * 0.5, y + cellSize * 0.5);
+        p.rotate(Math.floor(p.random(4)) * 90);
+        p.noFill();
+        p.stroke(p.random(palette));
+
+        const mode = Math.floor(p.random(4));
+        if (mode === 0) {
+          p.line(-cellSize * 0.4, 0, cellSize * 0.4, 0);
+        } else if (mode === 1) {
+          p.arc(0, 0, cellSize * 0.8, cellSize * 0.8, 0, 90);
+        } else if (mode === 2) {
+          p.rectMode(p.CENTER);
+          p.square(0, 0, cellSize * p.random(0.2, 0.8));
+        } else {
+          p.circle(0, 0, cellSize * p.random(0.18, 0.7));
+        }
+        p.pop();
+      }
+    }
+  };
+}

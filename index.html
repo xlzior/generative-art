@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Generative Art Sketchbook</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/src/styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header>
+        <p class="eyebrow">Sketchbook</p>
+        <h1>Generative Art Playground</h1>
+        <p class="subtitle">
+          Study pattern, noise, recursion, and emergence through small focused
+          sketches.
+        </p>
+      </header>
+
+      <section class="controls" aria-label="Sketch controls">
+        <label for="sketch-select">Sketch</label>
+        <select id="sketch-select"></select>
+        <button id="regenerate" type="button">Regenerate</button>
+        <button id="save-frame" type="button">Save PNG</button>
+      </section>
+
+      <main>
+        <div id="canvas-container" aria-live="polite"></div>
+      </main>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
