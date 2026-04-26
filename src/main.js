@@ -174,7 +174,7 @@ function mountSketch(sketchId, options = {}) {
     (p) => sketch.create({ p, theme: currentTheme, params }),
     canvasContainerEl,
   );
-  document.title = `Generative Art - ${sketch.title}`;
+  document.title = sketch.title;
 }
 
 async function saveCurrentParamsAsDefaults() {
