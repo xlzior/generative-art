@@ -1,4 +1,7 @@
-export function getCanvasSize(containerId = "canvas-container", minSize = 320) {
+export function getCanvasSize(
+  containerId: string = "canvas-container",
+  minSize: number = 320,
+): { width: number; height: number } {
   const container = document.getElementById(containerId);
   return {
     width: Math.max(

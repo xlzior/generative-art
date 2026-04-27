@@ -1,16 +1,16 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { defineConfig } from "vite";
+import { defineConfig, PluginOption } from "vite";
 
 const projectRoot = path.dirname(fileURLToPath(import.meta.url));
 const sketchesRoot = path.resolve(projectRoot, "src/sketches");
 
-function readJsonBody(req) {
+function readJsonBody(req: any): Promise<Record<string, any>> {
   return new Promise((resolve, reject) => {
     let body = "";
 
-    req.on("data", (chunk) => {
+    req.on("data", (chunk: string) => {
       body += chunk;
       if (body.length > 2_000_000) {
         reject(new Error("Request body too large"));
@@ -29,7 +29,7 @@ function readJsonBody(req) {
   });
 }
 
-function isWithinSketchesRoot(filePath) {
+function isWithinSketchesRoot(filePath: string): boolean {
   const normalizedRoot = path.normalize(sketchesRoot + path.sep);
   const normalizedPath = path.normalize(filePath);
   return normalizedPath.startsWith(normalizedRoot);
@@ -51,12 +51,12 @@ export default defineConfig({
           createSaveDefaultsHandler(),
         );
       },
-    },
+    } as PluginOption,
   ],
 });
 
 function createSaveDefaultsHandler() {
-  return async (req, res, next) => {
+  return async (req: any, res: any, next: () => void) => {
     if (req.method !== "POST") {
       return next();
     }

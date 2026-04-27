@@ -1,5 +1,5 @@
-import { attachResponsiveCanvas } from "../../utils/responsive-canvas.js";
-import { defineSketch } from "../../utils/defineSketch.js";
+import { attachResponsiveCanvas } from "../../utils/responsive-canvas";
+import { defineSketch, SketchContext } from "../../utils/defineSketch";
 
 export default defineSketch({
   id: "l-system-plant",
@@ -18,8 +18,8 @@ export default defineSketch({
     { key: "shrinkFactor", label: "Shrink", min: 0.3, max: 0.8, step: 0.01 },
     { key: "strokeWeight", label: "Stroke", min: 0.2, max: 3, step: 0.05 },
   ],
-  create({ p, theme = "light", params }) {
-    const rules = {
+  create({ p, theme = "light", params }: SketchContext) {
+    const rules: Record<string, string> = {
       F: "FF+[+F-F-F]-[-F+F+F]",
     };
 
@@ -29,7 +29,7 @@ export default defineSketch({
     const backgroundColor = isDark ? "#060B0D" : "#F4F4F5";
     const strokeColor = isDark ? "#6EE7B7" : "#14532D";
 
-    function rebuild() {
+    function rebuild(): void {
       sentence = "F";
       segment = params.initialSegment;
       const iterations = Math.max(1, Math.floor(params.iterations));
@@ -57,22 +57,37 @@ export default defineSketch({
 
     p.draw = () => {
       p.background(backgroundColor);
-      p.translate(p.width * 0.5, p.height - 8);
       p.stroke(strokeColor);
       p.strokeWeight(params.strokeWeight);
+      p.noFill();
+      p.translate(p.width * 0.5, p.height);
 
       for (const ch of sentence) {
-        if (ch === "F") {
-          p.line(0, 0, 0, -segment);
-          p.translate(0, -segment);
-        } else if (ch === "+") {
-          p.rotate(params.turn);
-        } else if (ch === "-") {
-          p.rotate(-params.turn);
-        } else if (ch === "[") {
-          p.push();
-        } else if (ch === "]") {
-          p.pop();
+        switch (ch) {
+          case "F": {
+            p.line(0, 0, 0, -segment);
+            p.translate(0, -segment);
+            break;
+          }
+          case "+": {
+            p.rotate(params.turn);
+            break;
+          }
+          case "-": {
+            p.rotate(-params.turn);
+            break;
+          }
+          case "[": {
+            p.push();
+            break;
+          }
+          case "]": {
+            p.pop();
+            break;
+          }
+          default: {
+            break;
+          }
         }
       }
     };
