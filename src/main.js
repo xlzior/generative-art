@@ -7,49 +7,19 @@ import {
   RotateCcw,
   Save,
 } from "lucide";
-import { sketches } from "./sketches/index";
+import { sketches } from "./sketches/index.js";
 
-// Define types for sketches and parameters
-interface Sketch {
-  id: string;
-  title: string;
-  defaults: Record<string, number>;
-  parameters: Array<{
-    key: string;
-    label: string;
-    min: number;
-    max: number;
-    step?: number;
-  }>;
-  create: (
-    context: { p: p5; theme: string; params: Record<string, number> },
-  ) => void;
-  defaultsFile: string;
-}
-
-const selectEl = document.getElementById("sketch-select") as HTMLSelectElement;
-const regenerateEl = document.getElementById("regenerate") as HTMLButtonElement;
-const saveFrameEl = document.getElementById("save-frame") as HTMLButtonElement;
-const themeToggleEl = document.getElementById(
-  "theme-toggle",
-) as HTMLButtonElement;
-const themeToggleLabelEl = document.getElementById(
-  "theme-toggle-label",
-) as HTMLSpanElement;
-const resetParamsEl = document.getElementById(
-  "reset-params",
-) as HTMLButtonElement;
-const saveDefaultsEl = document.getElementById(
-  "save-defaults",
-) as HTMLButtonElement;
-const saveDefaultsLabelEl = document.getElementById(
-  "save-defaults-label",
-) as HTMLSpanElement;
-const saveStatusEl = document.getElementById("save-status") as HTMLDivElement;
-const paramsListEl = document.getElementById("params-list") as HTMLDivElement;
-const canvasContainerEl = document.getElementById(
-  "canvas-container",
-) as HTMLDivElement;
+const selectEl = document.getElementById("sketch-select");
+const regenerateEl = document.getElementById("regenerate");
+const saveFrameEl = document.getElementById("save-frame");
+const themeToggleEl = document.getElementById("theme-toggle");
+const themeToggleLabelEl = document.getElementById("theme-toggle-label");
+const resetParamsEl = document.getElementById("reset-params");
+const saveDefaultsEl = document.getElementById("save-defaults");
+const saveDefaultsLabelEl = document.getElementById("save-defaults-label");
+const saveStatusEl = document.getElementById("save-status");
+const paramsListEl = document.getElementById("params-list");
+const canvasContainerEl = document.getElementById("canvas-container");
 const prefersDark = window.matchMedia("(prefers-color-scheme: dark)");
 const rootEl = document.documentElement;
 
@@ -63,16 +33,16 @@ createIcons({
   },
 });
 
-let currentSketch: string = sketches[0].id;
-let currentP5: p5 | null = null;
-let currentTheme: string = "light";
-const paramsBySketch: Map<string, Record<string, number>> = new Map();
+let currentSketch = sketches[0].id;
+let currentP5 = null;
+let currentTheme = "light";
+const paramsBySketch = new Map();
 
-function getSketchById(sketchId: string): Sketch | undefined {
+function getSketchById(sketchId) {
   return sketches.find((entry) => entry.id === sketchId);
 }
 
-function resolveInitialSketch(): string {
+function resolveInitialSketch() {
   const params = new URLSearchParams(window.location.search);
   const sketchFromUrl = params.get("sketch");
 
@@ -83,27 +53,27 @@ function resolveInitialSketch(): string {
   return sketches[0].id;
 }
 
-function writeSketchToUrl(sketchId: string): void {
+function writeSketchToUrl(sketchId) {
   const url = new URL(window.location.href);
   url.searchParams.set("sketch", sketchId);
   window.history.replaceState({}, "", url);
 }
 
-function cloneDefaults(sketch: Sketch): Record<string, number> {
+function cloneDefaults(sketch) {
   return Object.fromEntries(
     Object.entries(sketch.defaults).map(([key, value]) => [key, Number(value)]),
   );
 }
 
-function getParamsForSketch(sketch: Sketch): Record<string, number> {
+function getParamsForSketch(sketch) {
   if (!paramsBySketch.has(sketch.id)) {
     paramsBySketch.set(sketch.id, cloneDefaults(sketch));
   }
 
-  return paramsBySketch.get(sketch.id)!;
+  return paramsBySketch.get(sketch.id);
 }
 
-function formatParamValue(value: number): string {
+function formatParamValue(value) {
   if (Number.isInteger(value)) {
     return String(value);
   }
@@ -114,7 +84,7 @@ function formatParamValue(value: number): string {
     .replace(/(\.\d*?)0+$/, "$1");
 }
 
-function renderSketchParameters(sketch: Sketch): void {
+function renderSketchParameters(sketch) {
   const params = getParamsForSketch(sketch);
   paramsListEl.innerHTML = "";
 
@@ -139,7 +109,7 @@ function renderSketchParameters(sketch: Sketch): void {
     input.value = String(params[parameter.key]);
 
     input.addEventListener("input", (event) => {
-      params[parameter.key] = Number((event.target as HTMLInputElement).value);
+      params[parameter.key] = Number(event.target.value);
       valueEl.textContent = formatParamValue(params[parameter.key]);
       mountSketch(currentSketch, { redrawControls: false });
     });
@@ -149,7 +119,7 @@ function renderSketchParameters(sketch: Sketch): void {
   }
 }
 
-function resolveInitialTheme(): string {
+function resolveInitialTheme() {
   const stored = window.localStorage.getItem("theme");
   if (stored === "light" || stored === "dark") {
     return stored;
@@ -157,7 +127,7 @@ function resolveInitialTheme(): string {
   return prefersDark.matches ? "dark" : "light";
 }
 
-function applyTheme(theme: string): void {
+function applyTheme(theme) {
   currentTheme = theme;
   rootEl.setAttribute("data-theme", theme);
 
@@ -170,7 +140,7 @@ function applyTheme(theme: string): void {
   }
 }
 
-function populateSketches(): void {
+function populateSketches() {
   for (const sketch of sketches) {
     const option = document.createElement("option");
     option.value = sketch.id;
@@ -179,10 +149,7 @@ function populateSketches(): void {
   }
 }
 
-function mountSketch(
-  sketchId: string,
-  options: { redrawControls?: boolean; updateUrl?: boolean } = {},
-): void {
+function mountSketch(sketchId, options = {}) {
   const { redrawControls = true, updateUrl = true } = options;
   const sketch = getSketchById(sketchId);
   if (!sketch) {
@@ -210,7 +177,7 @@ function mountSketch(
   document.title = sketch.title;
 }
 
-async function saveCurrentParamsAsDefaults(): Promise<void> {
+async function saveCurrentParamsAsDefaults() {
   const sketch = sketches.find((entry) => entry.id === currentSketch);
   if (!sketch) {
     return;
@@ -324,7 +291,7 @@ mountSketch(currentSketch);
 selectEl.value = currentSketch;
 
 selectEl.addEventListener("change", (event) => {
-  mountSketch((event.target as HTMLSelectElement).value);
+  mountSketch(event.target.value);
 });
 
 regenerateEl.addEventListener("click", () => {

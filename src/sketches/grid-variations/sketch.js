@@ -1,5 +1,5 @@
-import { attachResponsiveCanvas } from "../../utils/responsive-canvas";
-import { defineSketch, SketchContext } from "../../utils/defineSketch";
+import { attachResponsiveCanvas } from "../../utils/responsive-canvas.js";
+import { defineSketch } from "../../utils/defineSketch.js";
 
 export default defineSketch({
   id: "grid-variations",
@@ -10,8 +10,8 @@ export default defineSketch({
     { key: "margin", label: "Margin", min: 8, max: 120, step: 1 },
     { key: "strokeWeight", label: "Stroke", min: 0.4, max: 4, step: 0.1 },
   ],
-  create({ p, theme = "light", params }: SketchContext) {
-    let palette: string[];
+  create({ p, theme = "light", params }) {
+    let palette;
     const isDark = theme === "dark";
     const backgroundColor = isDark ? "#070B12" : "#FCFBF7";
 
@@ -48,23 +48,31 @@ export default defineSketch({
     });
 
     p.draw = () => {
-      const { cellSize, cols, rows, startX, startY } = getGridLayout();
       p.background(backgroundColor);
       p.strokeWeight(params.strokeWeight);
-      p.strokeCap(p.ROUND);
-      p.noFill();
+      const { cellSize, cols, rows, startX, startY } = getGridLayout();
 
       for (let row = 0; row < rows; row += 1) {
         for (let col = 0; col < cols; col += 1) {
-          const x = startX + col * cellSize;
-          const y = startY + row * cellSize;
-          const color = p.random(palette);
-          p.stroke(color);
+          const x = startX + col * cellSize + cellSize * 0.5;
+          const y = startY + row * cellSize + cellSize * 0.5;
           p.push();
-          p.translate(x + cellSize * 0.5, y + cellSize * 0.5);
-          p.rotate(p.random([0, 90, 180, 270]));
-          p.rectMode(p.CENTER);
-          p.square(0, 0, cellSize * 0.8);
+          p.translate(x, y);
+          p.rotate(Math.floor(p.random(4)) * 90);
+          p.noFill();
+          p.stroke(p.random(palette));
+
+          const mode = Math.floor(p.random(4));
+          if (mode === 0) {
+            p.line(-cellSize * 0.4, 0, cellSize * 0.4, 0);
+          } else if (mode === 1) {
+            p.arc(0, 0, cellSize * 0.8, cellSize * 0.8, 0, 90);
+          } else if (mode === 2) {
+            p.rectMode(p.CENTER);
+            p.square(0, 0, cellSize * p.random(0.2, 0.8));
+          } else {
+            p.circle(0, 0, cellSize * p.random(0.18, 0.7));
+          }
           p.pop();
         }
       }

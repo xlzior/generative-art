@@ -1,5 +1,5 @@
 const sketchEntries = Object.entries(
-  import.meta.glob("./*/sketch.ts", { eager: true }),
+  import.meta.glob("./*/sketch.js", { eager: true }),
 );
 
 const defaultsByFolder = Object.fromEntries(
@@ -24,7 +24,7 @@ const sketchModules = sketchEntries
       );
     }
 
-    const folderMatch = path.match(/^\.\/([^/]+)\/sketch\.ts$/);
+    const folderMatch = path.match(/^\.\/([^/]+)\/sketch\.js$/);
     if (!folderMatch) {
       throw new TypeError(`Sketch module path has invalid shape: ${path}`);
     }

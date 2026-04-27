@@ -1,12 +1,5 @@
-import { attachResponsiveCanvas } from "../../utils/responsive-canvas";
-import { defineSketch, SketchContext } from "../../utils/defineSketch";
-
-interface Particle {
-  x: number;
-  y: number;
-  age: number;
-  ttl: number;
-}
+import { attachResponsiveCanvas } from "../../utils/responsive-canvas.js";
+import { defineSketch } from "../../utils/defineSketch.js";
 
 export default defineSketch({
   id: "flow-field-particles",
@@ -28,13 +21,13 @@ export default defineSketch({
     { key: "trailAlpha", label: "Fade", min: 1, max: 80, step: 1 },
     { key: "strokeAlpha", label: "Line Alpha", min: 10, max: 255, step: 1 },
   ],
-  create({ p, theme = "light", params }: SketchContext) {
+  create({ p, theme = "light", params }) {
     const isDark = theme === "dark";
     const backgroundColor = isDark ? [11, 13, 14] : [248, 250, 252];
     const strokeBase = isDark ? [220, 227, 231] : [15, 23, 42];
-    let particles: Particle[] = [];
+    let particles = [];
 
-    function spawnParticle(): Particle {
+    function spawnParticle() {
       const ttlMin = Math.max(
         1,
         Math.floor(Math.min(params.ttlMin, params.ttlMax)),
@@ -51,57 +44,63 @@ export default defineSketch({
       };
     }
 
-    function resetParticles(): void {
+    function resetParticles() {
       const count = Math.max(1, Math.floor(params.particleCount));
       particles = Array.from({ length: count }, spawnParticle);
     }
 
     attachResponsiveCanvas(p, {
       onSetup: () => {
-        p.noLoop();
+        p.background(...backgroundColor);
+        p.strokeWeight(params.strokeWeight);
         resetParticles();
       },
       onResize: () => {
+        p.background(...backgroundColor);
+        p.strokeWeight(params.strokeWeight);
         resetParticles();
-        p.redraw();
       },
     });
 
     p.draw = () => {
-      p.background(backgroundColor);
-      p.strokeWeight(params.strokeWeight);
-      p.strokeJoin(p.ROUND);
-      p.noFill();
-
-      p.blendMode(p.BLEND);
-      p.fill(backgroundColor[0], backgroundColor[1], backgroundColor[2], params.trailAlpha);
+      p.fill(
+        backgroundColor[0],
+        backgroundColor[1],
+        backgroundColor[2],
+        params.trailAlpha,
+      );
+      p.noStroke();
       p.rect(0, 0, p.width, p.height);
 
-      p.blendMode(p.ADD);
-      p.stroke(strokeBase[0], strokeBase[1], strokeBase[2], params.strokeAlpha);
+      for (const part of particles) {
+        const angle =
+          p.noise(
+            part.x * params.noiseScale,
+            part.y * params.noiseScale,
+            p.frameCount * 0.002,
+          ) *
+          p.TWO_PI *
+          1.8;
+        const vx = Math.cos(angle) * params.stepSize;
+        const vy = Math.sin(angle) * params.stepSize;
 
-      const stepSize = Math.max(0.1, params.stepSize);
-      const noiseScale = Math.max(0.0001, params.noiseScale);
+        p.stroke(
+          strokeBase[0],
+          strokeBase[1],
+          strokeBase[2],
+          params.strokeAlpha,
+        );
+        p.strokeWeight(params.strokeWeight);
+        p.line(part.x, part.y, part.x + vx, part.y + vy);
 
-      for (const particle of particles) {
-        const angle = p.noise(particle.x * noiseScale, particle.y * noiseScale) * p.TWO_PI * 4;
-        const dx = Math.cos(angle) * stepSize;
-        const dy = Math.sin(angle) * stepSize;
+        part.x += vx;
+        part.y += vy;
+        part.age += 1;
 
-        p.line(particle.x, particle.y, particle.x + dx, particle.y + dy);
-
-        particle.x += dx;
-        particle.y += dy;
-        particle.age += 1;
-
-        if (
-          particle.age >= particle.ttl ||
-          particle.x < 0 ||
-          particle.x > p.width ||
-          particle.y < 0 ||
-          particle.y > p.height
-        ) {
-          Object.assign(particle, spawnParticle());
+        const out =
+          part.x < 0 || part.x > p.width || part.y < 0 || part.y > p.height;
+        if (out || part.age > part.ttl) {
+          Object.assign(part, spawnParticle());
         }
       }
     };

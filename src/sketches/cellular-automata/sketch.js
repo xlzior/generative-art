@@ -1,5 +1,5 @@
-import { attachResponsiveCanvas } from "../../utils/responsive-canvas";
-import { defineSketch, SketchContext } from "../../utils/defineSketch";
+import { attachResponsiveCanvas } from "../../utils/responsive-canvas.js";
+import { defineSketch } from "../../utils/defineSketch.js";
 
 export default defineSketch({
   id: "cellular-automata",
@@ -18,15 +18,15 @@ export default defineSketch({
     },
     { key: "cellPadding", label: "Cell Gap", min: 0, max: 4, step: 1 },
   ],
-  create({ p, theme = "light", params }: SketchContext) {
+  create({ p, theme = "light", params }) {
     const isDark = theme === "dark";
     const backgroundColor = isDark ? [9, 9, 11] : [248, 250, 252];
     const cellColor = isDark ? [110, 231, 183] : [5, 150, 105];
-    let cols: number;
-    let rows: number;
-    let board: number[][];
+    let cols;
+    let rows;
+    let board;
 
-    function randomBoard(): number[][] {
+    function randomBoard() {
       return Array.from({ length: rows }, () =>
         Array.from({ length: cols }, () =>
           p.random() < params.seedProbability ? 1 : 0,
@@ -34,7 +34,7 @@ export default defineSketch({
       );
     }
 
-    function resetBoard(): void {
+    function resetBoard() {
       const cellSize = Math.max(1, Math.floor(params.cellSize));
       cols = Math.max(1, Math.floor(p.width / cellSize));
       rows = Math.max(1, Math.floor(p.height / cellSize));
@@ -42,7 +42,7 @@ export default defineSketch({
       p.frameRate(Math.max(1, Math.floor(params.frameRate)));
     }
 
-    function countNeighbors(x: number, y: number): number {
+    function countNeighbors(x, y) {
       let total = 0;
       for (let yy = -1; yy <= 1; yy += 1) {
         for (let xx = -1; xx <= 1; xx += 1) {
@@ -59,43 +59,43 @@ export default defineSketch({
 
     attachResponsiveCanvas(p, {
       onSetup: () => {
-        p.noLoop();
+        p.noStroke();
         resetBoard();
       },
       onResize: () => {
         resetBoard();
-        p.redraw();
       },
     });
 
     p.draw = () => {
-      p.background(backgroundColor);
+      p.background(...backgroundColor);
+
       const cellSize = Math.max(1, Math.floor(params.cellSize));
-      const padding = Math.max(0, Math.floor(params.cellPadding));
-      const innerSize = Math.max(0, cellSize - padding);
+      const cellInset = Math.max(0, Math.floor(params.cellPadding));
+      const drawSize = Math.max(1, cellSize - cellInset);
 
       for (let y = 0; y < rows; y += 1) {
         for (let x = 0; x < cols; x += 1) {
           if (board[y][x] === 1) {
-            p.fill(cellColor);
-            p.noStroke();
-            p.rect(x * cellSize, y * cellSize, innerSize, innerSize);
+            p.fill(...cellColor);
+            p.rect(x * cellSize, y * cellSize, drawSize, drawSize);
           }
         }
       }
 
-      const next = board.map((row, y) =>
-        row.map((cell, x) => {
-          const neighbors = countNeighbors(x, y);
-          if (cell === 1 && (neighbors < 2 || neighbors > 3)) {
-            return 0;
+      const next = board.map((row) => row.slice());
+      for (let y = 0; y < rows; y += 1) {
+        for (let x = 0; x < cols; x += 1) {
+          const state = board[y][x];
+          const n = countNeighbors(x, y);
+
+          if (state === 1 && (n < 2 || n > 3)) {
+            next[y][x] = 0;
+          } else if (state === 0 && n === 3) {
+            next[y][x] = 1;
           }
-          if (cell === 0 && neighbors === 3) {
-            return 1;
-          }
-          return cell;
-        }),
-      );
+        }
+      }
 
       board = next;
 

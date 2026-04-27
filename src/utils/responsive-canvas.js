@@ -1,16 +1,9 @@
-import { getCanvasSize } from "./canvas-size";
-
-interface ResponsiveCanvasOptions {
-  containerId?: string;
-  minSize?: number;
-  onSetup?: (size: { width: number; height: number }) => void;
-  onResize?: (size: { width: number; height: number }) => void;
-}
+import { getCanvasSize } from "./canvas-size.js";
 
 export function attachResponsiveCanvas(
-  p: p5,
-  { containerId = "canvas-container", minSize = 320, onSetup, onResize }: ResponsiveCanvasOptions = {},
-): void {
+  p,
+  { containerId = "canvas-container", minSize = 320, onSetup, onResize } = {},
+) {
   function resolveSize() {
     return getCanvasSize(containerId, minSize);
   }

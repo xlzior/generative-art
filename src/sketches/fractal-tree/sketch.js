@@ -1,5 +1,5 @@
-import { attachResponsiveCanvas } from "../../utils/responsive-canvas";
-import { defineSketch, SketchContext } from "../../utils/defineSketch";
+import { attachResponsiveCanvas } from "../../utils/responsive-canvas.js";
+import { defineSketch } from "../../utils/defineSketch.js";
 
 export default defineSketch({
   id: "fractal-tree",
@@ -20,12 +20,12 @@ export default defineSketch({
     { key: "maxSpread", label: "Max Spread", min: 0.1, max: 0.8, step: 0.01 },
     { key: "strokeWeight", label: "Stroke", min: 0.4, max: 4, step: 0.05 },
   ],
-  create({ p, theme = "light", params }: SketchContext) {
+  create({ p, theme = "light", params }) {
     const isDark = theme === "dark";
     const backgroundColor = isDark ? "#0A0E15" : "#FCFBF7";
     const strokeColor = isDark ? "#E2E8F0" : "#1C1917";
 
-    function branch(x: number, y: number, length: number, angle: number, depth: number): void {
+    function branch(x, y, length, angle, depth) {
       if (depth <= 0 || length < 2) {
         return;
       }
@@ -72,10 +72,12 @@ export default defineSketch({
       p.background(backgroundColor);
       p.stroke(strokeColor);
       p.strokeWeight(params.strokeWeight);
-      p.noFill();
 
-      const baseLength = Math.max(2, p.height * params.baseLengthRatio);
-      branch(p.width * 0.5, p.height, baseLength, -90, Math.floor(params.depth));
+      const baseLength = p.height * params.baseLengthRatio;
+      const depth = Math.max(1, Math.floor(params.depth));
+      const startX = p.width * 0.5;
+      const startY = p.height - 24;
+      branch(startX, startY, baseLength, -p.HALF_PI, depth);
     };
   },
 });
