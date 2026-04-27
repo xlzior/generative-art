@@ -1,5 +1,6 @@
 import { attachResponsiveCanvas } from "../../utils/responsive-canvas.js";
 import { defineSketch } from "../../utils/defineSketch.js";
+import type { SketchContext } from "../../types/sketch.js";
 
 export default defineSketch({
   id: "fractal-tree",
@@ -20,12 +21,18 @@ export default defineSketch({
     { key: "maxSpread", label: "Max Spread", min: 0.1, max: 0.8, step: 0.01 },
     { key: "strokeWeight", label: "Stroke", min: 0.4, max: 4, step: 0.05 },
   ],
-  create({ p, theme = "light", params }) {
+  create({ p, theme = "light", params }: SketchContext) {
     const isDark = theme === "dark";
     const backgroundColor = isDark ? "#0A0E15" : "#FCFBF7";
     const strokeColor = isDark ? "#E2E8F0" : "#1C1917";
 
-    function branch(x, y, length, angle, depth) {
+    function branch(
+      x: number,
+      y: number,
+      length: number,
+      angle: number,
+      depth: number,
+    ): void {
       if (depth <= 0 || length < 2) {
         return;
       }

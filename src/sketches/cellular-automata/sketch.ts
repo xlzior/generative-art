@@ -1,5 +1,10 @@
 import { attachResponsiveCanvas } from "../../utils/responsive-canvas.js";
 import { defineSketch } from "../../utils/defineSketch.js";
+import type { SketchContext } from "../../types/sketch.js";
+
+interface Board {
+  [y: number]: number[];
+}
 
 export default defineSketch({
   id: "cellular-automata",
@@ -18,23 +23,27 @@ export default defineSketch({
     },
     { key: "cellPadding", label: "Cell Gap", min: 0, max: 4, step: 1 },
   ],
-  create({ p, theme = "light", params }) {
+  create({ p, theme = "light", params }: SketchContext) {
     const isDark = theme === "dark";
     const backgroundColor = isDark ? [9, 9, 11] : [248, 250, 252];
     const cellColor = isDark ? [110, 231, 183] : [5, 150, 105];
-    let cols;
-    let rows;
-    let board;
+    let cols: number;
+    let rows: number;
+    let board: Board;
 
-    function randomBoard() {
-      return Array.from({ length: rows }, () =>
-        Array.from({ length: cols }, () =>
-          p.random() < params.seedProbability ? 1 : 0,
-        ),
+    function randomBoard(): Board {
+      return Object.fromEntries(
+        Array.from({ length: rows }, (_, y) => [
+          y,
+          Array.from(
+            { length: cols },
+            () => p.random() < params.seedProbability ? 1 : 0,
+          ),
+        ]),
       );
     }
 
-    function resetBoard() {
+    function resetBoard(): void {
       const cellSize = Math.max(1, Math.floor(params.cellSize));
       cols = Math.max(1, Math.floor(p.width / cellSize));
       rows = Math.max(1, Math.floor(p.height / cellSize));
@@ -42,7 +51,7 @@ export default defineSketch({
       p.frameRate(Math.max(1, Math.floor(params.frameRate)));
     }
 
-    function countNeighbors(x, y) {
+    function countNeighbors(x: number, y: number): number {
       let total = 0;
       for (let yy = -1; yy <= 1; yy += 1) {
         for (let xx = -1; xx <= 1; xx += 1) {
@@ -83,7 +92,9 @@ export default defineSketch({
         }
       }
 
-      const next = board.map((row) => row.slice());
+      const next = Object.fromEntries(
+        Object.entries(board).map(([k, row]) => [k, [...row]]),
+      ) as Board;
       for (let y = 0; y < rows; y += 1) {
         for (let x = 0; x < cols; x += 1) {
           const state = board[y][x];

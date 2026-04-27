@@ -1,35 +1,9 @@
-/**
- * @typedef {Object} SketchContext
- * @property {import('p5')} p
- * @property {"light"|"dark"} theme
- * @property {Record<string, number>} params
- */
-
-/**
- * @typedef {Object} SketchParameter
- * @property {string} key
- * @property {string} label
- * @property {number} min
- * @property {number} max
- * @property {number} [step]
- */
-
-/**
- * @typedef {Object} SketchModule
- * @property {string} id
- * @property {string} title
- * @property {string} description
- * @property {SketchParameter[]} parameters
- * @property {(context: SketchContext) => void} create
- */
+import type { SketchModule } from "../types/sketch.js";
 
 /**
  * Validate and freeze a sketch module so the app shell can inject it safely.
- *
- * @param {SketchModule} sketch
- * @returns {Readonly<SketchModule>}
  */
-export function defineSketch(sketch) {
+export function defineSketch(sketch: SketchModule): Readonly<SketchModule> {
   if (!sketch || typeof sketch !== "object") {
     throw new TypeError("Sketch module must be an object.");
   }
@@ -52,7 +26,7 @@ export function defineSketch(sketch) {
     throw new TypeError(`Sketch module ${id} must provide a parameters array.`);
   }
 
-  const seenKeys = new Set();
+  const seenKeys = new Set<string>();
   for (const parameter of parameters) {
     if (!parameter || typeof parameter !== "object") {
       throw new TypeError(
@@ -102,7 +76,7 @@ export function defineSketch(sketch) {
 
   if (typeof create !== "function") {
     throw new TypeError(
-      `Sketch module ${id} must provide a create(context) function.`,
+      `Sketch module ${id} must provide a create function.`,
     );
   }
 

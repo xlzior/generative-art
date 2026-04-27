@@ -1,5 +1,13 @@
 import { attachResponsiveCanvas } from "../../utils/responsive-canvas.js";
 import { defineSketch } from "../../utils/defineSketch.js";
+import type { SketchContext } from "../../types/sketch.js";
+
+interface Particle {
+  x: number;
+  y: number;
+  age: number;
+  ttl: number;
+}
 
 export default defineSketch({
   id: "flow-field-particles",
@@ -21,13 +29,17 @@ export default defineSketch({
     { key: "trailAlpha", label: "Fade", min: 1, max: 80, step: 1 },
     { key: "strokeAlpha", label: "Line Alpha", min: 10, max: 255, step: 1 },
   ],
-  create({ p, theme = "light", params }) {
+  create({ p, theme = "light", params }: SketchContext) {
     const isDark = theme === "dark";
-    const backgroundColor = isDark ? [11, 13, 14] : [248, 250, 252];
-    const strokeBase = isDark ? [220, 227, 231] : [15, 23, 42];
-    let particles = [];
+    const backgroundColor: [number, number, number] = isDark
+      ? [11, 13, 14]
+      : [248, 250, 252];
+    const strokeBase: [number, number, number] = isDark
+      ? [220, 227, 231]
+      : [15, 23, 42];
+    let particles: Particle[] = [];
 
-    function spawnParticle() {
+    function spawnParticle(): Particle {
       const ttlMin = Math.max(
         1,
         Math.floor(Math.min(params.ttlMin, params.ttlMax)),
@@ -44,7 +56,7 @@ export default defineSketch({
       };
     }
 
-    function resetParticles() {
+    function resetParticles(): void {
       const count = Math.max(1, Math.floor(params.particleCount));
       particles = Array.from({ length: count }, spawnParticle);
     }
@@ -73,12 +85,11 @@ export default defineSketch({
       p.rect(0, 0, p.width, p.height);
 
       for (const part of particles) {
-        const angle =
-          p.noise(
-            part.x * params.noiseScale,
-            part.y * params.noiseScale,
-            p.frameCount * 0.002,
-          ) *
+        const angle = p.noise(
+          part.x * params.noiseScale,
+          part.y * params.noiseScale,
+          p.frameCount * 0.002,
+        ) *
           p.TWO_PI *
           1.8;
         const vx = Math.cos(angle) * params.stepSize;
@@ -97,8 +108,8 @@ export default defineSketch({
         part.y += vy;
         part.age += 1;
 
-        const out =
-          part.x < 0 || part.x > p.width || part.y < 0 || part.y > p.height;
+        const out = part.x < 0 || part.x > p.width || part.y < 0 ||
+          part.y > p.height;
         if (out || part.age > part.ttl) {
           Object.assign(part, spawnParticle());
         }

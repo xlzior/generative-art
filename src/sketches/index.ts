@@ -1,10 +1,18 @@
+import type { SketchModuleWithDefaults } from "../types/sketch.js";
+
 const sketchEntries = Object.entries(
-  import.meta.glob("./*/sketch.js", { eager: true }),
+  import.meta.glob<{ default: SketchModuleWithDefaults }>(
+    "./*/sketch.ts",
+    { eager: true },
+  ),
 );
 
 const defaultsByFolder = Object.fromEntries(
   Object.entries(
-    import.meta.glob("./*/defaults.json", { eager: true, import: "default" }),
+    import.meta.glob<Record<string, number>>(
+      "./*/defaults.json",
+      { eager: true, import: "default" },
+    ),
   )
     .map(([path, defaults]) => {
       const match = path.match(/^\.\/([^/]+)\/defaults\.json$/);
@@ -13,7 +21,9 @@ const defaultsByFolder = Object.fromEntries(
       }
       return [match[1], defaults];
     })
-    .filter(Boolean),
+    .filter((entry): entry is [string, Record<string, number>] =>
+      entry !== null
+    ),
 );
 
 const sketchModules = sketchEntries
@@ -24,7 +34,7 @@ const sketchModules = sketchEntries
       );
     }
 
-    const folderMatch = path.match(/^\.\/([^/]+)\/sketch\.js$/);
+    const folderMatch = path.match(/^\.\/([^/]+)\/sketch\.ts$/);
     if (!folderMatch) {
       throw new TypeError(`Sketch module path has invalid shape: ${path}`);
     }
@@ -60,7 +70,7 @@ const sketchModules = sketchEntries
   })
   .sort((a, b) => a.filePath.localeCompare(b.filePath));
 
-const seenIds = new Set();
+const seenIds = new Set<string>();
 for (const sketch of sketchModules) {
   if (seenIds.has(sketch.id)) {
     throw new Error(`Duplicate sketch id detected: ${sketch.id}`);
@@ -68,4 +78,4 @@ for (const sketch of sketchModules) {
   seenIds.add(sketch.id);
 }
 
-export const sketches = sketchModules;
+export const sketches: SketchModuleWithDefaults[] = sketchModules;

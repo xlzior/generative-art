@@ -1,9 +1,16 @@
 import { getCanvasSize } from "./canvas-size.js";
+import type p5 from "p5";
+import type { ResponsiveCanvasOptions } from "../types/sketch.js";
 
 export function attachResponsiveCanvas(
-  p,
-  { containerId = "canvas-container", minSize = 320, onSetup, onResize } = {},
-) {
+  p: p5,
+  {
+    containerId = "canvas-container",
+    minSize = 320,
+    onSetup,
+    onResize,
+  }: ResponsiveCanvasOptions = {},
+): void {
   function resolveSize() {
     return getCanvasSize(containerId, minSize);
   }

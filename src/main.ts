@@ -8,18 +8,33 @@ import {
   Save,
 } from "lucide";
 import { sketches } from "./sketches/index.js";
+import type { SketchModuleWithDefaults, Theme } from "./types/sketch.js";
 
-const selectEl = document.getElementById("sketch-select");
-const regenerateEl = document.getElementById("regenerate");
-const saveFrameEl = document.getElementById("save-frame");
-const themeToggleEl = document.getElementById("theme-toggle");
-const themeToggleLabelEl = document.getElementById("theme-toggle-label");
-const resetParamsEl = document.getElementById("reset-params");
-const saveDefaultsEl = document.getElementById("save-defaults");
-const saveDefaultsLabelEl = document.getElementById("save-defaults-label");
-const saveStatusEl = document.getElementById("save-status");
-const paramsListEl = document.getElementById("params-list");
-const canvasContainerEl = document.getElementById("canvas-container");
+const selectEl = document.getElementById("sketch-select") as HTMLSelectElement;
+const regenerateEl = document.getElementById("regenerate") as HTMLButtonElement;
+const saveFrameEl = document.getElementById("save-frame") as HTMLButtonElement;
+const themeToggleEl = document.getElementById(
+  "theme-toggle",
+) as HTMLButtonElement;
+const themeToggleLabelEl = document.getElementById(
+  "theme-toggle-label",
+) as HTMLElement;
+const resetParamsEl = document.getElementById(
+  "reset-params",
+) as HTMLButtonElement;
+const saveDefaultsEl = document.getElementById(
+  "save-defaults",
+) as HTMLButtonElement;
+const saveDefaultsLabelEl = document.getElementById(
+  "save-defaults-label",
+) as HTMLElement;
+const saveStatusEl = document.getElementById(
+  "save-status",
+) as HTMLElement;
+const paramsListEl = document.getElementById("params-list") as HTMLElement;
+const canvasContainerEl = document.getElementById(
+  "canvas-container",
+) as HTMLElement;
 const prefersDark = window.matchMedia("(prefers-color-scheme: dark)");
 const rootEl = document.documentElement;
 
@@ -34,15 +49,15 @@ createIcons({
 });
 
 let currentSketch = sketches[0].id;
-let currentP5 = null;
-let currentTheme = "light";
-const paramsBySketch = new Map();
+let currentP5: p5 | null = null;
+let currentTheme: Theme = "light";
+const paramsBySketch = new Map<string, Record<string, number>>();
 
-function getSketchById(sketchId) {
+function getSketchById(sketchId: string): SketchModuleWithDefaults | undefined {
   return sketches.find((entry) => entry.id === sketchId);
 }
 
-function resolveInitialSketch() {
+function resolveInitialSketch(): string {
   const params = new URLSearchParams(window.location.search);
   const sketchFromUrl = params.get("sketch");
 
@@ -53,27 +68,31 @@ function resolveInitialSketch() {
   return sketches[0].id;
 }
 
-function writeSketchToUrl(sketchId) {
+function writeSketchToUrl(sketchId: string): void {
   const url = new URL(window.location.href);
   url.searchParams.set("sketch", sketchId);
   window.history.replaceState({}, "", url);
 }
 
-function cloneDefaults(sketch) {
+function cloneDefaults(
+  sketch: SketchModuleWithDefaults,
+): Record<string, number> {
   return Object.fromEntries(
     Object.entries(sketch.defaults).map(([key, value]) => [key, Number(value)]),
   );
 }
 
-function getParamsForSketch(sketch) {
+function getParamsForSketch(
+  sketch: SketchModuleWithDefaults,
+): Record<string, number> {
   if (!paramsBySketch.has(sketch.id)) {
     paramsBySketch.set(sketch.id, cloneDefaults(sketch));
   }
 
-  return paramsBySketch.get(sketch.id);
+  return paramsBySketch.get(sketch.id)!;
 }
 
-function formatParamValue(value) {
+function formatParamValue(value: number): string {
   if (Number.isInteger(value)) {
     return String(value);
   }
@@ -84,7 +103,7 @@ function formatParamValue(value) {
     .replace(/(\.\d*?)0+$/, "$1");
 }
 
-function renderSketchParameters(sketch) {
+function renderSketchParameters(sketch: SketchModuleWithDefaults): void {
   const params = getParamsForSketch(sketch);
   paramsListEl.innerHTML = "";
 
@@ -109,7 +128,8 @@ function renderSketchParameters(sketch) {
     input.value = String(params[parameter.key]);
 
     input.addEventListener("input", (event) => {
-      params[parameter.key] = Number(event.target.value);
+      const target = event.target as HTMLInputElement;
+      params[parameter.key] = Number(target.value);
       valueEl.textContent = formatParamValue(params[parameter.key]);
       mountSketch(currentSketch, { redrawControls: false });
     });
@@ -119,7 +139,7 @@ function renderSketchParameters(sketch) {
   }
 }
 
-function resolveInitialTheme() {
+function resolveInitialTheme(): Theme {
   const stored = window.localStorage.getItem("theme");
   if (stored === "light" || stored === "dark") {
     return stored;
@@ -127,7 +147,7 @@ function resolveInitialTheme() {
   return prefersDark.matches ? "dark" : "light";
 }
 
-function applyTheme(theme) {
+function applyTheme(theme: Theme): void {
   currentTheme = theme;
   rootEl.setAttribute("data-theme", theme);
 
@@ -140,7 +160,7 @@ function applyTheme(theme) {
   }
 }
 
-function populateSketches() {
+function populateSketches(): void {
   for (const sketch of sketches) {
     const option = document.createElement("option");
     option.value = sketch.id;
@@ -149,7 +169,15 @@ function populateSketches() {
   }
 }
 
-function mountSketch(sketchId, options = {}) {
+interface MountSketchOptions {
+  redrawControls?: boolean;
+  updateUrl?: boolean;
+}
+
+function mountSketch(
+  sketchId: string,
+  options: MountSketchOptions = {},
+): void {
   const { redrawControls = true, updateUrl = true } = options;
   const sketch = getSketchById(sketchId);
   if (!sketch) {
@@ -177,7 +205,7 @@ function mountSketch(sketchId, options = {}) {
   document.title = sketch.title;
 }
 
-async function saveCurrentParamsAsDefaults() {
+async function saveCurrentParamsAsDefaults(): Promise<void> {
   const sketch = sketches.find((entry) => entry.id === currentSketch);
   if (!sketch) {
     return;
@@ -218,8 +246,8 @@ async function saveCurrentParamsAsDefaults() {
       const contentType = response.headers.get("content-type") || "";
 
       if (contentType.includes("application/json")) {
-        const payload = await response.json();
-        message = payload?.message || message;
+        const data = await response.json() as { message?: string };
+        message = data.message || message;
       } else {
         const text = await response.text();
         if (text) {
@@ -283,6 +311,7 @@ async function saveCurrentParamsAsDefaults() {
   }
 }
 
+// Initialize
 applyTheme(resolveInitialTheme());
 populateSketches();
 currentSketch = resolveInitialSketch();
@@ -291,7 +320,8 @@ mountSketch(currentSketch);
 selectEl.value = currentSketch;
 
 selectEl.addEventListener("change", (event) => {
-  mountSketch(event.target.value);
+  const target = event.target as HTMLSelectElement;
+  mountSketch(target.value);
 });
 
 regenerateEl.addEventListener("click", () => {

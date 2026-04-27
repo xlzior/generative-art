@@ -1,5 +1,6 @@
 import { attachResponsiveCanvas } from "../../utils/responsive-canvas.js";
 import { defineSketch } from "../../utils/defineSketch.js";
+import type { SketchContext } from "../../types/sketch.js";
 
 export default defineSketch({
   id: "grid-variations",
@@ -10,12 +11,20 @@ export default defineSketch({
     { key: "margin", label: "Margin", min: 8, max: 120, step: 1 },
     { key: "strokeWeight", label: "Stroke", min: 0.4, max: 4, step: 0.1 },
   ],
-  create({ p, theme = "light", params }) {
-    let palette;
+  create({ p, theme = "light", params }: SketchContext) {
+    let palette: string[];
     const isDark = theme === "dark";
     const backgroundColor = isDark ? "#070B12" : "#FCFBF7";
 
-    function getGridLayout() {
+    interface GridLayout {
+      cellSize: number;
+      cols: number;
+      rows: number;
+      startX: number;
+      startY: number;
+    }
+
+    function getGridLayout(): GridLayout {
       const cellSize = Math.max(4, Math.floor(params.cellSize));
       const margin = Math.max(0, params.margin);
       const innerWidth = Math.max(0, p.width - margin * 2);

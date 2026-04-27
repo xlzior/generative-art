@@ -1,5 +1,10 @@
 import { attachResponsiveCanvas } from "../../utils/responsive-canvas.js";
 import { defineSketch } from "../../utils/defineSketch.js";
+import type { SketchContext } from "../../types/sketch.js";
+
+interface Rules {
+  [key: string]: string;
+}
 
 export default defineSketch({
   id: "l-system-plant",
@@ -18,8 +23,8 @@ export default defineSketch({
     { key: "shrinkFactor", label: "Shrink", min: 0.3, max: 0.8, step: 0.01 },
     { key: "strokeWeight", label: "Stroke", min: 0.2, max: 3, step: 0.05 },
   ],
-  create({ p, theme = "light", params }) {
-    const rules = {
+  create({ p, theme = "light", params }: SketchContext) {
+    const rules: Rules = {
       F: "FF+[+F-F-F]-[-F+F+F]",
     };
 
@@ -29,7 +34,7 @@ export default defineSketch({
     const backgroundColor = isDark ? "#060B0D" : "#F4F4F5";
     const strokeColor = isDark ? "#6EE7B7" : "#14532D";
 
-    function rebuild() {
+    function rebuild(): void {
       sentence = "F";
       segment = params.initialSegment;
       const iterations = Math.max(1, Math.floor(params.iterations));

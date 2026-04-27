@@ -2,15 +2,21 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vite";
+import type { IncomingMessage, ServerResponse } from "node:http";
 
 const projectRoot = path.dirname(fileURLToPath(import.meta.url));
 const sketchesRoot = path.resolve(projectRoot, "src/sketches");
 
-function readJsonBody(req) {
+interface DefaultsPayload {
+  defaultsFile: string;
+  defaults: Record<string, number>;
+}
+
+function readJsonBody(req: IncomingMessage): Promise<DefaultsPayload> {
   return new Promise((resolve, reject) => {
     let body = "";
 
-    req.on("data", (chunk) => {
+    req.on("data", (chunk: Buffer) => {
       body += chunk;
       if (body.length > 2_000_000) {
         reject(new Error("Request body too large"));
@@ -29,34 +35,18 @@ function readJsonBody(req) {
   });
 }
 
-function isWithinSketchesRoot(filePath) {
+function isWithinSketchesRoot(filePath: string): boolean {
   const normalizedRoot = path.normalize(sketchesRoot + path.sep);
   const normalizedPath = path.normalize(filePath);
   return normalizedPath.startsWith(normalizedRoot);
 }
 
-export default defineConfig({
-  plugins: [
-    {
-      name: "save-sketch-defaults",
-      configureServer(server) {
-        server.middlewares.use(
-          "/__sketch-defaults",
-          createSaveDefaultsHandler(),
-        );
-      },
-      configurePreviewServer(server) {
-        server.middlewares.use(
-          "/__sketch-defaults",
-          createSaveDefaultsHandler(),
-        );
-      },
-    },
-  ],
-});
-
 function createSaveDefaultsHandler() {
-  return async (req, res, next) => {
+  return async (
+    req: IncomingMessage,
+    res: ServerResponse,
+    next: () => void,
+  ): Promise<undefined> => {
     if (req.method !== "POST") {
       return next();
     }
@@ -97,20 +87,20 @@ function createSaveDefaultsHandler() {
       res.setHeader("Content-Type", "application/json");
       res.end(JSON.stringify({ ok: true }));
     } catch (error) {
-      const statusCode =
-        error &&
-        typeof error === "object" &&
-        "code" in error &&
-        error.code === "EACCES"
-          ? 403
-          : 400;
+      const statusCode = error &&
+          typeof error === "object" &&
+          "code" in error &&
+          (error as NodeJS.ErrnoException).code === "EACCES"
+        ? 403
+        : 400;
       res.statusCode = statusCode;
       res.setHeader("Content-Type", "application/json");
       res.end(
         JSON.stringify({
           ok: false,
-          message:
-            error instanceof Error ? error.message : "Failed to save defaults",
+          message: error instanceof Error
+            ? error.message
+            : "Failed to save defaults",
         }),
       );
     }
@@ -118,3 +108,23 @@ function createSaveDefaultsHandler() {
     return undefined;
   };
 }
+
+export default defineConfig({
+  plugins: [
+    {
+      name: "save-sketch-defaults",
+      configureServer(server) {
+        server.middlewares.use(
+          "/__sketch-defaults",
+          createSaveDefaultsHandler(),
+        );
+      },
+      configurePreviewServer(server) {
+        server.middlewares.use(
+          "/__sketch-defaults",
+          createSaveDefaultsHandler(),
+        );
+      },
+    },
+  ],
+});

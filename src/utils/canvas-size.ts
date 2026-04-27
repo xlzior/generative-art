@@ -1,4 +1,9 @@
-export function getCanvasSize(containerId = "canvas-container", minSize = 320) {
+import type { CanvasSize } from "../types/sketch.js";
+
+export function getCanvasSize(
+  containerId: string = "canvas-container",
+  minSize: number = 320,
+): CanvasSize {
   const container = document.getElementById(containerId);
   return {
     width: Math.max(
