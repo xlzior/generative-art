@@ -1,0 +1,6 @@
+{
+  "totalCircles": 5000,
+  "radiusMin": 5,
+  "radiusMax": 30,
+  "opacity": 180
+}
