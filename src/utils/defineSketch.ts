@@ -8,7 +8,7 @@ export function defineSketch(sketch: SketchModule): Readonly<SketchModule> {
     throw new TypeError("Sketch module must be an object.");
   }
 
-  const { id, title, description, parameters, create } = sketch;
+  const { id, title, description, date, parameters, create } = sketch;
 
   if (typeof id !== "string" || id.trim() === "") {
     throw new TypeError("Sketch module id must be a non-empty string.");
@@ -20,6 +20,10 @@ export function defineSketch(sketch: SketchModule): Readonly<SketchModule> {
 
   if (typeof description !== "string" || description.trim() === "") {
     throw new TypeError(`Sketch module ${id} is missing a description.`);
+  }
+
+  if (typeof date !== "string" || date.trim() === "") {
+    throw new TypeError(`Sketch module ${id} is missing a date.`);
   }
 
   if (!Array.isArray(parameters)) {

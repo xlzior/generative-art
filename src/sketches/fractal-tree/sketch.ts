@@ -6,6 +6,7 @@ export default defineSketch({
   id: "fractal-tree",
   title: "Fractal Tree",
   description: "Recursive branching with angle jitter.",
+  date: "2026-04-26",
   parameters: [
     { key: "depth", label: "Depth", min: 4, max: 14, step: 1 },
     {

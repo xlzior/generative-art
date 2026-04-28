@@ -68,7 +68,14 @@ const sketchModules = sketchEntries
       filePath: path,
     };
   })
-  .sort((a, b) => a.filePath.localeCompare(b.filePath));
+  .sort((a, b) => {
+    const dateComparison = b.date.localeCompare(a.date);
+    if (dateComparison !== 0) {
+      return dateComparison;
+    }
+
+    return a.title.localeCompare(b.title);
+  });
 
 const seenIds = new Set<string>();
 for (const sketch of sketchModules) {

@@ -8,6 +8,7 @@ export default defineSketch({
   title: "Mona Lisa Circles",
   description:
     "Random circles colored by the Mona Lisa painting at their coordinates.",
+  date: "2026-04-27",
   parameters: [
     {
       key: "totalCircles",

@@ -13,6 +13,7 @@ export default defineSketch({
   id: "flow-field-particles",
   title: "Flow Field Particles",
   description: "Particle trails following a noise-driven vector field.",
+  date: "2026-04-26",
   parameters: [
     { key: "particleCount", label: "Particles", min: 100, max: 5000, step: 50 },
     { key: "stepSize", label: "Step Size", min: 0.2, max: 4, step: 0.1 },

@@ -20,6 +20,7 @@ export interface SketchModule {
   id: string;
   title: string;
   description: string;
+  date: string;
   parameters: SketchParameter[];
   create: (context: SketchContext) => void;
 }

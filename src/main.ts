@@ -164,7 +164,7 @@ function populateSketches(): void {
   for (const sketch of sketches) {
     const option = document.createElement("option");
     option.value = sketch.id;
-    option.textContent = sketch.title;
+    option.textContent = `${sketch.date} - ${sketch.title}`;
     selectEl.append(option);
   }
 }

@@ -10,6 +10,7 @@ export default defineSketch({
   id: "cellular-automata",
   title: "Cellular Automata",
   description: "A Game of Life variant with periodic reseeding.",
+  date: "2026-04-26",
   parameters: [
     { key: "cellSize", label: "Cell Size", min: 3, max: 20, step: 1 },
     { key: "seedProbability", label: "Seed", min: 0.05, max: 0.9, step: 0.01 },

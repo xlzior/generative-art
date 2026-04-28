@@ -6,6 +6,7 @@ export default defineSketch({
   id: "grid-variations",
   title: "Grid Variations",
   description: "Controlled randomness on a geometric grid.",
+  date: "2026-04-26",
   parameters: [
     { key: "cellSize", label: "Cell Size", min: 16, max: 96, step: 1 },
     { key: "margin", label: "Margin", min: 8, max: 120, step: 1 },

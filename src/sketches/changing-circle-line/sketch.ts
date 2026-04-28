@@ -7,6 +7,7 @@ export default defineSketch({
   title: "Changing Circle Line",
   description:
     "Circles along a line with sizes that increase and randomly reverse direction.",
+  date: "2026-04-27",
   parameters: [
     { key: "spacing", label: "Spacing", min: 5, max: 60, step: 1 },
     {
