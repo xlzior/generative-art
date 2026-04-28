@@ -37,7 +37,14 @@ export default defineSketch({
       max: 50,
       step: 1,
     },
-    { key: "curviness", label: "Curviness", min: 0.1, max: 2, step: 0.1 },
+    { key: "numPoints", label: "Control Points", min: 4, max: 20, step: 1 },
+    {
+      key: "curveIterations",
+      label: "Curve Smoothness",
+      min: 1,
+      max: 6,
+      step: 1,
+    },
     { key: "strokeWeight", label: "Stroke", min: 0.5, max: 4, step: 0.25 },
   ],
   create({ p, theme = "light", params }: SketchContext) {
@@ -59,69 +66,80 @@ export default defineSketch({
     p.draw = () => {
       p.background(backgroundColor);
 
-      // Generate wandering curved path using Perlin noise
-      const curvePoints: Array<{ x: number; y: number }> = [];
-      const spacing = Math.max(1, params.spacing);
-      const maxPathLength = Math.hypot(p.width, p.height) * 2;
-      const numPoints = Math.floor(maxPathLength / spacing);
+      const margin = 50;
+      const numControlPoints = Math.floor(params.numPoints);
+      const numIterations = Math.floor(params.curveIterations);
 
-      const padding = 50;
-      // Randomize starting point
-      let x = p.random(padding, p.width - padding);
-      let y = p.random(padding, p.height - padding);
-
-      // Random seed for Perlin noise to change direction each time
-      const noiseSeed = p.random(10000);
-
-      for (let i = 0; i < numPoints; i += 1) {
-        // Calculate velocity from Perlin noise with random seed
-        const angle = p.noise(x * 0.003, y * 0.003, i * 0.02 + noiseSeed) * p.TWO_PI *
-          params.curviness;
-        const stepSize = spacing * 0.8;
-        let velX = Math.cos(angle) * stepSize;
-        let velY = Math.sin(angle) * stepSize;
-
-        // Calculate distance to walls
-        const distToLeft = x - padding;
-        const distToRight = p.width - padding - x;
-        const distToTop = y - padding;
-        const distToBottom = p.height - padding - y;
-
-        const repelDistance = 100;
-
-        // Repel from left wall
-        if (distToLeft < repelDistance) {
-          const strength = 1 - distToLeft / repelDistance;
-          velX += strength * stepSize * 1.5;
-        }
-        // Repel from right wall
-        if (distToRight < repelDistance) {
-          const strength = 1 - distToRight / repelDistance;
-          velX -= strength * stepSize * 1.5;
-        }
-        // Repel from top wall
-        if (distToTop < repelDistance) {
-          const strength = 1 - distToTop / repelDistance;
-          velY += strength * stepSize * 1.5;
-        }
-        // Repel from bottom wall
-        if (distToBottom < repelDistance) {
-          const strength = 1 - distToBottom / repelDistance;
-          velY -= strength * stepSize * 1.5;
-        }
-
-        // Move along the calculated velocity
-        x += velX;
-        y += velY;
-
-        // Hard clamp to bounds as safety measure
-        x = Math.max(padding, Math.min(p.width - padding, x));
-        y = Math.max(padding, Math.min(p.height - padding, y));
-
-        curvePoints.push({ x, y });
+      // Step 1: Generate random control points within margins
+      const controlPoints: Array<{ x: number; y: number }> = [];
+      for (let i = 0; i < numControlPoints; i += 1) {
+        controlPoints.push({
+          x: p.random(margin, p.width - margin),
+          y: p.random(margin, p.height - margin),
+        });
       }
 
-      // Draw curve line
+      // Step 2: Apply Chaikin's algorithm for curve smoothing
+      let curvePoints = [...controlPoints];
+      for (let iteration = 0; iteration < numIterations; iteration += 1) {
+        const smoothed: Array<{ x: number; y: number }> = [];
+        for (let i = 0; i < curvePoints.length; i += 1) {
+          const curr = curvePoints[i];
+          const next = curvePoints[(i + 1) % curvePoints.length];
+
+          // Chaikin's algorithm: create two new points at 1/4 and 3/4 of the segment
+          const q = {
+            x: curr.x * 0.75 + next.x * 0.25,
+            y: curr.y * 0.75 + next.y * 0.25,
+          };
+          const r = {
+            x: curr.x * 0.25 + next.x * 0.75,
+            y: curr.y * 0.25 + next.y * 0.75,
+          };
+
+          smoothed.push(q);
+          smoothed.push(r);
+        }
+        curvePoints = smoothed;
+      }
+
+      // Step 3: Sample the curve at regular intervals for circle placement
+      const sampledPoints: Array<{ x: number; y: number }> = [];
+      const spacing = Math.max(1, params.spacing);
+
+      // Calculate distances along the curve
+      let cumulativeDistance = 0;
+      const distances = [0];
+
+      for (let i = 1; i < curvePoints.length; i += 1) {
+        const dx = curvePoints[i].x - curvePoints[i - 1].x;
+        const dy = curvePoints[i].y - curvePoints[i - 1].y;
+        cumulativeDistance += Math.hypot(dx, dy);
+        distances.push(cumulativeDistance);
+      }
+
+      const totalDistance = cumulativeDistance;
+
+      // Sample points at regular intervals
+      for (let d = 0; d <= totalDistance; d += spacing) {
+        let idx = 0;
+        while (idx < distances.length - 1 && distances[idx + 1] < d) {
+          idx += 1;
+        }
+
+        const t = idx < distances.length - 1
+          ? (d - distances[idx]) / (distances[idx + 1] - distances[idx])
+          : 0;
+
+        const point = {
+          x: p.lerp(curvePoints[idx].x, curvePoints[idx + 1].x, t),
+          y: p.lerp(curvePoints[idx].y, curvePoints[idx + 1].y, t),
+        };
+
+        sampledPoints.push(point);
+      }
+
+      // Draw the curve line
       p.stroke(strokeColor);
       p.noFill();
       p.strokeWeight(params.strokeWeight);
@@ -129,13 +147,13 @@ export default defineSketch({
       for (const point of curvePoints) {
         p.vertex(point.x, point.y);
       }
-      p.endShape();
+      p.endShape(p.CLOSE);
 
-      // Draw circles along the curve
+      // Draw circles along the sampled curve
       let radius = params.initialRadius;
       let direction = 1; // 1 for increasing, -1 for decreasing
 
-      for (const point of curvePoints) {
+      for (const point of sampledPoints) {
         // Draw circle
         p.fill(fillColor);
         p.stroke(strokeColor);

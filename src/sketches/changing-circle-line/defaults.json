@@ -4,6 +4,7 @@
   "maxRadius": 60,
   "radiusIncrement": 1.5,
   "reverseProbability": 5,
-  "curviness": 0.6,
+  "numPoints": 8,
+  "curveIterations": 3,
   "strokeWeight": 1.2
 }
