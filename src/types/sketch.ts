@@ -5,16 +5,25 @@ export type Theme = "light" | "dark";
 export interface SketchContext {
   p: p5;
   theme: Theme;
-  params: Record<string, number>;
+  params: Record<string, number | string>;
 }
 
-export interface SketchParameter {
+export interface NumberParameter {
   key: string;
   label: string;
+  type?: "number";
   min: number;
   max: number;
   step?: number;
 }
+
+export interface StringParameter {
+  key: string;
+  label: string;
+  type: "string";
+}
+
+export type SketchParameter = NumberParameter | StringParameter;
 
 export interface SketchModule {
   id: string;
@@ -25,7 +34,7 @@ export interface SketchModule {
 }
 
 export interface SketchModuleWithDefaults extends SketchModule {
-  defaults: Record<string, number>;
+  defaults: Record<string, number | string>;
   defaultsFile: string;
   filePath: string;
 }
