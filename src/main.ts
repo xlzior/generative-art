@@ -51,7 +51,7 @@ createIcons({
 let currentSketch = sketches[0].id;
 let currentP5: p5 | null = null;
 let currentTheme: Theme = "light";
-const paramsBySketch = new Map<string, Record<string, number | string>>();
+const paramsBySketch = new Map<string, Record<string, number>>();
 
 function getSketchById(sketchId: string): SketchModuleWithDefaults | undefined {
   return sketches.find((entry) => entry.id === sketchId);
@@ -76,20 +76,15 @@ function writeSketchToUrl(sketchId: string): void {
 
 function cloneDefaults(
   sketch: SketchModuleWithDefaults,
-): Record<string, number | string> {
+): Record<string, number> {
   return Object.fromEntries(
-    Object.entries(sketch.defaults).map(([key, value]) => {
-      if (typeof value === "string") {
-        return [key, value];
-      }
-      return [key, Number(value)];
-    }),
+    Object.entries(sketch.defaults).map(([key, value]) => [key, Number(value)]),
   );
 }
 
 function getParamsForSketch(
   sketch: SketchModuleWithDefaults,
-): Record<string, number | string> {
+): Record<string, number> {
   if (!paramsBySketch.has(sketch.id)) {
     paramsBySketch.set(sketch.id, cloneDefaults(sketch));
   }
@@ -120,43 +115,26 @@ function renderSketchParameters(sketch: SketchModuleWithDefaults): void {
     label.setAttribute("for", `param-${sketch.id}-${parameter.key}`);
     label.textContent = parameter.label;
 
-    if (parameter.type === "string") {
-      const input = document.createElement("input");
-      input.type = "text";
-      input.id = `param-${sketch.id}-${parameter.key}`;
-      input.value = String(params[parameter.key] ?? "");
+    const valueEl = document.createElement("span");
+    valueEl.className = "param-value";
+    valueEl.textContent = formatParamValue(params[parameter.key]);
 
-      input.addEventListener("input", (event) => {
-        const target = event.target as HTMLInputElement;
-        params[parameter.key] = target.value;
-        mountSketch(sketch.id, { redrawControls: false });
-      });
+    const input = document.createElement("input");
+    input.type = "range";
+    input.id = `param-${sketch.id}-${parameter.key}`;
+    input.min = String(parameter.min);
+    input.max = String(parameter.max);
+    input.step = String(parameter.step ?? 1);
+    input.value = String(params[parameter.key]);
 
-      row.append(label, input);
-    } else {
-      // number parameter
-      const valueEl = document.createElement("span");
-      valueEl.className = "param-value";
-      valueEl.textContent = formatParamValue(params[parameter.key] as number);
+    input.addEventListener("input", (event) => {
+      const target = event.target as HTMLInputElement;
+      params[parameter.key] = Number(target.value);
+      valueEl.textContent = formatParamValue(params[parameter.key]);
+      mountSketch(currentSketch, { redrawControls: false });
+    });
 
-      const input = document.createElement("input");
-      input.type = "range";
-      input.id = `param-${sketch.id}-${parameter.key}`;
-      input.min = String(parameter.min);
-      input.max = String(parameter.max);
-      input.step = String(parameter.step ?? 1);
-      input.value = String(params[parameter.key]);
-
-      input.addEventListener("input", (event) => {
-        const target = event.target as HTMLInputElement;
-        params[parameter.key] = Number(target.value);
-        valueEl.textContent = formatParamValue(params[parameter.key] as number);
-        mountSketch(sketch.id, { redrawControls: false });
-      });
-
-      row.append(label, valueEl, input);
-    }
-
+    row.append(label, valueEl, input);
     paramsListEl.append(row);
   }
 }

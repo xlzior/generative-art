@@ -1,4 +1,4 @@
-import type { SketchModuleWithDefaults, SketchParameter } from "../types/sketch.js";
+import type { SketchModuleWithDefaults } from "../types/sketch.js";
 
 const sketchEntries = Object.entries(
   import.meta.glob<{ default: SketchModuleWithDefaults }>(
@@ -9,7 +9,7 @@ const sketchEntries = Object.entries(
 
 const defaultsByFolder = Object.fromEntries(
   Object.entries(
-    import.meta.glob<Record<string, number | string>>(
+    import.meta.glob<Record<string, number>>(
       "./*/defaults.json",
       { eager: true, import: "default" },
     ),
@@ -21,8 +21,9 @@ const defaultsByFolder = Object.fromEntries(
       }
       return [match[1], defaults];
     })
-    .filter((entry) => entry !== null),
-) as Record<string, Record<string, number | string>>;
+    .filter((entry): entry is [string, Record<string, number>] =>
+      entry !== null
+    ),
 );
 
 const sketchModules = sketchEntries
@@ -45,7 +46,7 @@ const sketchModules = sketchEntries
     }
 
     const sketch = module.default;
-    for (const parameter of sketch.parameters as SketchParameter[]) {
+    for (const parameter of sketch.parameters) {
       if (!Object.prototype.hasOwnProperty.call(defaults, parameter.key)) {
         throw new TypeError(
           `Sketch ${sketch.id} defaults.json is missing key: ${parameter.key}`,
@@ -53,21 +54,10 @@ const sketchModules = sketchEntries
       }
 
       const defaultValue = defaults[parameter.key];
-
-      // If the parameter explicitly declares a type, validate accordingly.
-      if ((parameter as any).type === "string") {
-        if (typeof defaultValue !== "string") {
-          throw new TypeError(
-            `Sketch ${sketch.id} defaults.json key ${parameter.key} must be a string.`,
-          );
-        }
-      } else {
-        // Default / legacy: numeric parameter
-        if (!Number.isFinite(Number(defaultValue))) {
-          throw new TypeError(
-            `Sketch ${sketch.id} defaults.json key ${parameter.key} must be numeric.`,
-          );
-        }
+      if (!Number.isFinite(defaultValue)) {
+        throw new TypeError(
+          `Sketch ${sketch.id} defaults.json key ${parameter.key} must be numeric.`,
+        );
       }
     }
 

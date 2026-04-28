@@ -10,42 +10,15 @@ export default defineSketch({
     "Random circles colored by the Mona Lisa painting at their coordinates.",
   parameters: [
     {
-      key: "imageUrl",
-      label: "Image URL",
-      type: "string",
-    },
-    {
       key: "totalCircles",
       label: "Total Circles",
-      type: "number",
       min: 100,
       max: 10000,
       step: 10,
     },
-    {
-      key: "radiusMin",
-      label: "Min Radius",
-      type: "number",
-      min: 2,
-      max: 50,
-      step: 1,
-    },
-    {
-      key: "radiusMax",
-      label: "Max Radius",
-      type: "number",
-      min: 5,
-      max: 200,
-      step: 5,
-    },
-    {
-      key: "opacity",
-      label: "Opacity",
-      type: "number",
-      min: 0,
-      max: 255,
-      step: 5,
-    },
+    { key: "radiusMin", label: "Min Radius", min: 2, max: 50, step: 1 },
+    { key: "radiusMax", label: "Max Radius", min: 5, max: 200, step: 5 },
+    { key: "opacity", label: "Opacity", min: 0, max: 255, step: 5 },
   ],
   create({ p, theme = "light", params }: SketchContext) {
     const isDark = theme === "dark";
@@ -55,42 +28,12 @@ export default defineSketch({
 
     let monaLisaImage: p5.Image | null = null;
     let isImageLoaded = false;
-    let lastImageUrl = "";
 
-    function loadImageFromUrl(url: string) {
-      if (!url) {
-        return;
-      }
-
-      if (url === lastImageUrl) {
-        return;
-      }
-
-      lastImageUrl = url;
-      isImageLoaded = false;
-
-      p.loadImage(
-        url,
-        (img: p5.Image) => {
-          monaLisaImage = img;
-          isImageLoaded = true;
-          drawCircles();
-        },
-        () => {
-          console.error("Failed to load image:", url);
-          isImageLoaded = false;
-        },
-      );
-    }
+    // Mona Lisa image URL (public domain)
+    const MONA_LISA_URL =
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/Mona_Lisa%2C_by_Leonardo_da_Vinci%2C_from_C2RMF_retouched.jpg/960px-Mona_Lisa%2C_by_Leonardo_da_Vinci%2C_from_C2RMF_retouched.jpg";
 
     function drawCircles() {
-      // Check if we need to load a new image
-      const currentUrl = String(params.imageUrl);
-      if (currentUrl && currentUrl !== lastImageUrl) {
-        loadImageFromUrl(currentUrl);
-        return;
-      }
-
       if (!isImageLoaded || !monaLisaImage) {
         return;
       }
@@ -148,24 +91,20 @@ export default defineSketch({
         const b = monaLisaImage.pixels[pixelIndex + 2];
 
         // Random radius
-        const radius = p.random(
-          params.radiusMin as number,
-          params.radiusMax as number,
-        );
+        const radius = p.random(params.radiusMin, params.radiusMax);
 
         // Draw circle with color from image
-        p.fill(r, g, b, params.opacity as number);
+        p.fill(r, g, b, params.opacity);
         p.noStroke();
         p.circle(x, y, radius * 2);
       }
     }
 
     p.preload = function () {
-      // Load the initial image from params
-      const initialUrl = String(params.imageUrl);
-      if (initialUrl) {
-        loadImageFromUrl(initialUrl);
-      }
+      p.loadImage(MONA_LISA_URL, (img: p5.Image) => {
+        monaLisaImage = img;
+        isImageLoaded = true;
+      });
     };
 
     attachResponsiveCanvas(p, {
