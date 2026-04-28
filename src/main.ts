@@ -328,6 +328,13 @@ regenerateEl.addEventListener("click", () => {
   mountSketch(currentSketch);
 });
 
+document.addEventListener("keydown", (event) => {
+  if (event.key.toLowerCase() === "r" || event.code === "Space") {
+    event.preventDefault();
+    mountSketch(currentSketch);
+  }
+});
+
 resetParamsEl.addEventListener("click", () => {
   const sketch = sketches.find((entry) => entry.id === currentSketch);
   if (!sketch) {
