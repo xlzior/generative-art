@@ -63,8 +63,12 @@ export default defineSketch({
 	parameters,
 	create({ p, theme = "light", params }: SketchContext<Params>) {
 		const isDark = theme === "dark";
-		const backgroundColor = isDark ? [9, 9, 11] : [248, 250, 252];
-		const cellColor = isDark ? [110, 231, 183] : [5, 150, 105];
+		const backgroundColor: [number, number, number] = isDark
+			? [9, 9, 11]
+			: [248, 250, 252];
+		const cellColor: [number, number, number] = isDark
+			? [110, 231, 183]
+			: [5, 150, 105];
 		let cols: number;
 		let rows: number;
 		let board: Board;

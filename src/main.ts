@@ -91,7 +91,11 @@ function getParamsForSketch(
 		paramsBySketch.set(sketch.id, cloneDefaults(sketch));
 	}
 
-	return paramsBySketch.get(sketch.id)!;
+	const params = paramsBySketch.get(sketch.id);
+	if (!params) {
+		throw new Error(`Failed to get params for sketch: ${sketch.id}`);
+	}
+	return params;
 }
 
 function formatParamValue(parameter: SketchParameter, value: unknown): string {
