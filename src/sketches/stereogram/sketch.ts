@@ -53,17 +53,67 @@ function depthBlob(
 export default defineSketch({
   id: "stereogram",
   title: "Parallel Stereogram",
-  description: "A random-dot autostereogram for parallel viewing (0 = render, 1 = depth map).",
+  description:
+    "A random-dot autostereogram for parallel viewing (0 = render, 1 = depth map).",
   date: "2026-04-28",
   parameters: [
-    { key: "viewMode", label: "View Mode", min: 0, max: 1, step: 1 },
-    { key: "patternPeriod", label: "Pattern Period", min: 72, max: 180, step: 1 },
-    { key: "maxOffset", label: "Max Offset", min: 4, max: 24, step: 1 },
-    { key: "objectScale", label: "Object Scale", min: 0.12, max: 0.42, step: 0.01 },
-    { key: "softness", label: "Softness", min: 0.04, max: 0.3, step: 0.01 },
-    { key: "objectX", label: "Object X", min: 0.2, max: 0.8, step: 0.01 },
-    { key: "objectY", label: "Object Y", min: 0.2, max: 0.8, step: 0.01 },
-    { key: "seed", label: "Seed", min: 1, max: 9999, step: 1 },
+    {
+      type: "number",
+      key: "viewMode",
+      label: "View Mode",
+      min: 0,
+      max: 1,
+      step: 1,
+    },
+    {
+      type: "number",
+      key: "patternPeriod",
+      label: "Pattern Period",
+      min: 72,
+      max: 180,
+      step: 1,
+    },
+    {
+      type: "number",
+      key: "maxOffset",
+      label: "Max Offset",
+      min: 4,
+      max: 24,
+      step: 1,
+    },
+    {
+      type: "number",
+      key: "objectScale",
+      label: "Object Scale",
+      min: 0.12,
+      max: 0.42,
+      step: 0.01,
+    },
+    {
+      type: "number",
+      key: "softness",
+      label: "Softness",
+      min: 0.04,
+      max: 0.3,
+      step: 0.01,
+    },
+    {
+      type: "number",
+      key: "objectX",
+      label: "Object X",
+      min: 0.2,
+      max: 0.8,
+      step: 0.01,
+    },
+    {
+      type: "number",
+      key: "objectY",
+      label: "Object Y",
+      min: 0.2,
+      max: 0.8,
+      step: 0.01,
+    },
+    { type: "number", key: "seed", label: "Seed", min: 1, max: 9999, step: 1 },
   ],
   create({ p, params }: SketchContext) {
     attachResponsiveCanvas(p, {
@@ -82,7 +132,10 @@ export default defineSketch({
       const width = p.width;
       const height = p.height;
       const period = Math.max(24, Math.floor(params.patternPeriod));
-      const maxOffset = Math.max(1, Math.min(period - 1, Math.floor(params.maxOffset)));
+      const maxOffset = Math.max(
+        1,
+        Math.min(period - 1, Math.floor(params.maxOffset)),
+      );
       const objectScale = clamp(params.objectScale, 0.08, 0.5);
       const softness = clamp(params.softness, 0.01, 0.45);
       const centerX = width * clamp(params.objectX, 0, 1);

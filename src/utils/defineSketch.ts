@@ -1,14 +1,22 @@
-import type { SketchModule } from "../types/sketch.js";
+import type { SketchModule, SketchModuleInput } from "../types/sketch.js";
+import { extractParametersFromSchema } from "./zod-params.js";
 
 /**
  * Validate and freeze a sketch module so the app shell can inject it safely.
  */
-export function defineSketch(sketch: SketchModule): Readonly<SketchModule> {
+export function defineSketch<
+  T extends Record<string, number | string | boolean> = Record<
+    string,
+    number | string | boolean
+  >,
+>(
+  sketch: SketchModuleInput<T>,
+): Readonly<SketchModule<T>> {
   if (!sketch || typeof sketch !== "object") {
     throw new TypeError("Sketch module must be an object.");
   }
 
-  const { id, title, description, date, parameters, create } = sketch;
+  const { id, title, description, date, schema, create } = sketch;
 
   if (typeof id !== "string" || id.trim() === "") {
     throw new TypeError("Sketch module id must be a non-empty string.");
@@ -26,8 +34,15 @@ export function defineSketch(sketch: SketchModule): Readonly<SketchModule> {
     throw new TypeError(`Sketch module ${id} is missing a date.`);
   }
 
-  if (!Array.isArray(parameters)) {
-    throw new TypeError(`Sketch module ${id} must provide a parameters array.`);
+  if (!schema) {
+    throw new TypeError(`Sketch module ${id} must provide a schema.`);
+  }
+
+  // Extract parameters from schema
+  const parameters = extractParametersFromSchema(schema);
+
+  if (!Array.isArray(parameters) || parameters.length === 0) {
+    throw new TypeError(`Sketch module ${id} schema produced no parameters.`);
   }
 
   const seenKeys = new Set<string>();
@@ -38,7 +53,7 @@ export function defineSketch(sketch: SketchModule): Readonly<SketchModule> {
       );
     }
 
-    const { key, label, min, max, step } = parameter;
+    const { key, label, type } = parameter;
 
     if (typeof key !== "string" || key.trim() === "") {
       throw new TypeError(
@@ -59,22 +74,29 @@ export function defineSketch(sketch: SketchModule): Readonly<SketchModule> {
       );
     }
 
-    if (!Number.isFinite(min) || !Number.isFinite(max)) {
-      throw new TypeError(
-        `Sketch module ${id} parameter ${key} must use numeric min/max.`,
-      );
-    }
+    // Validate type-specific constraints
+    if (type === "number") {
+      const numParam = parameter as any;
+      if (!Number.isFinite(numParam.min) || !Number.isFinite(numParam.max)) {
+        throw new TypeError(
+          `Sketch module ${id} numeric parameter ${key} must use numeric min/max.`,
+        );
+      }
 
-    if (min >= max) {
-      throw new TypeError(
-        `Sketch module ${id} parameter ${key} requires min < max.`,
-      );
-    }
+      if (numParam.min >= numParam.max) {
+        throw new TypeError(
+          `Sketch module ${id} numeric parameter ${key} requires min < max.`,
+        );
+      }
 
-    if (step !== undefined && (!Number.isFinite(step) || step <= 0)) {
-      throw new TypeError(
-        `Sketch module ${id} parameter ${key} uses an invalid step.`,
-      );
+      if (
+        numParam.step !== undefined &&
+        (!Number.isFinite(numParam.step) || numParam.step <= 0)
+      ) {
+        throw new TypeError(
+          `Sketch module ${id} numeric parameter ${key} uses an invalid step.`,
+        );
+      }
     }
   }
 
@@ -84,5 +106,8 @@ export function defineSketch(sketch: SketchModule): Readonly<SketchModule> {
     );
   }
 
-  return Object.freeze(sketch);
+  return Object.freeze({
+    ...sketch,
+    parameters,
+  });
 }

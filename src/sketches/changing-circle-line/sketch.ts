@@ -9,8 +9,16 @@ export default defineSketch({
     "Circles along a line with sizes that increase and randomly reverse direction.",
   date: "2026-04-27",
   parameters: [
-    { key: "spacing", label: "Spacing", min: 5, max: 60, step: 1 },
     {
+      type: "number",
+      key: "spacing",
+      label: "Spacing",
+      min: 5,
+      max: 60,
+      step: 1,
+    },
+    {
+      type: "number",
       key: "initialRadius",
       label: "Initial Radius",
       min: 2,
@@ -18,6 +26,7 @@ export default defineSketch({
       step: 1,
     },
     {
+      type: "number",
       key: "maxRadius",
       label: "Max Radius",
       min: 20,
@@ -25,6 +34,7 @@ export default defineSketch({
       step: 5,
     },
     {
+      type: "number",
       key: "radiusIncrement",
       label: "Radius Increment",
       min: 0.5,
@@ -32,21 +42,37 @@ export default defineSketch({
       step: 0.25,
     },
     {
+      type: "number",
       key: "reverseProbability",
       label: "Reverse Chance %",
       min: 1,
       max: 50,
       step: 1,
     },
-    { key: "numPoints", label: "Control Points", min: 4, max: 20, step: 1 },
     {
+      type: "number",
+      key: "numPoints",
+      label: "Control Points",
+      min: 4,
+      max: 20,
+      step: 1,
+    },
+    {
+      type: "number",
       key: "curveIterations",
       label: "Curve Smoothness",
       min: 1,
       max: 6,
       step: 1,
     },
-    { key: "strokeWeight", label: "Stroke", min: 0.5, max: 4, step: 0.25 },
+    {
+      type: "number",
+      key: "strokeWeight",
+      label: "Stroke",
+      min: 0.5,
+      max: 4,
+      step: 0.25,
+    },
   ],
   create({ p, theme = "light", params }: SketchContext) {
     const isDark = theme === "dark";

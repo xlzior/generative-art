@@ -1,27 +1,27 @@
+import { z } from "zod";
 import { attachResponsiveCanvas } from "../../utils/responsive-canvas.js";
 import { defineSketch } from "../../utils/defineSketch.js";
 import type { SketchContext } from "../../types/sketch.js";
 import type p5 from "p5";
 
-export default defineSketch({
+// Define parameters validation schema - single source of truth for validation
+const MonaLisaParamsSchema = z.object({
+  totalCircles: z.number().int().min(100).max(10000),
+  radiusMin: z.number().min(2).max(50),
+  radiusMax: z.number().min(5).max(200),
+  opacity: z.number().int().min(0).max(255),
+});
+
+type MonaLisaParams = z.infer<typeof MonaLisaParamsSchema>;
+
+export default defineSketch<MonaLisaParams>({
   id: "mona-lisa-circles",
   title: "Mona Lisa Circles",
   description:
     "Random circles colored by the Mona Lisa painting at their coordinates.",
   date: "2026-04-27",
-  parameters: [
-    {
-      key: "totalCircles",
-      label: "Total Circles",
-      min: 100,
-      max: 10000,
-      step: 10,
-    },
-    { key: "radiusMin", label: "Min Radius", min: 2, max: 50, step: 1 },
-    { key: "radiusMax", label: "Max Radius", min: 5, max: 200, step: 5 },
-    { key: "opacity", label: "Opacity", min: 0, max: 255, step: 5 },
-  ],
-  create({ p, theme = "light", params }: SketchContext) {
+  schema: MonaLisaParamsSchema,
+  create({ p, theme = "light", params }: SketchContext<MonaLisaParams>) {
     const isDark = theme === "dark";
     const backgroundColor: [number, number, number] = isDark
       ? [11, 13, 14]

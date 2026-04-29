@@ -8,7 +8,11 @@ import {
   Save,
 } from "lucide";
 import { sketches } from "./sketches/index.js";
-import type { SketchModuleWithDefaults, Theme } from "./types/sketch.js";
+import type {
+  SketchModuleWithDefaults,
+  SketchNumberParameter,
+  Theme,
+} from "./types/sketch.js";
 
 const selectEl = document.getElementById("sketch-select") as HTMLSelectElement;
 const regenerateEl = document.getElementById("regenerate") as HTMLButtonElement;
@@ -108,6 +112,11 @@ function renderSketchParameters(sketch: SketchModuleWithDefaults): void {
   paramsListEl.innerHTML = "";
 
   for (const parameter of sketch.parameters) {
+    if (parameter.type !== "number") {
+      // Skip non-number parameters for now (string, boolean)
+      continue;
+    }
+
     const row = document.createElement("div");
     row.className = "param-control";
 
@@ -117,7 +126,10 @@ function renderSketchParameters(sketch: SketchModuleWithDefaults): void {
 
     const valueEl = document.createElement("span");
     valueEl.className = "param-value";
-    valueEl.textContent = formatParamValue(params[parameter.key]);
+    const paramValue = params[parameter.key];
+    valueEl.textContent = typeof paramValue === "number"
+      ? formatParamValue(paramValue)
+      : String(paramValue);
 
     const input = document.createElement("input");
     input.type = "range";
@@ -199,7 +211,13 @@ function mountSketch(
     writeSketchToUrl(currentSketch);
   }
   currentP5 = new p5(
-    (p) => sketch.create({ p, theme: currentTheme, params }),
+    (p) =>
+      sketch.create({
+        p,
+        theme: currentTheme,
+        params,
+        getNumParam: (key: string) => Number(params[key]),
+      }),
     canvasContainerEl,
   );
   document.title = sketch.title;

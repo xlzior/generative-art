@@ -10,7 +10,8 @@
   },
   "dependencies": {
     "lucide": "^1.11.0",
-    "p5": "^1.11.10"
+    "p5": "^1.11.10",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@types/p5": "^1.7.7",
