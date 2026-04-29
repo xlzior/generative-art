@@ -53,9 +53,10 @@ function depthBlob(
 export default defineSketch({
   id: "stereogram",
   title: "Parallel Stereogram",
-  description: "A random-dot autostereogram for parallel viewing.",
+  description: "A random-dot autostereogram for parallel viewing (0 = render, 1 = depth map).",
   date: "2026-04-28",
   parameters: [
+    { key: "viewMode", label: "View Mode", min: 0, max: 1, step: 1 },
     { key: "patternPeriod", label: "Pattern Period", min: 72, max: 180, step: 1 },
     { key: "maxOffset", label: "Max Offset", min: 4, max: 24, step: 1 },
     { key: "objectScale", label: "Object Scale", min: 0.12, max: 0.42, step: 0.01 },
@@ -77,6 +78,7 @@ export default defineSketch({
     });
 
     p.draw = () => {
+      const viewMode = Math.round(params.viewMode);
       const width = p.width;
       const height = p.height;
       const period = Math.max(24, Math.floor(params.patternPeriod));
@@ -137,34 +139,52 @@ export default defineSketch({
       p.loadPixels();
       const pixels = p.pixels;
 
-      for (let y = 0; y < height; y += 1) {
-        const rowOffset = y * width;
-        const rowPixels = new Uint8Array(width);
+      if (viewMode === 0) {
+        // Stereogram rendering
+        for (let y = 0; y < height; y += 1) {
+          const rowOffset = y * width;
+          const rowPixels = new Uint8Array(width);
 
-        for (let x = 0; x < Math.min(period, width); x += 1) {
-          rowPixels[x] = rowTone(params.seed, y, x);
-        }
-
-        for (let x = 0; x < width; x += 1) {
-          const shift = Math.round(depthMap[rowOffset + x] * maxOffset);
-          const repeatDistance = Math.max(1, period - shift);
-          const sourceX = x - repeatDistance;
-
-          if (x >= period && sourceX >= 0) {
-            rowPixels[x] = rowPixels[sourceX];
-          } else if (x >= period) {
+          for (let x = 0; x < Math.min(period, width); x += 1) {
             rowPixels[x] = rowTone(params.seed, y, x);
           }
+
+          for (let x = 0; x < width; x += 1) {
+            const shift = Math.round(depthMap[rowOffset + x] * maxOffset);
+            const repeatDistance = Math.max(1, period - shift);
+            const sourceX = x - repeatDistance;
+
+            if (x >= period && sourceX >= 0) {
+              rowPixels[x] = rowPixels[sourceX];
+            } else if (x >= period) {
+              rowPixels[x] = rowTone(params.seed, y, x);
+            }
+          }
+
+          for (let x = 0; x < width; x += 1) {
+            const tone = rowPixels[x];
+            const pixelIndex = (rowOffset + x) * 4;
+
+            pixels[pixelIndex] = tone;
+            pixels[pixelIndex + 1] = tone;
+            pixels[pixelIndex + 2] = tone;
+            pixels[pixelIndex + 3] = 255;
+          }
         }
+      } else {
+        // Depth map rendering
+        for (let y = 0; y < height; y += 1) {
+          const rowOffset = y * width;
+          for (let x = 0; x < width; x += 1) {
+            const depth = depthMap[rowOffset + x];
+            const gray = Math.round(depth * 255);
+            const pixelIndex = (rowOffset + x) * 4;
 
-        for (let x = 0; x < width; x += 1) {
-          const tone = rowPixels[x];
-          const pixelIndex = (rowOffset + x) * 4;
-
-          pixels[pixelIndex] = tone;
-          pixels[pixelIndex + 1] = tone;
-          pixels[pixelIndex + 2] = tone;
-          pixels[pixelIndex + 3] = 255;
+            pixels[pixelIndex] = gray;
+            pixels[pixelIndex + 1] = gray;
+            pixels[pixelIndex + 2] = gray;
+            pixels[pixelIndex + 3] = 255;
+          }
         }
       }
 
