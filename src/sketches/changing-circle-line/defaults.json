@@ -1,10 +1,10 @@
 {
-  "spacing": 25,
-  "initialRadius": 8,
-  "maxRadius": 60,
-  "radiusIncrement": 1.5,
-  "reverseProbability": 5,
-  "numPoints": 8,
-  "curveIterations": 3,
-  "strokeWeight": 1.2
+	"spacing": 25,
+	"initialRadius": 8,
+	"maxRadius": 60,
+	"radiusIncrement": 1.5,
+	"reverseProbability": 5,
+	"numPoints": 8,
+	"curveIterations": 3,
+	"strokeWeight": 1.2
 }

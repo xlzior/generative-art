@@ -1,10 +1,10 @@
 {
-  "viewMode": false,
-  "patternPeriod": 120,
-  "maxOffset": 12,
-  "objectScale": 0.26,
-  "softness": 0.16,
-  "objectX": 0.52,
-  "objectY": 0.5,
-  "seed": 1337
+	"viewMode": false,
+	"patternPeriod": 120,
+	"maxOffset": 12,
+	"objectScale": 0.26,
+	"softness": 0.16,
+	"objectX": 0.52,
+	"objectY": 0.5,
+	"seed": 1337
 }

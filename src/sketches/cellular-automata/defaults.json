@@ -1,7 +1,7 @@
 {
-  "cellSize": 8,
-  "seedProbability": 0.3,
-  "frameRate": 12,
-  "reseedFrames": 420,
-  "cellPadding": 1
+	"cellSize": 8,
+	"seedProbability": 0.3,
+	"frameRate": 12,
+	"reseedFrames": 420,
+	"cellPadding": 1
 }
