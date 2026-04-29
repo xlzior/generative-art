@@ -1,6 +1,79 @@
 import { attachResponsiveCanvas } from "../../utils/responsive-canvas.js";
 import { defineSketch } from "../../utils/defineSketch.js";
-import type { SketchContext } from "../../types/sketch.js";
+import type {
+  InferParams,
+  SketchContext,
+  SketchParameter,
+} from "../../types/sketch.js";
+
+const parameters = [
+  {
+    type: "number",
+    key: "particleCount",
+    label: "Particles",
+    min: 100,
+    max: 5000,
+    step: 50,
+  },
+  {
+    type: "number",
+    key: "stepSize",
+    label: "Step Size",
+    min: 0.2,
+    max: 4,
+    step: 0.1,
+  },
+  {
+    type: "number",
+    key: "noiseScale",
+    label: "Noise Scale",
+    min: 0.0005,
+    max: 0.02,
+    step: 0.0001,
+  },
+  {
+    type: "number",
+    key: "ttlMin",
+    label: "TTL Min",
+    min: 20,
+    max: 500,
+    step: 1,
+  },
+  {
+    type: "number",
+    key: "ttlMax",
+    label: "TTL Max",
+    min: 30,
+    max: 800,
+    step: 1,
+  },
+  {
+    type: "number",
+    key: "strokeWeight",
+    label: "Stroke",
+    min: 0.2,
+    max: 3,
+    step: 0.05,
+  },
+  {
+    type: "number",
+    key: "trailAlpha",
+    label: "Fade",
+    min: 1,
+    max: 80,
+    step: 1,
+  },
+  {
+    type: "number",
+    key: "strokeAlpha",
+    label: "Line Alpha",
+    min: 10,
+    max: 255,
+    step: 1,
+  },
+] as const satisfies readonly SketchParameter[];
+
+type Params = InferParams<typeof parameters>;
 
 interface Particle {
   x: number;
@@ -14,23 +87,8 @@ export default defineSketch({
   title: "Flow Field Particles",
   description: "Particle trails following a noise-driven vector field.",
   date: "2026-04-26",
-  parameters: [
-    { key: "particleCount", label: "Particles", min: 100, max: 5000, step: 50 },
-    { key: "stepSize", label: "Step Size", min: 0.2, max: 4, step: 0.1 },
-    {
-      key: "noiseScale",
-      label: "Noise Scale",
-      min: 0.0005,
-      max: 0.02,
-      step: 0.0001,
-    },
-    { key: "ttlMin", label: "TTL Min", min: 20, max: 500, step: 1 },
-    { key: "ttlMax", label: "TTL Max", min: 30, max: 800, step: 1 },
-    { key: "strokeWeight", label: "Stroke", min: 0.2, max: 3, step: 0.05 },
-    { key: "trailAlpha", label: "Fade", min: 1, max: 80, step: 1 },
-    { key: "strokeAlpha", label: "Line Alpha", min: 10, max: 255, step: 1 },
-  ],
-  create({ p, theme = "light", params }: SketchContext) {
+  parameters,
+  create({ p, theme = "light", params }: SketchContext<Params>) {
     const isDark = theme === "dark";
     const backgroundColor: [number, number, number] = isDark
       ? [11, 13, 14]

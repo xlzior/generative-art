@@ -1,28 +1,72 @@
 import { attachResponsiveCanvas } from "../../utils/responsive-canvas.js";
 import { defineSketch } from "../../utils/defineSketch.js";
-import type { SketchContext } from "../../types/sketch.js";
+import type {
+  InferParams,
+  SketchContext,
+  SketchParameter,
+} from "../../types/sketch.js";
+
+const parameters = [
+  { type: "number", key: "depth", label: "Depth", min: 4, max: 14, step: 1 },
+  {
+    type: "number",
+    key: "baseLengthRatio",
+    label: "Base Ratio",
+    min: 0.1,
+    max: 0.45,
+    step: 0.01,
+  },
+  {
+    type: "number",
+    key: "minShrink",
+    label: "Min Shrink",
+    min: 0.5,
+    max: 0.9,
+    step: 0.01,
+  },
+  {
+    type: "number",
+    key: "maxShrink",
+    label: "Max Shrink",
+    min: 0.55,
+    max: 0.95,
+    step: 0.01,
+  },
+  {
+    type: "number",
+    key: "minSpread",
+    label: "Min Spread",
+    min: 0.05,
+    max: 0.45,
+    step: 0.01,
+  },
+  {
+    type: "number",
+    key: "maxSpread",
+    label: "Max Spread",
+    min: 0.1,
+    max: 0.8,
+    step: 0.01,
+  },
+  {
+    type: "number",
+    key: "strokeWeight",
+    label: "Stroke",
+    min: 0.4,
+    max: 4,
+    step: 0.05,
+  },
+] as const satisfies readonly SketchParameter[];
+
+type Params = InferParams<typeof parameters>;
 
 export default defineSketch({
   id: "fractal-tree",
   title: "Fractal Tree",
   description: "Recursive branching with angle jitter.",
   date: "2026-04-26",
-  parameters: [
-    { key: "depth", label: "Depth", min: 4, max: 14, step: 1 },
-    {
-      key: "baseLengthRatio",
-      label: "Base Ratio",
-      min: 0.1,
-      max: 0.45,
-      step: 0.01,
-    },
-    { key: "minShrink", label: "Min Shrink", min: 0.5, max: 0.9, step: 0.01 },
-    { key: "maxShrink", label: "Max Shrink", min: 0.55, max: 0.95, step: 0.01 },
-    { key: "minSpread", label: "Min Spread", min: 0.05, max: 0.45, step: 0.01 },
-    { key: "maxSpread", label: "Max Spread", min: 0.1, max: 0.8, step: 0.01 },
-    { key: "strokeWeight", label: "Stroke", min: 0.4, max: 4, step: 0.05 },
-  ],
-  create({ p, theme = "light", params }: SketchContext) {
+  parameters,
+  create({ p, theme = "light", params }: SketchContext<Params>) {
     const isDark = theme === "dark";
     const backgroundColor = isDark ? "#0A0E15" : "#FCFBF7";
     const strokeColor = isDark ? "#E2E8F0" : "#1C1917";

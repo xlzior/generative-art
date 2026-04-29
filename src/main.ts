@@ -8,7 +8,11 @@ import {
   Save,
 } from "lucide";
 import { sketches } from "./sketches/index.js";
-import type { SketchModuleWithDefaults, Theme } from "./types/sketch.js";
+import type {
+  SketchModuleWithDefaults,
+  SketchParameter,
+  Theme,
+} from "./types/sketch.js";
 
 const selectEl = document.getElementById("sketch-select") as HTMLSelectElement;
 const regenerateEl = document.getElementById("regenerate") as HTMLButtonElement;
@@ -51,9 +55,11 @@ createIcons({
 let currentSketch = sketches[0].id;
 let currentP5: p5 | null = null;
 let currentTheme: Theme = "light";
-const paramsBySketch = new Map<string, Record<string, number>>();
+const paramsBySketch = new Map<string, Record<string, unknown>>();
 
-function getSketchById(sketchId: string): SketchModuleWithDefaults | undefined {
+function getSketchById(
+  sketchId: string,
+): SketchModuleWithDefaults<Record<string, unknown>> | undefined {
   return sketches.find((entry) => entry.id === sketchId);
 }
 
@@ -75,16 +81,14 @@ function writeSketchToUrl(sketchId: string): void {
 }
 
 function cloneDefaults(
-  sketch: SketchModuleWithDefaults,
-): Record<string, number> {
-  return Object.fromEntries(
-    Object.entries(sketch.defaults).map(([key, value]) => [key, Number(value)]),
-  );
+  sketch: SketchModuleWithDefaults<Record<string, unknown>>,
+): Record<string, unknown> {
+  return { ...sketch.defaults };
 }
 
 function getParamsForSketch(
-  sketch: SketchModuleWithDefaults,
-): Record<string, number> {
+  sketch: SketchModuleWithDefaults<Record<string, unknown>>,
+): Record<string, unknown> {
   if (!paramsBySketch.has(sketch.id)) {
     paramsBySketch.set(sketch.id, cloneDefaults(sketch));
   }
@@ -92,18 +96,114 @@ function getParamsForSketch(
   return paramsBySketch.get(sketch.id)!;
 }
 
-function formatParamValue(value: number): string {
-  if (Number.isInteger(value)) {
+function formatParamValue(parameter: SketchParameter, value: unknown): string {
+  if (parameter.type === "boolean") {
+    return value ? "On" : "Off";
+  }
+  if (parameter.type === "string") {
     return String(value);
   }
-
-  return value
+  const num = value as number;
+  if (Number.isInteger(num)) {
+    return String(num);
+  }
+  return num
     .toFixed(3)
     .replace(/\.0+$/, "")
     .replace(/(\.\d*?)0+$/, "$1");
 }
 
-function renderSketchParameters(sketch: SketchModuleWithDefaults): void {
+function renderParamNumber(
+  row: HTMLDivElement,
+  parameter: Extract<SketchParameter, { type: "number" }>,
+  params: Record<string, unknown>,
+  sketch: SketchModuleWithDefaults<Record<string, unknown>>,
+): void {
+  const valueEl = document.createElement("span");
+  valueEl.className = "param-value";
+  valueEl.textContent = formatParamValue(parameter, params[parameter.key]);
+
+  const input = document.createElement("input");
+  input.type = "range";
+  input.id = `param-${sketch.id}-${parameter.key}`;
+  input.min = String(parameter.min);
+  input.max = String(parameter.max);
+  input.step = String(parameter.step ?? 1);
+  input.value = String(params[parameter.key]);
+
+  input.addEventListener("input", (event) => {
+    const target = event.target as HTMLInputElement;
+    params[parameter.key] = Number(target.value);
+    valueEl.textContent = formatParamValue(parameter, params[parameter.key]);
+    mountSketch(currentSketch, { redrawControls: false });
+  });
+
+  row.append(document.createElement("label"), valueEl, input);
+  const label = row.querySelector("label") as HTMLLabelElement;
+  label.setAttribute("for", input.id);
+  label.textContent = parameter.label;
+}
+
+function renderParamString(
+  row: HTMLDivElement,
+  parameter: Extract<SketchParameter, { type: "string" }>,
+  params: Record<string, unknown>,
+  sketch: SketchModuleWithDefaults<Record<string, unknown>>,
+): void {
+  const valueEl = document.createElement("span");
+  valueEl.className = "param-value";
+  valueEl.textContent = formatParamValue(parameter, params[parameter.key]);
+
+  const input = document.createElement("input");
+  input.type = "text";
+  input.id = `param-${sketch.id}-${parameter.key}`;
+  input.value = String(params[parameter.key] ?? "");
+
+  input.addEventListener("input", (event) => {
+    const target = event.target as HTMLInputElement;
+    params[parameter.key] = target.value;
+    valueEl.textContent = formatParamValue(parameter, params[parameter.key]);
+    mountSketch(currentSketch, { redrawControls: false });
+  });
+
+  row.append(document.createElement("label"), valueEl, input);
+  const label = row.querySelector("label") as HTMLLabelElement;
+  label.setAttribute("for", input.id);
+  label.textContent = parameter.label;
+}
+
+function renderParamBoolean(
+  row: HTMLDivElement,
+  parameter: Extract<SketchParameter, { type: "boolean" }>,
+  params: Record<string, unknown>,
+  sketch: SketchModuleWithDefaults<Record<string, unknown>>,
+): void {
+  const label = document.createElement("label");
+  label.setAttribute("for", `param-${sketch.id}-${parameter.key}`);
+  label.textContent = parameter.label;
+
+  const valueEl = document.createElement("span");
+  valueEl.className = "param-value";
+  valueEl.textContent = formatParamValue(parameter, params[parameter.key]);
+
+  const input = document.createElement("input");
+  input.type = "checkbox";
+  input.id = `param-${sketch.id}-${parameter.key}`;
+  input.checked = Boolean(params[parameter.key]);
+
+  input.addEventListener("change", (event) => {
+    const target = event.target as HTMLInputElement;
+    params[parameter.key] = target.checked;
+    valueEl.textContent = formatParamValue(parameter, params[parameter.key]);
+    mountSketch(currentSketch, { redrawControls: false });
+  });
+
+  row.append(label, valueEl, input);
+}
+
+function renderSketchParameters(
+  sketch: SketchModuleWithDefaults<Record<string, unknown>>,
+): void {
   const params = getParamsForSketch(sketch);
   paramsListEl.innerHTML = "";
 
@@ -111,30 +211,14 @@ function renderSketchParameters(sketch: SketchModuleWithDefaults): void {
     const row = document.createElement("div");
     row.className = "param-control";
 
-    const label = document.createElement("label");
-    label.setAttribute("for", `param-${sketch.id}-${parameter.key}`);
-    label.textContent = parameter.label;
+    if (parameter.type === "number") {
+      renderParamNumber(row, parameter, params, sketch);
+    } else if (parameter.type === "string") {
+      renderParamString(row, parameter, params, sketch);
+    } else if (parameter.type === "boolean") {
+      renderParamBoolean(row, parameter, params, sketch);
+    }
 
-    const valueEl = document.createElement("span");
-    valueEl.className = "param-value";
-    valueEl.textContent = formatParamValue(params[parameter.key]);
-
-    const input = document.createElement("input");
-    input.type = "range";
-    input.id = `param-${sketch.id}-${parameter.key}`;
-    input.min = String(parameter.min);
-    input.max = String(parameter.max);
-    input.step = String(parameter.step ?? 1);
-    input.value = String(params[parameter.key]);
-
-    input.addEventListener("input", (event) => {
-      const target = event.target as HTMLInputElement;
-      params[parameter.key] = Number(target.value);
-      valueEl.textContent = formatParamValue(params[parameter.key]);
-      mountSketch(currentSketch, { redrawControls: false });
-    });
-
-    row.append(label, valueEl, input);
     paramsListEl.append(row);
   }
 }

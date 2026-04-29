@@ -1,7 +1,38 @@
-import type { SketchModuleWithDefaults } from "../types/sketch.js";
+import type {
+  SketchModuleWithDefaults,
+  SketchParameter,
+} from "../types/sketch.js";
+
+function validateDefaultValue(
+  sketchId: string,
+  parameter: SketchParameter,
+  value: unknown,
+): void {
+  if (parameter.type === "number") {
+    if (typeof value !== "number" || !Number.isFinite(value)) {
+      throw new TypeError(
+        `Sketch ${sketchId} defaults.json key ${parameter.key} must be a finite number.`,
+      );
+    }
+  } else if (parameter.type === "string") {
+    if (typeof value !== "string") {
+      throw new TypeError(
+        `Sketch ${sketchId} defaults.json key ${parameter.key} must be a string.`,
+      );
+    }
+  } else if (parameter.type === "boolean") {
+    if (typeof value !== "boolean") {
+      throw new TypeError(
+        `Sketch ${sketchId} defaults.json key ${parameter.key} must be a boolean.`,
+      );
+    }
+  }
+}
 
 const sketchEntries = Object.entries(
-  import.meta.glob<{ default: SketchModuleWithDefaults }>(
+  import.meta.glob<
+    { default: SketchModuleWithDefaults<Record<string, unknown>> }
+  >(
     "./*/sketch.ts",
     { eager: true },
   ),
@@ -9,7 +40,7 @@ const sketchEntries = Object.entries(
 
 const defaultsByFolder = Object.fromEntries(
   Object.entries(
-    import.meta.glob<Record<string, number>>(
+    import.meta.glob<Record<string, unknown>>(
       "./*/defaults.json",
       { eager: true, import: "default" },
     ),
@@ -21,7 +52,7 @@ const defaultsByFolder = Object.fromEntries(
       }
       return [match[1], defaults];
     })
-    .filter((entry): entry is [string, Record<string, number>] =>
+    .filter((entry): entry is [string, Record<string, unknown>] =>
       entry !== null
     ),
 );
@@ -53,12 +84,7 @@ const sketchModules = sketchEntries
         );
       }
 
-      const defaultValue = defaults[parameter.key];
-      if (!Number.isFinite(defaultValue)) {
-        throw new TypeError(
-          `Sketch ${sketch.id} defaults.json key ${parameter.key} must be numeric.`,
-        );
-      }
+      validateDefaultValue(sketch.id, parameter, defaults[parameter.key]);
     }
 
     return {
@@ -85,4 +111,5 @@ for (const sketch of sketchModules) {
   seenIds.add(sketch.id);
 }
 
-export const sketches: SketchModuleWithDefaults[] = sketchModules;
+export const sketches: SketchModuleWithDefaults<Record<string, unknown>>[] =
+  sketchModules;

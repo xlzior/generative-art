@@ -1,9 +1,64 @@
-import type { SketchModule } from "../types/sketch.js";
+import type { SketchModule, SketchParameter } from "../types/sketch.js";
 
-/**
- * Validate and freeze a sketch module so the app shell can inject it safely.
- */
-export function defineSketch(sketch: SketchModule): Readonly<SketchModule> {
+const VALID_TYPES = ["number", "string", "boolean"] as const;
+
+function validateParameter(
+  sketchId: string,
+  parameter: SketchParameter,
+): void {
+  if (!parameter || typeof parameter !== "object") {
+    throw new TypeError(
+      `Sketch module ${sketchId} has an invalid parameter definition.`,
+    );
+  }
+
+  const { key, label, type } = parameter;
+
+  if (typeof key !== "string" || key.trim() === "") {
+    throw new TypeError(
+      `Sketch module ${sketchId} parameter key must be a non-empty string.`,
+    );
+  }
+
+  if (typeof label !== "string" || label.trim() === "") {
+    throw new TypeError(
+      `Sketch module ${sketchId} parameter ${key} must include a label.`,
+    );
+  }
+
+  if (type !== "number" && type !== "string" && type !== "boolean") {
+    throw new TypeError(
+      `Sketch module ${sketchId} parameter ${key} has invalid type "${type}". Must be one of: ${
+        VALID_TYPES.join(", ")
+      }.`,
+    );
+  }
+
+  if (type === "number") {
+    const { min, max, step } = parameter;
+    if (!Number.isFinite(min) || !Number.isFinite(max)) {
+      throw new TypeError(
+        `Sketch module ${sketchId} parameter ${key} must use numeric min/max.`,
+      );
+    }
+
+    if (min >= max) {
+      throw new TypeError(
+        `Sketch module ${sketchId} parameter ${key} requires min < max.`,
+      );
+    }
+
+    if (step !== undefined && (!Number.isFinite(step) || step <= 0)) {
+      throw new TypeError(
+        `Sketch module ${sketchId} parameter ${key} uses an invalid step.`,
+      );
+    }
+  }
+}
+
+export function defineSketch<TParams extends Record<string, unknown>>(
+  sketch: SketchModule<TParams>,
+): Readonly<SketchModule<TParams>> {
   if (!sketch || typeof sketch !== "object") {
     throw new TypeError("Sketch module must be an object.");
   }
@@ -32,50 +87,14 @@ export function defineSketch(sketch: SketchModule): Readonly<SketchModule> {
 
   const seenKeys = new Set<string>();
   for (const parameter of parameters) {
-    if (!parameter || typeof parameter !== "object") {
+    validateParameter(id, parameter);
+
+    if (seenKeys.has(parameter.key)) {
       throw new TypeError(
-        `Sketch module ${id} has an invalid parameter definition.`,
+        `Sketch module ${id} has duplicate parameter key: ${parameter.key}`,
       );
     }
-
-    const { key, label, min, max, step } = parameter;
-
-    if (typeof key !== "string" || key.trim() === "") {
-      throw new TypeError(
-        `Sketch module ${id} parameter key must be a non-empty string.`,
-      );
-    }
-
-    if (seenKeys.has(key)) {
-      throw new TypeError(
-        `Sketch module ${id} has duplicate parameter key: ${key}`,
-      );
-    }
-    seenKeys.add(key);
-
-    if (typeof label !== "string" || label.trim() === "") {
-      throw new TypeError(
-        `Sketch module ${id} parameter ${key} must include a label.`,
-      );
-    }
-
-    if (!Number.isFinite(min) || !Number.isFinite(max)) {
-      throw new TypeError(
-        `Sketch module ${id} parameter ${key} must use numeric min/max.`,
-      );
-    }
-
-    if (min >= max) {
-      throw new TypeError(
-        `Sketch module ${id} parameter ${key} requires min < max.`,
-      );
-    }
-
-    if (step !== undefined && (!Number.isFinite(step) || step <= 0)) {
-      throw new TypeError(
-        `Sketch module ${id} parameter ${key} uses an invalid step.`,
-      );
-    }
+    seenKeys.add(parameter.key);
   }
 
   if (typeof create !== "function") {

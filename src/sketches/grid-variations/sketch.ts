@@ -1,18 +1,40 @@
 import { attachResponsiveCanvas } from "../../utils/responsive-canvas.js";
 import { defineSketch } from "../../utils/defineSketch.js";
-import type { SketchContext } from "../../types/sketch.js";
+import type {
+  InferParams,
+  SketchContext,
+  SketchParameter,
+} from "../../types/sketch.js";
+
+const parameters = [
+  {
+    type: "number",
+    key: "cellSize",
+    label: "Cell Size",
+    min: 16,
+    max: 96,
+    step: 1,
+  },
+  { type: "number", key: "margin", label: "Margin", min: 8, max: 120, step: 1 },
+  {
+    type: "number",
+    key: "strokeWeight",
+    label: "Stroke",
+    min: 0.4,
+    max: 4,
+    step: 0.1,
+  },
+] as const satisfies readonly SketchParameter[];
+
+type Params = InferParams<typeof parameters>;
 
 export default defineSketch({
   id: "grid-variations",
   title: "Grid Variations",
   description: "Controlled randomness on a geometric grid.",
   date: "2026-04-26",
-  parameters: [
-    { key: "cellSize", label: "Cell Size", min: 16, max: 96, step: 1 },
-    { key: "margin", label: "Margin", min: 8, max: 120, step: 1 },
-    { key: "strokeWeight", label: "Stroke", min: 0.4, max: 4, step: 0.1 },
-  ],
-  create({ p, theme = "light", params }: SketchContext) {
+  parameters,
+  create({ p, theme = "light", params }: SketchContext<Params>) {
     let palette: string[];
     const isDark = theme === "dark";
     const backgroundColor = isDark ? "#070B12" : "#FCFBF7";

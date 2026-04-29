@@ -1,5 +1,5 @@
 {
-  "viewMode": 0,
+  "viewMode": false,
   "patternPeriod": 120,
   "maxOffset": 12,
   "objectScale": 0.26,

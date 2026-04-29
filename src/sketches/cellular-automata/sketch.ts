@@ -1,6 +1,55 @@
 import { attachResponsiveCanvas } from "../../utils/responsive-canvas.js";
 import { defineSketch } from "../../utils/defineSketch.js";
-import type { SketchContext } from "../../types/sketch.js";
+import type {
+  InferParams,
+  SketchContext,
+  SketchParameter,
+} from "../../types/sketch.js";
+
+const parameters = [
+  {
+    type: "number",
+    key: "cellSize",
+    label: "Cell Size",
+    min: 3,
+    max: 20,
+    step: 1,
+  },
+  {
+    type: "number",
+    key: "seedProbability",
+    label: "Seed",
+    min: 0.05,
+    max: 0.9,
+    step: 0.01,
+  },
+  {
+    type: "number",
+    key: "frameRate",
+    label: "Frame Rate",
+    min: 2,
+    max: 30,
+    step: 1,
+  },
+  {
+    type: "number",
+    key: "reseedFrames",
+    label: "Reseed Frames",
+    min: 60,
+    max: 1200,
+    step: 1,
+  },
+  {
+    type: "number",
+    key: "cellPadding",
+    label: "Cell Gap",
+    min: 0,
+    max: 4,
+    step: 1,
+  },
+] as const satisfies readonly SketchParameter[];
+
+type Params = InferParams<typeof parameters>;
 
 interface Board {
   [y: number]: number[];
@@ -11,20 +60,8 @@ export default defineSketch({
   title: "Cellular Automata",
   description: "A Game of Life variant with periodic reseeding.",
   date: "2026-04-26",
-  parameters: [
-    { key: "cellSize", label: "Cell Size", min: 3, max: 20, step: 1 },
-    { key: "seedProbability", label: "Seed", min: 0.05, max: 0.9, step: 0.01 },
-    { key: "frameRate", label: "Frame Rate", min: 2, max: 30, step: 1 },
-    {
-      key: "reseedFrames",
-      label: "Reseed Frames",
-      min: 60,
-      max: 1200,
-      step: 1,
-    },
-    { key: "cellPadding", label: "Cell Gap", min: 0, max: 4, step: 1 },
-  ],
-  create({ p, theme = "light", params }: SketchContext) {
+  parameters,
+  create({ p, theme = "light", params }: SketchContext<Params>) {
     const isDark = theme === "dark";
     const backgroundColor = isDark ? [9, 9, 11] : [248, 250, 252];
     const cellColor = isDark ? [110, 231, 183] : [5, 150, 105];

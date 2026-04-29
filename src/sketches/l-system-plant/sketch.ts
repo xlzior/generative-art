@@ -1,6 +1,48 @@
 import { attachResponsiveCanvas } from "../../utils/responsive-canvas.js";
 import { defineSketch } from "../../utils/defineSketch.js";
-import type { SketchContext } from "../../types/sketch.js";
+import type {
+  InferParams,
+  SketchContext,
+  SketchParameter,
+} from "../../types/sketch.js";
+
+const parameters = [
+  { type: "number", key: "turn", label: "Turn", min: 5, max: 45, step: 0.5 },
+  {
+    type: "number",
+    key: "initialSegment",
+    label: "Initial Segment",
+    min: 20,
+    max: 180,
+    step: 1,
+  },
+  {
+    type: "number",
+    key: "iterations",
+    label: "Iterations",
+    min: 1,
+    max: 6,
+    step: 1,
+  },
+  {
+    type: "number",
+    key: "shrinkFactor",
+    label: "Shrink",
+    min: 0.3,
+    max: 0.8,
+    step: 0.01,
+  },
+  {
+    type: "number",
+    key: "strokeWeight",
+    label: "Stroke",
+    min: 0.2,
+    max: 3,
+    step: 0.05,
+  },
+] as const satisfies readonly SketchParameter[];
+
+type Params = InferParams<typeof parameters>;
 
 interface Rules {
   [key: string]: string;
@@ -11,20 +53,8 @@ export default defineSketch({
   title: "L-System Plant",
   description: "String-rewriting fractal grown with turtle graphics.",
   date: "2026-04-26",
-  parameters: [
-    { key: "turn", label: "Turn", min: 5, max: 45, step: 0.5 },
-    {
-      key: "initialSegment",
-      label: "Initial Segment",
-      min: 20,
-      max: 180,
-      step: 1,
-    },
-    { key: "iterations", label: "Iterations", min: 1, max: 6, step: 1 },
-    { key: "shrinkFactor", label: "Shrink", min: 0.3, max: 0.8, step: 0.01 },
-    { key: "strokeWeight", label: "Stroke", min: 0.2, max: 3, step: 0.05 },
-  ],
-  create({ p, theme = "light", params }: SketchContext) {
+  parameters,
+  create({ p, theme = "light", params }: SketchContext<Params>) {
     const rules: Rules = {
       F: "FF+[+F-F-F]-[-F+F+F]",
     };
