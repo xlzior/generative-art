@@ -1,21 +1,14 @@
 import type p5 from "p5";
-import type { z } from "zod";
 
 export type Theme = "light" | "dark";
 
-export interface SketchContext<
-  T extends Record<string, number | string | boolean> = Record<
-    string,
-    number | string | boolean
-  >,
-> {
+export interface SketchContext {
   p: p5;
   theme: Theme;
-  params: T;
+  params: Record<string, number>;
 }
 
-export interface SketchNumberParameter {
-  type: "number";
+export interface SketchParameter {
   key: string;
   label: string;
   min: number;
@@ -23,61 +16,17 @@ export interface SketchNumberParameter {
   step?: number;
 }
 
-export interface SketchStringParameter {
-  type: "string";
-  key: string;
-  label: string;
-  placeholder?: string;
-}
-
-export interface SketchBooleanParameter {
-  type: "boolean";
-  key: string;
-  label: string;
-}
-
-export type SketchParameter =
-  | SketchNumberParameter
-  | SketchStringParameter
-  | SketchBooleanParameter;
-
-/**
- * Input type for defineSketch - parameters optional (will be auto-extracted from schema)
- */
-export interface SketchModuleInput<
-  T extends Record<string, number | string | boolean> = Record<
-    string,
-    number | string | boolean
-  >,
-> {
+export interface SketchModule {
   id: string;
   title: string;
   description: string;
   date: string;
-  schema: z.ZodType<T>;
-  create: (context: SketchContext<T>) => void;
+  parameters: SketchParameter[];
+  create: (context: SketchContext) => void;
 }
 
-/**
- * Output type from defineSketch - parameters required (auto-extracted from schema)
- */
-export interface SketchModule<
-  T extends Record<string, number | string | boolean> = Record<
-    string,
-    number | string | boolean
-  >,
-> extends SketchModuleInput<T> {
-  parameters: SketchParameter[];
-}
-
-export interface SketchModuleWithDefaults<
-  T extends Record<string, number | string | boolean> = Record<
-    string,
-    number | string | boolean
-  >,
-> extends SketchModule<T> {
-  defaults: T;
-  parameters: SketchParameter[];
+export interface SketchModuleWithDefaults extends SketchModule {
+  defaults: Record<string, number>;
   defaultsFile: string;
   filePath: string;
 }

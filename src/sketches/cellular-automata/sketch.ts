@@ -1,6 +1,5 @@
 import { attachResponsiveCanvas } from "../../utils/responsive-canvas.js";
 import { defineSketch } from "../../utils/defineSketch.js";
-import { asNumber } from "../../utils/param-helpers.js";
 import type { SketchContext } from "../../types/sketch.js";
 
 interface Board {
@@ -13,46 +12,17 @@ export default defineSketch({
   description: "A Game of Life variant with periodic reseeding.",
   date: "2026-04-26",
   parameters: [
+    { key: "cellSize", label: "Cell Size", min: 3, max: 20, step: 1 },
+    { key: "seedProbability", label: "Seed", min: 0.05, max: 0.9, step: 0.01 },
+    { key: "frameRate", label: "Frame Rate", min: 2, max: 30, step: 1 },
     {
-      type: "number",
-      key: "cellSize",
-      label: "Cell Size",
-      min: 3,
-      max: 20,
-      step: 1,
-    },
-    {
-      type: "number",
-      key: "seedProbability",
-      label: "Seed",
-      min: 0.05,
-      max: 0.9,
-      step: 0.01,
-    },
-    {
-      type: "number",
-      key: "frameRate",
-      label: "Frame Rate",
-      min: 2,
-      max: 30,
-      step: 1,
-    },
-    {
-      type: "number",
       key: "reseedFrames",
       label: "Reseed Frames",
       min: 60,
       max: 1200,
       step: 1,
     },
-    {
-      type: "number",
-      key: "cellPadding",
-      label: "Cell Gap",
-      min: 0,
-      max: 4,
-      step: 1,
-    },
+    { key: "cellPadding", label: "Cell Gap", min: 0, max: 4, step: 1 },
   ],
   create({ p, theme = "light", params }: SketchContext) {
     const isDark = theme === "dark";
@@ -68,18 +38,18 @@ export default defineSketch({
           y,
           Array.from(
             { length: cols },
-            () => p.random() < asNumber(params.seedProbability) ? 1 : 0,
+            () => p.random() < params.seedProbability ? 1 : 0,
           ),
         ]),
       );
     }
 
     function resetBoard(): void {
-      const cellSize = Math.max(1, Math.floor(asNumber(params.cellSize)));
+      const cellSize = Math.max(1, Math.floor(params.cellSize));
       cols = Math.max(1, Math.floor(p.width / cellSize));
       rows = Math.max(1, Math.floor(p.height / cellSize));
       board = randomBoard();
-      p.frameRate(Math.max(1, Math.floor(asNumber(params.frameRate))));
+      p.frameRate(Math.max(1, Math.floor(params.frameRate)));
     }
 
     function countNeighbors(x: number, y: number): number {

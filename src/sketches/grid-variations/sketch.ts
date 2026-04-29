@@ -8,30 +8,9 @@ export default defineSketch({
   description: "Controlled randomness on a geometric grid.",
   date: "2026-04-26",
   parameters: [
-    {
-      type: "number",
-      key: "cellSize",
-      label: "Cell Size",
-      min: 16,
-      max: 96,
-      step: 1,
-    },
-    {
-      type: "number",
-      key: "margin",
-      label: "Margin",
-      min: 8,
-      max: 120,
-      step: 1,
-    },
-    {
-      type: "number",
-      key: "strokeWeight",
-      label: "Stroke",
-      min: 0.4,
-      max: 4,
-      step: 0.1,
-    },
+    { key: "cellSize", label: "Cell Size", min: 16, max: 96, step: 1 },
+    { key: "margin", label: "Margin", min: 8, max: 120, step: 1 },
+    { key: "strokeWeight", label: "Stroke", min: 0.4, max: 4, step: 0.1 },
   ],
   create({ p, theme = "light", params }: SketchContext) {
     let palette: string[];

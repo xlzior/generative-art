@@ -12,39 +12,17 @@ export default defineSketch({
   description: "String-rewriting fractal grown with turtle graphics.",
   date: "2026-04-26",
   parameters: [
-    { type: "number", key: "turn", label: "Turn", min: 5, max: 45, step: 0.5 },
+    { key: "turn", label: "Turn", min: 5, max: 45, step: 0.5 },
     {
-      type: "number",
       key: "initialSegment",
       label: "Initial Segment",
       min: 20,
       max: 180,
       step: 1,
     },
-    {
-      type: "number",
-      key: "iterations",
-      label: "Iterations",
-      min: 1,
-      max: 6,
-      step: 1,
-    },
-    {
-      type: "number",
-      key: "shrinkFactor",
-      label: "Shrink",
-      min: 0.3,
-      max: 0.8,
-      step: 0.01,
-    },
-    {
-      type: "number",
-      key: "strokeWeight",
-      label: "Stroke",
-      min: 0.2,
-      max: 3,
-      step: 0.05,
-    },
+    { key: "iterations", label: "Iterations", min: 1, max: 6, step: 1 },
+    { key: "shrinkFactor", label: "Shrink", min: 0.3, max: 0.8, step: 0.01 },
+    { key: "strokeWeight", label: "Stroke", min: 0.2, max: 3, step: 0.05 },
   ],
   create({ p, theme = "light", params }: SketchContext) {
     const rules: Rules = {
