@@ -5,6 +5,7 @@ import type {
 } from "../../types/sketch.js";
 import { defineSketch } from "../../utils/defineSketch.js";
 import { attachResponsiveCanvas } from "../../utils/responsive-canvas.js";
+import { rngRandom } from "../../utils/seeded-random.js";
 
 const parameters = [
 	{
@@ -88,7 +89,7 @@ export default defineSketch({
 	description: "Particle trails following a noise-driven vector field.",
 	date: "2026-04-26",
 	parameters,
-	create({ p, theme = "light", params }: SketchContext<Params>) {
+	create({ p, theme = "light", params, rng }: SketchContext<Params>) {
 		const isDark = theme === "dark";
 		const backgroundColor: [number, number, number] = isDark
 			? [11, 13, 14]
@@ -108,10 +109,10 @@ export default defineSketch({
 				Math.floor(Math.max(params.ttlMin, params.ttlMax)),
 			);
 			return {
-				x: p.random(p.width),
-				y: p.random(p.height),
+				x: rngRandom(rng, 0, p.width),
+				y: rngRandom(rng, 0, p.height),
 				age: 0,
-				ttl: p.random(ttlMin, ttlMax),
+				ttl: rngRandom(rng, ttlMin, ttlMax),
 			};
 		}
 
