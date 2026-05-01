@@ -5,6 +5,7 @@ import type {
 } from "../../types/sketch.js";
 import { defineSketch } from "../../utils/defineSketch.js";
 import { attachResponsiveCanvas } from "../../utils/responsive-canvas.js";
+import { rngChoice, rngInt, rngRandom } from "../../utils/seeded-random.js";
 
 const parameters = [
 	{
@@ -34,7 +35,7 @@ export default defineSketch({
 	description: "Controlled randomness on a geometric grid.",
 	date: "2026-04-26",
 	parameters,
-	create({ p, theme = "light", params }: SketchContext<Params>) {
+	create({ p, theme = "light", params, rng }: SketchContext<Params>) {
 		let palette: string[];
 		const isDark = theme === "dark";
 		const backgroundColor = isDark ? "#070B12" : "#FCFBF7";
@@ -90,20 +91,20 @@ export default defineSketch({
 					const y = startY + row * cellSize + cellSize * 0.5;
 					p.push();
 					p.translate(x, y);
-					p.rotate(Math.floor(p.random(4)) * 90);
+					p.rotate(rngInt(rng, 4) * 90);
 					p.noFill();
-					p.stroke(p.random(palette));
+					p.stroke(rngChoice(rng, palette));
 
-					const mode = Math.floor(p.random(4));
+					const mode = rngInt(rng, 4);
 					if (mode === 0) {
 						p.line(-cellSize * 0.4, 0, cellSize * 0.4, 0);
 					} else if (mode === 1) {
 						p.arc(0, 0, cellSize * 0.8, cellSize * 0.8, 0, 90);
 					} else if (mode === 2) {
 						p.rectMode(p.CENTER);
-						p.square(0, 0, cellSize * p.random(0.2, 0.8));
+						p.square(0, 0, cellSize * rngRandom(rng, 0.2, 0.8));
 					} else {
-						p.circle(0, 0, cellSize * p.random(0.18, 0.7));
+						p.circle(0, 0, cellSize * rngRandom(rng, 0.18, 0.7));
 					}
 					p.pop();
 				}
