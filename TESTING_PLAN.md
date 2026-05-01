@@ -15,19 +15,13 @@ Prevent regressions when working on TODO items. Tests should be resilient to imp
 
 ---
 
-## Phase 1: Infrastructure Setup
+## Phase 1: Contract Tests (Vitest)
 
-**Install:**
+**Install (Phase 1):**
 - `vitest` + `@sveltejs/vite-plugin-svelte` — unit tests with Svelte 5 support
-- `@playwright/test` + `playwright` — visual regression tests
 
-**Configure:**
+**Configure (Phase 1):**
 - `vitest.config.ts` with Svelte plugin
-- `playwright.config.ts` with fixed viewport (e.g., 800x600)
-
----
-
-## Phase 2: Contract Tests (Vitest)
 
 Test the sketch system's public contract. No seeded randomness needed.
 
@@ -61,7 +55,7 @@ Extract `readJsonBody` and `isWithinSketchesRoot` into testable functions. Test:
 
 ---
 
-## Phase 3: Seeded Randomness (Prerequisite for Visual Tests)
+## Phase 2: Seeded Randomness (Prerequisite for Visual Tests)
 
 **Why:** Visual regression requires deterministic output. Currently sketches using `Math.random()` are non-deterministic.
 
@@ -75,7 +69,13 @@ Extract `readJsonBody` and `isWithinSketchesRoot` into testable functions. Test:
 
 ---
 
-## Phase 4: Visual Regression Tests (Playwright)
+## Phase 3: Visual Regression Tests (Playwright)
+
+**Install (Phase 3):**
+- `@playwright/test` + `playwright` — visual regression tests
+
+**Configure (Phase 3):**
+- `playwright.config.ts` with fixed viewport (e.g., 800x600)
 
 Once seeded randomness is in place.
 
@@ -102,7 +102,7 @@ test(`sketch ${sketch.id} renders correctly`, async ({ page }) => {
 
 ---
 
-## Phase 5: Component Tests (Optional)
+## Phase 4: Component Tests (Optional)
 
 Only if UI behavior regressions are a concern.
 
@@ -128,11 +128,11 @@ To avoid brittle tests:
 
 ## Implementation Order
 
-1. Set up Vitest + write `defineSketch()` contract tests
-2. Refactor `sketches/index.ts` + write auto-discovery contract tests
-3. Implement seeded randomness (TODO item, needed for Phase 4)
-4. Set up Playwright + write visual regression tests for all sketches
-5. (Optional) Add component tests for critical UI
+1. Set up Vitest + write `defineSketch()` contract tests (Phase 1)
+2. Refactor `sketches/index.ts` + write auto-discovery contract tests (Phase 1)
+3. Implement seeded randomness (Phase 2, TODO item, needed for Phase 3)
+4. Set up Playwright + write visual regression tests for all sketches (Phase 3)
+5. (Optional) Add component tests for critical UI (Phase 4)
 
 ---
 
@@ -140,8 +140,8 @@ To avoid brittle tests:
 
 | Phase | Effort |
 |-------|--------|
-| Infrastructure | 1-2 hrs |
-| Contract tests | 2-3 hrs |
-| Seeded randomness | 3-4 hrs |
-| Visual regression | 2-3 hrs |
-| **Total** | **8-12 hrs** |
+| Phase 1: Contract tests | 3-5 hrs |
+| Phase 2: Seeded randomness | 3-4 hrs |
+| Phase 3: Visual regression | 2-3 hrs |
+| Phase 4: Component tests (optional) | 1-2 hrs |
+| **Total** | **9-14 hrs** |
