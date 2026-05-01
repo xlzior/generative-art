@@ -463,34 +463,378 @@ After migration, verify determinism:
 
 ## Phase 3: Visual Regression Tests (Playwright)
 
-**Install (Phase 3):**
-- `@playwright/test` + `playwright` — visual regression tests
+**Prerequisite:** Phase 2 (Seeded Randomness) must be complete. All sketches must produce deterministic output given the same seed.
 
-**Configure (Phase 3):**
-- `playwright.config.ts` with fixed viewport (e.g., 800x600)
+### Overview
+Visual regression tests capture canvas output for each sketch at a fixed seed and compare against stored snapshots. This detects unintended rendering changes across refactoring.
 
-Once seeded randomness is in place.
+---
 
-**Test file:** `tests/visual/sketches.spec.ts`
+### Step 1: Install Dependencies
+
+```bash
+pnpm add -D @playwright/test playwright
+```
+
+- `@playwright/test`: Test runner with built-in snapshot testing
+- `playwright`: Browser binaries (Chromium for consistent rendering)
+
+After install, initialize Playwright (optional, can skip if configuring manually):
+```bash
+pnpm exec playwright install chromium
+```
+
+---
+
+### Step 2: Configure Playwright
+
+**File:** `playwright.config.ts` in project root:
 
 ```typescript
-test(`sketch ${sketch.id} renders correctly`, async ({ page }) => {
-  await page.goto(`/?sketch=${sketch.id}&seed=42`);
-  await page.waitForSelector('canvas');
-  await page.waitForTimeout(500); // Wait for render
-  expect(await page.screenshot()).toMatchSnapshot(`${sketch.id}.png`);
+import { defineConfig } from '@playwright/test';
+
+export default defineConfig({
+  testDir: './tests/visual',
+  timeout: 30_000,
+  expect: {
+    toMatchSnapshot: {
+      // 1% pixel difference threshold — allows minor anti-aliasing variance
+      maxDiffPixels: 1000,
+      // Or use threshold ratio:
+      // maxDiffPixels: 0.01,
+    },
+  },
+  use: {
+    // Fixed viewport ensures consistent canvas sizing
+    viewport: { width: 800, height: 600 },
+    // Disable animations that could cause flakiness
+    actionTimeout: 10_000,
+  },
+  projects: [
+    {
+      name: 'chromium',
+      use: {
+        browserName: 'chromium',
+        // Headless for CI; can override with `npx playwright test --headed`
+        headless: true,
+      },
+    },
+  ],
+  // Only run on Chromium for consistent pixel output
+  fullyParallel: true,
 });
 ```
 
-**Challenges & Solutions:**
+**Add test scripts to `package.json`:**
+```json
+{
+  "scripts": {
+    "test:visual": "playwright test",
+    "test:visual:update": "playwright test --update-snapshots",
+    "test:visual:ui": "playwright test --ui"
+  }
+}
+```
 
-| Challenge | Solution |
-|----------|----------|
-| Detecting render completion | For `noLoop()` sketches, wait fixed time. For animated, capture frame 1. Optionally dispatch `sketch-rendered` event. |
-| Canvas size variability | Fixed viewport in Playwright config |
-| Image loading (mona-lisa) | Preload or mock image in test |
+---
 
-**Run in CI:** Add GitHub Action to run Playwright and compare snapshots.
+### Step 3: Create Test Utilities
+
+**File:** `tests/visual/utils.ts`
+
+Helper functions to handle sketch-specific quirks:
+
+```typescript
+import type { Page } from '@playwright/test';
+
+/**
+ * Navigate to a sketch with a specific seed.
+ * Ensures the page is loaded and canvas is available.
+ */
+export async function gotoSketch(
+  page: Page,
+  sketchId: string,
+  seed = 42
+): Promise<void> {
+  await page.goto(`/?sketch=${sketchId}&seed=${seed}`, {
+    waitUntil: 'networkidle',
+  });
+  // Wait for canvas element to exist
+  await page.waitForSelector('canvas');
+}
+
+/**
+ * Wait for sketch rendering to complete.
+ * Handles both static (noLoop) and animated sketches.
+ */
+export async function waitForRender(
+  page: Page,
+  sketchId: string
+): Promise<void> {
+  // Dispatch a custom event from sketches to signal completion (optional enhancement)
+  // For now, use sketch-specific wait strategies:
+
+  const animatedSketches = ['flow-field-particles', 'changing-circle-line', 'cellular-automata'];
+  const imageSketches = ['mona-lisa-circles']; // Needs image load
+
+  if (animatedSketches.includes(sketchId)) {
+    // Animated sketches: capture after 2 frames (approx 32ms at 60fps)
+    await page.waitForTimeout(100);
+  } else if (imageSketches.includes(sketchId)) {
+    // Wait for Mona Lisa image to load
+    await page.waitForFunction(() => {
+      const img = document.querySelector('img[data-mona-lisa]') as HTMLImageElement;
+      return img && img.complete;
+    }).catch(() => {
+      // If no img element found, just wait fixed time
+      console.warn('Mona Lisa image not found, waiting fixed time');
+    });
+    // Additional buffer for image-based rendering
+    await page.waitForTimeout(500);
+  } else {
+    // Static sketches (noLoop): brief wait for paint
+    await page.waitForTimeout(300);
+  }
+}
+
+/**
+ * Capture canvas snapshot, excluding UI elements.
+ * Returns buffer of PNG screenshot.
+ */
+export async function captureCanvas(
+  page: Page
+): Promise<Buffer> {
+  // Option A: Screenshot just the canvas element
+  const canvas = page.locator('canvas').first();
+  const screenshot = await canvas.screenshot({ type: 'png' });
+  return screenshot;
+
+  // Option B: Full page but mask UI elements (alternative)
+  // const screenshot = await page.screenshot({
+  //   type: 'png',
+  //   mask: [page.locator('.controls'), page.locator('.sketch-selector')],
+  // });
+  // return screenshot;
+}
+
+/**
+ * Get all sketch IDs from the application.
+ * Fetches the auto-discovered sketch list via the same glob pattern.
+ */
+export async function getAllSketchIds(): Promise<string[]> {
+  // This should match the auto-discovery in src/sketches/index.ts
+  // For tests, we can either:
+  // 1. Import and use the actual index (requires Vite transform)
+  // 2. Hardcode sketch IDs (brittle but simple)
+  // 3. Fetch from a test endpoint or parse the index page
+
+  // Option 3: Parse from the index page
+  // In the test, we'll navigate to home and extract sketch IDs from the selector
+
+  return [
+    'stereogram',
+    'l-system-plant',
+    'cellular-automata',
+    'mona-lisa-circles',
+    'grid-variations',
+    'changing-circle-line',
+    'flow-field-particles',
+    'fractal-tree',
+  ];
+}
+```
+
+---
+
+### Step 4: Write Visual Regression Tests
+
+**File:** `tests/visual/sketches.spec.ts`
+
+```typescript
+import { test, expect } from '@playwright/test';
+import { gotoSketch, waitForRender, captureCanvas, getAllSketchIds } from './utils';
+
+// Global seed for all visual tests — ensures consistency
+const VISUAL_TEST_SEED = 42;
+
+test.describe('Sketch Visual Regression', () => {
+  // Get all sketch IDs (can be dynamic or hardcoded)
+  const sketchIds = getAllSketchIds();
+
+  // Run a test for each sketch
+  for (const sketchId of sketchIds) {
+    test(`sketch "${sketchId}" renders correctly`, async ({ page }) => {
+      // Navigate to the sketch with fixed seed
+      await gotoSketch(page, sketchId, VISUAL_TEST_SEED);
+
+      // Wait for rendering to complete (handles animated vs static)
+      await waitForRender(page, sketchId);
+
+      // Capture canvas screenshot
+      const screenshot = await captureCanvas(page);
+
+      // Compare against stored snapshot
+      // Snapshot will be stored at:
+      // tests/visual/__snapshots__/sketches.spec.ts/sketch-{id}-render-{chromium}.snap.png
+      expect(screenshot).toMatchSnapshot(`${sketchId}-render.png`);
+    });
+  }
+
+  // Optional: Test with different seed produces different output
+  test('different seeds produce different output', async ({ page }) => {
+    await gotoSketch(page, 'grid-variations', 42);
+    await waitForRender(page, 'grid-variations');
+    const screenshot42 = await captureCanvas(page);
+
+    await gotoSketch(page, 'grid-variations', 99);
+    await waitForRender(page, 'grid-variations');
+    const screenshot99 = await captureCanvas(page);
+
+    // Should be different (unless extremely unlucky with hash collision)
+    expect(screenshot42.equals(screenshot99)).toBe(false);
+  });
+
+  // Optional: Test theme switching doesn't break rendering
+  test('sketch renders correctly in dark mode', async ({ page }) => {
+    await page.goto(`/?sketch=grid-variations&seed=42&theme=dark`, {
+      waitUntil: 'networkidle',
+    });
+    await page.waitForSelector('canvas');
+    await waitForRender(page, 'grid-variations');
+
+    const screenshot = await captureCanvas(page);
+    expect(screenshot).toMatchSnapshot(`grid-variations-dark-render.png`);
+  });
+});
+```
+
+---
+
+### Step 5: Handle Special Cases
+
+#### 5.1 Animated Sketches (flow-field-particles, changing-circle-line, cellular-automata)
+
+These sketches redraw continuously. For visual tests, we need to capture a consistent frame.
+
+**Approach:** Wait for a fixed time (e.g., 100ms) after page load to allow first frame to render.
+
+**Enhanced approach (optional):** Modify sketches to dispatch a `sketch-rendered` event after the first frame:
+
+```typescript
+// In each animated sketch's create() function, after first draw:
+p.windowResized = () => {
+  // ... existing code
+};
+
+// After first frame:
+if (p.frameCount === 1) {
+  window.dispatchEvent(new CustomEvent('sketch-rendered'));
+}
+```
+
+Then in test utility:
+```typescript
+export async function waitForRender(page: Page, sketchId: string): Promise<void> {
+  const animatedSketches = ['flow-field-particles', 'changing-circle-line', 'cellular-automata'];
+
+  if (animatedSketches.includes(sketchId)) {
+    // Wait for custom event or timeout after 1 second
+    await Promise.race([
+      page.waitForEvent('sketch-rendered' as any),
+      page.waitForTimeout(1000),
+    ]);
+  } else {
+    await page.waitForTimeout(300);
+  }
+}
+```
+
+#### 5.2 Image-Dependent Sketches (mona-lisa-circles)
+
+The `mona-lisa-circles` sketch loads an external image. This can cause flakiness if the image hasn't loaded by screenshot time.
+
+**Solution A: Mock the image in Playwright**
+```typescript
+test.beforeEach(async ({ page }) => {
+  // Intercept the Mona Lisa image request and return a mock
+  await page.route('**/mona-lisa.jpg', async (route) => {
+    // Serve a simple 100x100 test image
+    const buffer = await generateTestImageBuffer(); // Helper function
+    await route.fulfill({
+      contentType: 'image/jpeg',
+      body: buffer,
+    });
+  });
+});
+```
+
+**Solution B: Wait for image load**
+Already handled in `waitForRender()` utility above.
+
+#### 5.3 Canvas Size Consistency
+
+The canvas size must be consistent across test runs. Playwright's fixed viewport (800x600) helps, but the sketch might resize the canvas.
+
+**Ensure:** The sketch respects the container size or uses a fixed canvas size. Add a test to verify canvas dimensions:
+
+```typescript
+test('canvas has consistent dimensions', async ({ page }) => {
+  await gotoSketch(page, 'grid-variations', 42);
+  await waitForRender(page, 'grid-variations');
+
+  const canvasSize = await page.evaluate(() => {
+    const canvas = document.querySelector('canvas')!;
+    return { width: canvas.width, height: canvas.height };
+  });
+
+  // Assert expected size (adjust per your layout)
+  expect(canvasSize).toEqual({ width: 800, height: 600 });
+});
+```
+
+---
+
+### Step 6: Update Snapshots (First Run)
+
+On the first run, there will be no snapshots to compare against. Generate them:
+
+```bash
+# Generate initial snapshots for all sketches
+pnpm test:visual:update
+
+# Or update specific test snapshots
+pnpm test:visual:update -- sketches.spec.ts
+```
+
+Snapshots will be stored in `tests/visual/__snapshots__/` (or alongside the test file, depending on Playwright config).
+
+**Review snapshots:** Before committing, manually verify the generated snapshots look correct. Delete any that look wrong and re-run with `--update-snapshots`.
+
+---
+
+### Phase 3 Success Criteria
+
+- [ ] `@playwright/test` and `playwright` installed
+- [ ] `playwright.config.ts` configured with fixed viewport and Chromium only
+- [ ] `tests/visual/utils.ts` created with helper functions
+- [ ] `tests/visual/sketches.spec.ts` covers all 8 sketches
+- [ ] Initial snapshots generated and committed to repo
+- [ ] `pnpm test:visual` passes locally
+- [ ] Special cases handled (animated sketches, image loading, canvas size)
+- [ ] Snapshot diff threshold set appropriately (e.g., 1% pixel difference)
+
+---
+
+### Effort Estimate (Phase 3)
+
+| Task | Effort |
+|------|--------|
+| Install Playwright + configure | 0.5 hr |
+| Create test utilities | 1 hr |
+| Write visual regression tests | 0.5 hr |
+| Handle special cases (animated, images) | 1 hr |
+| Generate and verify initial snapshots | 0.5 hr |
+| **Total** | **3-4 hrs** |
 
 ---
 
@@ -534,6 +878,6 @@ To avoid brittle tests:
 |-------|--------|
 | Phase 1: Contract tests | 3-5 hrs |
 | Phase 2: Seeded randomness | 3-4 hrs |
-| Phase 3: Visual regression | 2-3 hrs |
+| Phase 3: Visual regression | 3-4 hrs |
 | Phase 4: Component tests (optional) | 1-2 hrs |
-| **Total** | **9-14 hrs** |
+| **Total** | **10-15 hrs** |
