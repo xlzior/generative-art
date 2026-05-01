@@ -495,6 +495,7 @@ import { defineConfig } from '@playwright/test';
 
 export default defineConfig({
   testDir: './tests/visual',
+  snapshotDir: './tests/visual/__snapshots__',
   timeout: 30_000,
   expect: {
     toMatchSnapshot: {
@@ -557,43 +558,43 @@ export async function gotoSketch(
   seed = 42
 ): Promise<void> {
   await page.goto(`/?sketch=${sketchId}&seed=${seed}`, {
-    waitUntil: 'networkidle',
+    waitUntil: 'load',
   });
-  // Wait for canvas element to exist
-  await page.waitForSelector('canvas');
+  // Wait for canvas element to exist (SPA may render after load)
+  await page.waitForSelector('canvas', { state: 'visible' });
 }
 
 /**
  * Wait for sketch rendering to complete.
  * Handles both static (noLoop) and animated sketches.
+ * Relies on sketches dispatching a 'sketch-rendered' event after first frame.
  */
 export async function waitForRender(
   page: Page,
   sketchId: string
 ): Promise<void> {
-  // Dispatch a custom event from sketches to signal completion (optional enhancement)
-  // For now, use sketch-specific wait strategies:
-
   const animatedSketches = ['flow-field-particles', 'changing-circle-line', 'cellular-automata'];
   const imageSketches = ['mona-lisa-circles']; // Needs image load
 
+  // Primary approach: wait for custom event (sketches must dispatch this)
+  // Fallback: timeout after 2 seconds if event never fires
+  const renderPromise = page.waitForEvent('sketch-rendered' as any).catch(() => {});
+  const timeoutPromise = page.waitForTimeout(2000);
+
   if (animatedSketches.includes(sketchId)) {
-    // Animated sketches: capture after 2 frames (approx 32ms at 60fps)
-    await page.waitForTimeout(100);
+    // Animated sketches: wait for first frame event or timeout
+    await Promise.race([renderPromise, timeoutPromise]);
   } else if (imageSketches.includes(sketchId)) {
-    // Wait for Mona Lisa image to load
+    // Wait for Mona Lisa image to load (with route mocking in beforeEach)
     await page.waitForFunction(() => {
       const img = document.querySelector('img[data-mona-lisa]') as HTMLImageElement;
       return img && img.complete;
-    }).catch(() => {
-      // If no img element found, just wait fixed time
-      console.warn('Mona Lisa image not found, waiting fixed time');
-    });
-    // Additional buffer for image-based rendering
-    await page.waitForTimeout(500);
+    }).catch(() => {});
+    // Also wait for first render event
+    await Promise.race([renderPromise, timeoutPromise]);
   } else {
-    // Static sketches (noLoop): brief wait for paint
-    await page.waitForTimeout(300);
+    // Static sketches (noLoop): wait for first render event or brief timeout
+    await Promise.race([renderPromise, page.waitForTimeout(500)]);
   }
 }
 
@@ -618,29 +619,27 @@ export async function captureCanvas(
 }
 
 /**
- * Get all sketch IDs from the application.
- * Fetches the auto-discovered sketch list via the same glob pattern.
+ * Get all sketch IDs from the application by parsing the sketch selector on the page.
+ * This matches the auto-discovery in src/sketches/index.ts and automatically
+ * picks up new sketches without manual updates.
  */
-export async function getAllSketchIds(): Promise<string[]> {
-  // This should match the auto-discovery in src/sketches/index.ts
-  // For tests, we can either:
-  // 1. Import and use the actual index (requires Vite transform)
-  // 2. Hardcode sketch IDs (brittle but simple)
-  // 3. Fetch from a test endpoint or parse the index page
+export async function getAllSketchIds(page: Page): Promise<string[]> {
+  // Navigate to home page and extract sketch IDs from the selector
+  await page.goto('/', { waitUntil: 'load' });
+  await page.waitForSelector('[data-sketch-selector]', { state: 'visible' });
 
-  // Option 3: Parse from the index page
-  // In the test, we'll navigate to home and extract sketch IDs from the selector
+  // Extract all sketch IDs from option values or data attributes
+  const sketchIds = await page.$$eval('[data-sketch-selector] option, [data-sketch-option]', (elements) => {
+    return elements
+      .map((el) => el.getAttribute('value') || el.getAttribute('data-sketch-id'))
+      .filter((id): id is string => id !== null && id !== '');
+  });
 
-  return [
-    'stereogram',
-    'l-system-plant',
-    'cellular-automata',
-    'mona-lisa-circles',
-    'grid-variations',
-    'changing-circle-line',
-    'flow-field-particles',
-    'fractal-tree',
-  ];
+  if (sketchIds.length === 0) {
+    throw new Error('No sketch IDs found on page. Check sketch selector selector.');
+  }
+
+  return sketchIds;
 }
 ```
 
@@ -658,8 +657,14 @@ import { gotoSketch, waitForRender, captureCanvas, getAllSketchIds } from './uti
 const VISUAL_TEST_SEED = 42;
 
 test.describe('Sketch Visual Regression', () => {
-  // Get all sketch IDs (can be dynamic or hardcoded)
-  const sketchIds = getAllSketchIds();
+  let sketchIds: string[];
+
+  test.beforeAll(async ({ browser }) => {
+    // Dynamically discover all sketch IDs from the running app
+    const page = await browser.newPage();
+    sketchIds = await getAllSketchIds(page);
+    await page.close();
+  });
 
   // Run a test for each sketch
   for (const sketchId of sketchIds) {
@@ -674,8 +679,7 @@ test.describe('Sketch Visual Regression', () => {
       const screenshot = await captureCanvas(page);
 
       // Compare against stored snapshot
-      // Snapshot will be stored at:
-      // tests/visual/__snapshots__/sketches.spec.ts/sketch-{id}-render-{chromium}.snap.png
+      // Snapshot will be stored at: tests/visual/__snapshots__/sketch-id-render.png
       expect(screenshot).toMatchSnapshot(`${sketchId}-render.png`);
     });
   }
@@ -696,10 +700,12 @@ test.describe('Sketch Visual Regression', () => {
 
   // Optional: Test theme switching doesn't break rendering
   test('sketch renders correctly in dark mode', async ({ page }) => {
-    await page.goto(`/?sketch=grid-variations&seed=42&theme=dark`, {
-      waitUntil: 'networkidle',
-    });
-    await page.waitForSelector('canvas');
+    await gotoSketch(page, 'grid-variations', VISUAL_TEST_SEED);
+    // Toggle dark mode via UI or verify theme param support
+    await page.waitForSelector('[data-theme-toggle]').then(
+      (el) => el.click(),
+      () => page.goto(`/?sketch=grid-variations&seed=${VISUAL_TEST_SEED}&theme=dark`)
+    );
     await waitForRender(page, 'grid-variations');
 
     const screenshot = await captureCanvas(page);
@@ -714,52 +720,49 @@ test.describe('Sketch Visual Regression', () => {
 
 #### 5.1 Animated Sketches (flow-field-particles, changing-circle-line, cellular-automata)
 
-These sketches redraw continuously. For visual tests, we need to capture a consistent frame.
+These sketches redraw continuously. For visual tests, we capture after the first frame.
 
-**Approach:** Wait for a fixed time (e.g., 100ms) after page load to allow first frame to render.
-
-**Enhanced approach (optional):** Modify sketches to dispatch a `sketch-rendered` event after the first frame:
+**Required:** Modify each animated sketch's `create()` function to dispatch a `sketch-rendered` event after the first frame:
 
 ```typescript
-// In each animated sketch's create() function, after first draw:
-p.windowResized = () => {
-  // ... existing code
+// In each animated sketch's create() function:
+const sketch = (p: p5) => {
+  p.setup = () => { /* ... */ };
+  p.draw = () => {
+    // ... existing draw logic
+
+    // After first frame, signal that rendering is complete
+    if (p.frameCount === 1) {
+      window.dispatchEvent(new CustomEvent('sketch-rendered'));
+    }
+  };
 };
-
-// After first frame:
-if (p.frameCount === 1) {
-  window.dispatchEvent(new CustomEvent('sketch-rendered'));
-}
 ```
 
-Then in test utility:
-```typescript
-export async function waitForRender(page: Page, sketchId: string): Promise<void> {
-  const animatedSketches = ['flow-field-particles', 'changing-circle-line', 'cellular-automata'];
-
-  if (animatedSketches.includes(sketchId)) {
-    // Wait for custom event or timeout after 1 second
-    await Promise.race([
-      page.waitForEvent('sketch-rendered' as any),
-      page.waitForTimeout(1000),
-    ]);
-  } else {
-    await page.waitForTimeout(300);
-  }
-}
-```
+The `waitForRender()` utility already waits for this event (with a 2-second timeout fallback).
 
 #### 5.2 Image-Dependent Sketches (mona-lisa-circles)
 
-The `mona-lisa-circles` sketch loads an external image. This can cause flakiness if the image hasn't loaded by screenshot time.
+The `mona-lisa-circles` sketch loads an external image. Mock the image in Playwright to avoid network flakiness.
 
-**Solution A: Mock the image in Playwright**
+**Add to `tests/visual/sketches.spec.ts`:**
 ```typescript
+// Generate a simple test image buffer (100x100 colored rectangle)
+function generateTestImageBuffer(): Buffer {
+  // Use a minimal valid JPEG or PNG buffer
+  // Option: import a pre-made 100x100 test image from test fixtures
+  const { createCanvas } = require('canvas');
+  const canvas = createCanvas(100, 100);
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#cccccc';
+  ctx.fillRect(0, 0, 100, 100);
+  return canvas.toBuffer('image/jpeg');
+}
+
 test.beforeEach(async ({ page }) => {
   // Intercept the Mona Lisa image request and return a mock
   await page.route('**/mona-lisa.jpg', async (route) => {
-    // Serve a simple 100x100 test image
-    const buffer = await generateTestImageBuffer(); // Helper function
+    const buffer = generateTestImageBuffer();
     await route.fulfill({
       contentType: 'image/jpeg',
       body: buffer,
@@ -768,15 +771,22 @@ test.beforeEach(async ({ page }) => {
 });
 ```
 
-**Solution B: Wait for image load**
-Already handled in `waitForRender()` utility above.
+**Alternative (simpler):** Place a test image at `tests/visual/fixtures/mona-lisa.jpg` and serve it:
+```typescript
+test.beforeEach(async ({ page }) => {
+  await page.route('**/mona-lisa.jpg', async (route) => {
+    await route.fulfill({
+      path: 'tests/visual/fixtures/mona-lisa.jpg',
+    });
+  });
+});
+```
 
 #### 5.3 Canvas Size Consistency
 
 The canvas size must be consistent across test runs. Playwright's fixed viewport (800x600) helps, but the sketch might resize the canvas.
 
-**Ensure:** The sketch respects the container size or uses a fixed canvas size. Add a test to verify canvas dimensions:
-
+**Add a verification test:**
 ```typescript
 test('canvas has consistent dimensions', async ({ page }) => {
   await gotoSketch(page, 'grid-variations', 42);
@@ -806,7 +816,7 @@ pnpm test:visual:update
 pnpm test:visual:update -- sketches.spec.ts
 ```
 
-Snapshots will be stored in `tests/visual/__snapshots__/` (or alongside the test file, depending on Playwright config).
+Snapshots will be stored in `tests/visual/__snapshots__/` (configured via `snapshotDir` in `playwright.config.ts`).
 
 **Review snapshots:** Before committing, manually verify the generated snapshots look correct. Delete any that look wrong and re-run with `--update-snapshots`.
 
@@ -815,12 +825,14 @@ Snapshots will be stored in `tests/visual/__snapshots__/` (or alongside the test
 ### Phase 3 Success Criteria
 
 - [ ] `@playwright/test` and `playwright` installed
-- [ ] `playwright.config.ts` configured with fixed viewport and Chromium only
-- [ ] `tests/visual/utils.ts` created with helper functions
-- [ ] `tests/visual/sketches.spec.ts` covers all 8 sketches
+- [ ] `playwright.config.ts` configured with fixed viewport, Chromium only, and `snapshotDir`
+- [ ] `tests/visual/utils.ts` created with helper functions (dynamic `getAllSketchIds`, event-based `waitForRender`)
+- [ ] Animated sketches dispatch `sketch-rendered` event after first frame
+- [ ] `tests/visual/sketches.spec.ts` dynamically discovers and covers all sketches
+- [ ] Image mocking configured for `mona-lisa-circles` in `beforeEach`
 - [ ] Initial snapshots generated and committed to repo
 - [ ] `pnpm test:visual` passes locally
-- [ ] Special cases handled (animated sketches, image loading, canvas size)
+- [ ] Special cases handled (animated sketches via events, image mocking, canvas size verification)
 - [ ] Snapshot diff threshold set appropriately (e.g., 1% pixel difference)
 
 ---
