@@ -5,6 +5,7 @@ import type {
 } from "../../types/sketch.js";
 import { defineSketch } from "../../utils/defineSketch.js";
 import { attachResponsiveCanvas } from "../../utils/responsive-canvas.js";
+import { rngRandom } from "../../utils/seeded-random.js";
 
 const parameters = [
 	{ type: "number", key: "depth", label: "Depth", min: 4, max: 14, step: 1 },
@@ -66,7 +67,7 @@ export default defineSketch({
 	description: "Recursive branching with angle jitter.",
 	date: "2026-04-26",
 	parameters,
-	create({ p, theme = "light", params }: SketchContext<Params>) {
+	create({ p, theme = "light", params, rng }: SketchContext<Params>) {
 		const isDark = theme === "dark";
 		const backgroundColor = isDark ? "#0A0E15" : "#FCFBF7";
 		const strokeColor = isDark ? "#E2E8F0" : "#1C1917";
@@ -98,14 +99,14 @@ export default defineSketch({
 			branch(
 				x2,
 				y2,
-				length * p.random(minShrink, maxShrink),
+				length * rngRandom(rng, minShrink, maxShrink),
 				angle - spread,
 				depth - 1,
 			);
 			branch(
 				x2,
 				y2,
-				length * p.random(minShrink, maxShrink),
+				length * rngRandom(rng, minShrink, maxShrink),
 				angle + spread,
 				depth - 1,
 			);
