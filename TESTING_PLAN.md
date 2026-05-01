@@ -223,8 +223,11 @@ export function createRng(seed: number): () => number {
   };
 }
 
+/** Type alias for the RNG function returned by createRng */
+export type Rng = ReturnType<typeof createRng>;
+
 /** Deterministic random in range [min, max) — mirrors p5's random(min, max) */
-export function rngRandom(rng: () => number, min: number, max?: number): number {
+export function rngRandom(rng: Rng, min: number, max?: number): number {
   if (max === undefined) {
     max = min;
     min = 0;
@@ -233,12 +236,12 @@ export function rngRandom(rng: () => number, min: number, max?: number): number 
 }
 
 /** Deterministic integer in [0, bound) — mirrors p5's random(bound) for integers */
-export function rngInt(rng: () => number, bound: number): number {
+export function rngInt(rng: Rng, bound: number): number {
   return Math.floor(rng() * bound);
 }
 
 /** Deterministic choice from an array */
-export function rngChoice<T>(rng: () => number, arr: readonly T[]): T {
+export function rngChoice<T>(rng: Rng, arr: readonly T[]): T {
   return arr[Math.floor(rng() * arr.length)];
 }
 ```
@@ -258,9 +261,7 @@ export function rngChoice<T>(rng: () => number, arr: readonly T[]): T {
 Add `rng` to `SketchContext`:
 ```typescript
 import type p5 from "p5";
-import type { createRng } from "../utils/seeded-random.js";
-
-export type Rng = ReturnType<typeof createRng>;
+import type { Rng } from "../utils/seeded-random.js";
 
 export interface SketchContext<TParams extends Record<string, unknown>> {
   p: p5;
@@ -306,8 +307,8 @@ export function setSeedInUrl(seed: number): void {
 
 In the sketch instantiation logic, pass `rng` from `createRng(seed)`:
 ```typescript
-import { createRng } from "$lib/utils/seeded-random.js";
-import { getSeedFromUrl } from "$lib/utils/seed.js";
+import { createRng } from "../../utils/seeded-random.js";
+import { getSeedFromUrl } from "../../utils/seed.js";
 
 const seed = getSeedFromUrl();
 const rng = createRng(seed);
