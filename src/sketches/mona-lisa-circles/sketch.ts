@@ -6,6 +6,7 @@ import type {
 } from "../../types/sketch.js";
 import { defineSketch } from "../../utils/defineSketch.js";
 import { attachResponsiveCanvas } from "../../utils/responsive-canvas.js";
+import { rngRandom } from "../../utils/seeded-random.js";
 
 const parameters = [
 	{
@@ -51,7 +52,7 @@ export default defineSketch({
 		"Random circles colored by the Mona Lisa painting at their coordinates.",
 	date: "2026-04-27",
 	parameters,
-	create({ p, theme = "light", params }: SketchContext<Params>) {
+	create({ p, theme = "light", params, rng }: SketchContext<Params>) {
 		const isDark = theme === "dark";
 		const backgroundColor: [number, number, number] = isDark
 			? [11, 13, 14]
@@ -100,8 +101,8 @@ export default defineSketch({
 
 			for (let i = 0; i < params.totalCircles; i++) {
 				// Pick random point on canvas
-				const x = p.random(canvasWidth);
-				const y = p.random(canvasHeight);
+				const x = rngRandom(rng, 0, canvasWidth);
+				const y = rngRandom(rng, 0, canvasHeight);
 
 				// Map canvas coordinates to image coordinates while maintaining aspect ratio
 				let imgX = Math.floor(
@@ -122,7 +123,7 @@ export default defineSketch({
 				const b = monaLisaImage.pixels[pixelIndex + 2];
 
 				// Random radius
-				const radius = p.random(params.radiusMin, params.radiusMax);
+				const radius = rngRandom(rng, params.radiusMin, params.radiusMax);
 
 				// Draw circle with color from image
 				p.fill(r, g, b, params.opacity);
