@@ -210,7 +210,7 @@ export default defineSketch({
 				}
 
 				// Random chance to reverse direction
-				if (Math.random() * 100 < params.reverseProbability) {
+				if (rngRandom(rng, 0, 100) < params.reverseProbability) {
 					direction *= -1;
 				}
 			}

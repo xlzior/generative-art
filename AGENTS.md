@@ -32,6 +32,14 @@ Sketch contract is enforced by `defineSketch()` in `src/utils/defineSketch.ts`. 
 
 Strict mode enabled. `moduleResolution: "bundler"`, `noEmit: true`. Typecheck with `pnpm tsc --noEmit`.
 
+## Seeded randomness
+
+All sketches MUST use `rng()` from `src/utils/seeded-random.ts` for any randomness. This ensures deterministic output when a seed is provided via URL `?seed=N` (used in Playwright visual regression tests).
+
+- Import `rngRandom`, `rngInt`, `rngChoice` from `src/utils/seeded-random.ts`
+- Use `rng` passed in `SketchContext` — never use `Math.random()` or `p.random()`
+- The seed is only used in Playwright tests; normal app usage falls back to `Math.random()`
+
 ## Agent conventions
 
 - Clean up Vite dev servers you start (use `kill` or similar when done).
