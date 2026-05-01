@@ -159,9 +159,12 @@
   }
 
   function handleParamChange(key, value) {
-    if (!currentParams) return;
-    currentParams[key] = value;
-    currentParams = { ...currentParams };
+    const sketch = getSketchById(currentSketch);
+    if (!sketch) return;
+    const params = getParamsForSketch(sketch);
+    params[key] = value;
+    paramsBySketch.set(sketch.id, { ...params });
+    paramsBySketch = new Map(paramsBySketch);
     mountSketch(currentSketch, { updateUrl: false, redrawControls: false });
   }
 
