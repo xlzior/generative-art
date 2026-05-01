@@ -5,6 +5,7 @@ import type {
 } from "../../types/sketch.js";
 import { defineSketch } from "../../utils/defineSketch.js";
 import { attachResponsiveCanvas } from "../../utils/responsive-canvas.js";
+import { rngRandom } from "../../utils/seeded-random.js";
 
 const parameters = [
 	{
@@ -82,7 +83,7 @@ export default defineSketch({
 		"Circles along a line with sizes that increase and randomly reverse direction.",
 	date: "2026-04-27",
 	parameters,
-	create({ p, theme = "light", params }: SketchContext<Params>) {
+	create({ p, theme = "light", params, rng }: SketchContext<Params>) {
 		const isDark = theme === "dark";
 		const backgroundColor = isDark ? "#0A0E15" : "#FCFBF7";
 		const strokeColor = isDark ? "#E2E8F0" : "#1C1917";
@@ -109,8 +110,8 @@ export default defineSketch({
 			const controlPoints: Array<{ x: number; y: number }> = [];
 			for (let i = 0; i < numControlPoints; i += 1) {
 				controlPoints.push({
-					x: p.random(margin, p.width - margin),
-					y: p.random(margin, p.height - margin),
+					x: rngRandom(rng, margin, p.width - margin),
+					y: rngRandom(rng, margin, p.height - margin),
 				});
 			}
 

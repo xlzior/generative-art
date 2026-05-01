@@ -6,8 +6,8 @@
   import SketchSelector from './components/SketchSelector.svelte';
   import ParameterControls from './components/ParameterControls.svelte';
   import ThemeToggle from './components/ThemeToggle.svelte';
-  import { createRng, type Rng } from './utils/seeded-random.js';
-  import { getSeedFromUrl, setSeedInUrl } from './utils/seed.js';
+  import { createRng } from './utils/seeded-random.js';
+  import { getSeedFromUrl } from './utils/seed.js';
 
   let currentSketch = $state(sketches[0].id);
   let currentTheme = $state('light');
@@ -15,8 +15,7 @@
   let paramsBySketch = $state(new Map());
   let currentParams = $state(null);
   let currentSketchModule = $state(null);
-  let currentSeed = $state(getSeedFromUrl());
-  let currentRng = $state(createRng(currentSeed));
+  let currentRng = $state(getSeedFromUrl() !== undefined ? createRng(getSeedFromUrl()) : () => Math.random());
 
   const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
 
@@ -87,8 +86,11 @@
     const container = document.getElementById('canvas-container');
     if (!container) return;
 
+    const seed = getSeedFromUrl();
+    const rng = seed !== undefined ? createRng(seed) : () => Math.random();
+
     currentP5 = new p5(
-      (p) => sketch.create({ p, theme: currentTheme, params, rng: currentRng }),
+      (p) => sketch.create({ p, theme: currentTheme, params, rng }),
       container,
     );
     document.title = sketch.title;
@@ -100,9 +102,6 @@
   }
 
   function handleRegenerate() {
-    currentSeed = getSeedFromUrl();
-    currentRng = createRng(currentSeed);
-    setSeedInUrl(currentSeed);
     mountSketch(currentSketch, { updateUrl: false });
   }
 
@@ -178,18 +177,12 @@
   onMount(() => {
     applyTheme(resolveInitialTheme());
     createIcons({ icons: { Download, Moon, RefreshCw, RotateCcw, Save } });
-    currentSeed = getSeedFromUrl();
-    currentRng = createRng(currentSeed);
-    setSeedInUrl(currentSeed);
     currentSketch = resolveInitialSketch();
     mountSketch(currentSketch);
 
     const handleKeyDown = (event) => {
       if (event.key.toLowerCase() === 'r' || event.code === 'Space') {
         event.preventDefault();
-        currentSeed = getSeedFromUrl();
-        currentRng = createRng(currentSeed);
-        setSeedInUrl(currentSeed);
         mountSketch(currentSketch, { updateUrl: false });
       }
     };
