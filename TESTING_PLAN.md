@@ -17,41 +17,167 @@ Prevent regressions when working on TODO items. Tests should be resilient to imp
 
 ## Phase 1: Contract Tests (Vitest)
 
-**Install (Phase 1):**
-- `vitest` + `@sveltejs/vite-plugin-svelte` — unit tests with Svelte 5 support
-
-**Configure (Phase 1):**
-- `vitest.config.ts` with Svelte plugin
-
 Test the sketch system's public contract. No seeded randomness needed.
 
-### 2.1 `defineSketch()` Validation (`src/utils/__tests__/defineSketch.test.ts`)
-- Valid sketch passes
-- Missing required fields (`id`, `title`, `description`, `date`, `parameters`, `create`) throws
-- Invalid parameter types throw
-- Duplicate parameter keys throw
-- Number parameter validation (`min < max`, `step > 0`)
+### Prerequisites
+- Package manager: `pnpm` (per project conventions)
+- Existing `tsconfig.json` with strict mode and `"moduleResolution": "bundler"`
 
-### 2.2 Sketch Auto-Discovery (`src/sketches/__tests__/validation.test.ts`)
+### Install Dependencies
+```bash
+pnpm add -D vitest @sveltejs/vite-plugin-svelte
+```
+- `vitest`: Test runner integrated with Vite toolchain
+- `@sveltejs/vite-plugin-svelte`: Enables Svelte 5 (runes) support in Vitest for any Svelte file imports
 
-**Refactoring needed:** Extract from `sketches/index.ts` into testable pure functions:
+### Configure Vitest
+Create `vitest.config.ts` in project root:
 ```typescript
-// New: src/sketches/validation.ts
-export function validateSketchModule(sketch, defaults) { ... }
-export function sortSketches(sketches) { ... }
-export function checkDuplicateIds(sketches) { ... }
+import { defineConfig } from 'vitest/config';
+import { svelte } from '@sveltejs/vite-plugin-svelte';
+
+export default defineConfig({
+  plugins: [svelte({ runes: true })],
+  test: {
+    include: ['src/**/*.{test,spec}.ts'],
+    exclude: ['node_modules', 'dist', 'tests/visual', 'tests/component'],
+    tsconfig: './tsconfig.json',
+  },
+});
 ```
 
-Tests:
-- `validateSketchModule()` — valid/invalid inputs
-- `sortSketches()` — sorts by date descending, then title ascending
-- `checkDuplicateIds()` — detects duplicates
-- Defaults validation — keys match parameters, values are correct types
+Add test scripts to `package.json`:
+```json
+{
+  "scripts": {
+    "test": "vitest",
+    "test:run": "vitest run"
+  }
+}
+```
 
-### 2.3 Vite Endpoint Logic (`vite.config.ts`)
-Extract `readJsonBody` and `isWithinSketchesRoot` into testable functions. Test:
-- `readJsonBody()` — correct body parsing
-- `isWithinSketchesRoot()` — path traversal prevention
+### 1.1 `defineSketch()` Validation (`src/utils/__tests__/defineSketch.test.ts`)
+Tests the public API of `defineSketch()` from `src/utils/defineSketch.ts` with no mocked dependencies.
+
+#### Detailed Test Cases:
+1. **Valid sketch passes**
+   - Input: Complete sketch with all required fields and valid number parameter:
+     ```typescript
+     defineSketch({
+       id: 'test-sketch',
+       title: 'Test Sketch',
+       date: '2026-01-01',
+       description: 'Test sketch for contract validation',
+       parameters: [
+         { id: 'size', type: 'number', min: 0, max: 100, step: 1, default: 50 }
+       ],
+       create: (ctx) => ctx.canvas.getContext('2d')!,
+     })
+     ```
+   - Expect: No error thrown, returns sketch object with correct `id` and `parameters`
+
+2. **Missing required fields throw**
+   - Test each required field individually: omit `id`, `title`, `date`, `description`, `parameters`, `create`
+   - Test multiple missing fields (e.g., omit `id` and `title`)
+   - Expect: Throws error mentioning missing field name(s)
+
+3. **Invalid parameter types throw**
+   - Parameter with `type: 'invalid'` (only `number`/`boolean` permitted per contract)
+   - Parameter missing `type` field
+   - Parameter `id` is non-string (e.g., numeric `123`)
+   - Expect: Throws error indicating invalid parameter type
+
+4. **Duplicate parameter keys throw**
+   - Input: Two parameters with identical `id: 'size'`
+   - Expect: Throws error referencing duplicate parameter ID
+
+5. **Number parameter validation**
+   - `min >= max` (e.g., `min: 100, max: 50`) → throws
+   - `step <= 0` (e.g., `step: 0` or `step: -1`) → throws
+   - `default` outside `[min, max]` range (e.g., `min: 0, max: 100, default: 150`) → throws (if enforced by contract)
+   - Valid number parameter (`min: 0, max: 100, step: 2, default: 50`) → passes
+
+### 1.2 Sketch Auto-Discovery (`src/sketches/__tests__/validation.test.ts`)
+First refactor `src/sketches/index.ts` to extract validation/sorting logic into pure, testable functions.
+
+#### Refactoring Steps:
+1. Create `src/sketches/validation.ts`:
+   ```typescript
+   import type { Sketch } from './types'; // Adjust per actual project types
+
+   /** Validate sketch module against contract and matching defaults */
+   export function validateSketchModule(
+     sketch: Sketch,
+     defaults: Record<string, number>
+   ): void { /* throws if invalid */ }
+
+   /** Sort sketches by date descending, then title ascending */
+   export function sortSketches(sketches: Sketch[]): Sketch[] { /* returns sorted copy */ }
+
+   /** Check for duplicate sketch IDs, throw if found */
+   export function checkDuplicateIds(sketches: Sketch[]): void { /* throws if duplicates */ }
+   ```
+
+2. Update `src/sketches/index.ts` to use these functions for processing auto-discovered sketches.
+
+#### Detailed Test Cases:
+1. **`validateSketchModule()` tests**
+   - Valid sketch + matching defaults → no error
+   - Defaults keys mismatch parameter IDs (e.g., parameter `size` exists, defaults has `scale`) → throws
+   - Defaults value type mismatch (number parameter, defaults has string value) → throws
+   - Missing defaults key for a parameter → throws
+   - Extra defaults keys not present in parameters → throws (per contract)
+
+2. **`sortSketches()` tests**
+   - Same date, different titles: `title: 'B'` vs `title: 'A'` → sorted A then B
+   - Different dates: `2026-01-01` vs `2026-02-01` → newer date (Feb) first
+   - 3+ sketches with mixed dates/titles → correct order
+   - Invalid date strings (optional, if contract enforces ISO 8601)
+
+3. **`checkDuplicateIds()` tests**
+   - No duplicates → no error
+   - Two sketches with identical `id: 'duplicate'` → throws with duplicate ID in message
+   - Multiple duplicates → throws listing all duplicate IDs
+
+### 1.3 Vite Endpoint Logic (`src/vite/__tests__/endpoint.test.ts`)
+Refactor `vite.config.ts` to extract `/__sketch-defaults` endpoint logic into testable functions.
+
+#### Refactoring Steps:
+1. Create `src/vite/endpoint-utils.ts`:
+   ```typescript
+   import type { IncomingMessage } from 'node:http';
+
+   /** Parse JSON request body, throw on invalid JSON */
+   export async function readJsonBody(
+     req: IncomingMessage
+   ): Promise<Record<string, unknown>> { /* ... */ }
+
+   /** Prevent path traversal by checking target path is within sketches root */
+   export function isWithinSketchesRoot(
+     targetPath: string,
+     sketchesRoot: string = 'src/sketches'
+   ): boolean { /* ... */ }
+   ```
+
+2. Update `vite.config.ts` to import and use these functions for the endpoint handler.
+
+#### Detailed Test Cases:
+1. **`readJsonBody()` tests**
+   - Valid JSON `{"size": 50}` → returns parsed object
+   - Invalid JSON (e.g., unquoted keys `{size: 50}`) → throws
+   - Empty body → throws or returns empty object (per implementation)
+
+2. **`isWithinSketchesRoot()` tests**
+   - Valid path: `src/sketches/my-sketch/defaults.json` → returns `true`
+   - Path traversal: `src/sketches/../other/defaults.json` → returns `false`
+   - Absolute path outside root: `/etc/passwd` → returns `false`
+   - Relative traversal: `src/sketches/my-sketch/../../defaults.json` → returns `false`
+
+### Phase 1 Success Criteria
+- All Vitest tests pass with `pnpm test:run`
+- `pnpm tsc --noEmit` passes (no type errors in new files)
+- `pnpm biome check --write` passes (formatting/linting)
+- Existing `pnpm dev` and `pnpm build` commands still work after refactoring
 
 ---
 
