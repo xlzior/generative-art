@@ -135,6 +135,11 @@ export default defineSketch({
 		});
 
 		p.draw = () => {
+			// Dispatch event after first frame for visual tests
+			if (p.frameCount === 1) {
+				window.dispatchEvent(new CustomEvent("sketch-rendered"));
+			}
+
 			p.fill(
 				backgroundColor[0],
 				backgroundColor[1],
