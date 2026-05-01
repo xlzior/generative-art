@@ -5,6 +5,7 @@ import type {
 } from "../../types/sketch.js";
 import { defineSketch } from "../../utils/defineSketch.js";
 import { attachResponsiveCanvas } from "../../utils/responsive-canvas.js";
+import { rngRandom } from "../../utils/seeded-random.js";
 
 const parameters = [
 	{
@@ -61,7 +62,7 @@ export default defineSketch({
 	description: "A Game of Life variant with periodic reseeding.",
 	date: "2026-04-26",
 	parameters,
-	create({ p, theme = "light", params }: SketchContext<Params>) {
+	create({ p, theme = "light", params, rng }: SketchContext<Params>) {
 		const isDark = theme === "dark";
 		const backgroundColor: [number, number, number] = isDark
 			? [9, 9, 11]
@@ -78,7 +79,7 @@ export default defineSketch({
 				Array.from({ length: rows }, (_, y) => [
 					y,
 					Array.from({ length: cols }, () =>
-						p.random() < params.seedProbability ? 1 : 0,
+						rngRandom(rng, 0, 1) < params.seedProbability ? 1 : 0,
 					),
 				]),
 			);

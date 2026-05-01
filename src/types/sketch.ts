@@ -1,6 +1,9 @@
 import type p5 from "p5";
+import type { createRng } from "../utils/seeded-random.js";
 
 export type Theme = "light" | "dark";
+
+export type Rng = ReturnType<typeof createRng>;
 
 export type SketchParameter =
 	| {
@@ -28,6 +31,7 @@ export interface SketchContext<TParams extends Record<string, unknown>> {
 	p: p5;
 	theme: Theme;
 	params: TParams;
+	rng: Rng;
 }
 
 export interface SketchModule<TParams extends Record<string, unknown>> {
