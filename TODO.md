@@ -58,3 +58,17 @@
 ## Testing
 
 - [ ] **Add unit tests** — For `defineSketch` validation logic and `src/sketches/index.ts` auto-discovery behavior.
+- [ ] Refactor the code to make it more testable (if necessary)
+- [ ] Add component tests where relevant and appropriate.
+- [ ] Seeded randomness: Make all sketches take in a seed which controls all sources of randomness within the sketch. Given the same seed, a sketch should always produce the same output.
+- [ ] Add Visual Regression Testing using Playwright. Playwright will load your Svelte page, wait for the p5 canvas to render, and take a snapshot. (Requires seeded randomness)
+
+## Sketches
+
+- [ ] Add URL as a parameter to mona lisa sketch to allow for background images besides mona lisa
+- [ ] Check if mona lisa is drawing in an infinite loop and if that is undesirable, find another way to implement it
+- [ ] Use a reasonably-sized toggle for boolean parameters instead of a tiny checkbox (see depth map boolean parameter for stereogram)
+
+## Gallery view
+
+- [ ] Implement home page as a gallery of all sketches. Each sketch should be represented as a card, with a thumbnail-sized render of the sketch. Clicking on the card should bring you to to the full sketch.
