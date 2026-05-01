@@ -183,15 +183,280 @@ Refactor `vite.config.ts` to extract `/__sketch-defaults` endpoint logic into te
 
 ## Phase 2: Seeded Randomness (Prerequisite for Visual Tests)
 
-**Why:** Visual regression requires deterministic output. Currently sketches using `Math.random()` are non-deterministic.
+**Why:** Visual regression requires deterministic output. Currently sketches using `p.random()` / `Math.random()` are non-deterministic.
 
-**Implementation:**
-1. Create `src/utils/seeded-random.ts` — export `createRng(seed): () => number` (mulberry32)
-2. Add `rng` to `SketchContext` type
-3. Update all 8 sketches to use `rng()` instead of `Math.random()`
-4. Pass seed via URL param `?seed=42` (fall back to random)
+**Feasibility:** ✅ Feasible. 6/8 sketches need migration; all use `p.random()` (uniform replacement). 2 sketches (stereogram, l-system-plant) are already deterministic.
 
-**Note:** This is a TODO item but necessary before visual tests. Recommend doing it early.
+### Randomness Audit (All 8 Sketches)
+
+| Sketch | Randomness Source | Calls | Deterministic Already? |
+|--------|------------------|-------|----------------------|
+| stereogram | Custom `hashUint(seed, row, col)` | 0 (`p.random`) | ✅ Yes — uses seed param |
+| l-system-plant | None | 0 | ✅ Yes — pure L-system |
+| cellular-automata | `p.random()` | 1 (`randomBoard`) | ❌ No |
+| mona-lisa-circles | `p.random()` | 3 (x, y, radius) | ❌ No |
+| grid-variations | `p.random()` | 5 (rotation, color, mode, sizes) | ❌ No |
+| changing-circle-line | `p.random()` + `Math.random()` | 3 (points, reversal) | ❌ No |
+| flow-field-particles | `p.random()` | 3 (spawn x, y, ttl) | ❌ No* |
+| fractal-tree | `p.random()` | 2 (shrink per branch) | ❌ No |
+
+\* `p.noise()` is deterministic per (x, y, z) input; only particle spawn needs seeding.
+
+---
+
+### Step 1: Create Seeded RNG Utility
+
+**File:** `src/utils/seeded-random.ts`
+
+```typescript
+/**
+ * Mulberry32 PRNG — simple, fast, seedable.
+ * Returns a function that produces deterministic floats in [0, 1).
+ */
+export function createRng(seed: number): () => number {
+  let state = seed | 0;
+  return () => {
+    state = (state + 0x6d2b79f5) | 0;
+    let t = Math.imul(state ^ (state >>> 15), 1 | state);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/** Deterministic random in range [min, max) — mirrors p5's random(min, max) */
+export function rngRandom(rng: () => number, min: number, max?: number): number {
+  if (max === undefined) {
+    max = min;
+    min = 0;
+  }
+  return min + rng() * (max - min);
+}
+
+/** Deterministic integer in [0, bound) — mirrors p5's random(bound) for integers */
+export function rngInt(rng: () => number, bound: number): number {
+  return Math.floor(rng() * bound);
+}
+
+/** Deterministic choice from an array */
+export function rngChoice<T>(rng: () => number, arr: readonly T[]): T {
+  return arr[Math.floor(rng() * arr.length)];
+}
+```
+
+**Verification:** Unit test `src/utils/__tests__/seeded-random.test.ts`:
+- Same seed → same sequence of 100 calls produces identical values
+- Different seed → different sequence
+- `rngRandom(rng, 5, 10)` always returns values in [5, 10)
+- `rngInt(rng, 4)` returns integers in [0, 4)
+
+---
+
+### Step 2: Update `SketchContext` Type
+
+**File:** `src/types/sketch.ts`
+
+Add `rng` to `SketchContext`:
+```typescript
+import type p5 from "p5";
+import type { createRng } from "../utils/seeded-random.js";
+
+export type Rng = ReturnType<typeof createRng>;
+
+export interface SketchContext<TParams extends Record<string, unknown>> {
+  p: p5;
+  theme: Theme;
+  params: TParams;
+  rng: Rng;  // Deterministic PRNG seeded per sketch instance
+}
+```
+
+---
+
+### Step 3: Wire Seed Through the Application
+
+#### 3a. Parse seed from URL / generate random
+
+**File:** `src/utils/seed.ts` (new)
+
+```typescript
+const SEED_PARAM = "seed";
+
+/** Get seed from URL ?seed=42, or generate a random one */
+export function getSeedFromUrl(): number {
+  const params = new URLSearchParams(window.location.search);
+  const seedStr = params.get(SEED_PARAM);
+  if (seedStr !== null && /^\d+$/.test(seedStr)) {
+    return parseInt(seedStr, 10);
+  }
+  // Random seed (32-bit signed int)
+  return (Math.random() * 2147483647) | 0;
+}
+
+/** Update URL with new seed (without reload) */
+export function setSeedInUrl(seed: number): void {
+  const url = new URL(window.location.href);
+  url.searchParams.set(SEED_PARAM, String(seed));
+  window.history.replaceState({}, "", url.toString());
+}
+```
+
+#### 3b. Pass `rng` to sketch `create()` context
+
+**File:** `src/routes/+page.svelte` (or wherever sketch is instantiated)
+
+In the sketch instantiation logic, pass `rng` from `createRng(seed)`:
+```typescript
+import { createRng } from "$lib/utils/seeded-random.js";
+import { getSeedFromUrl } from "$lib/utils/seed.js";
+
+const seed = getSeedFromUrl();
+const rng = createRng(seed);
+
+// When creating sketch context:
+sketch.create({ p, theme, params, rng });
+```
+
+---
+
+### Step 4: Migrate Each Sketch
+
+#### 4.1 `cellular-automata/sketch.ts`
+**Change:** Replace `p.random()` in `randomBoard()`:
+```typescript
+// Before:
+Array.from({ length: cols }, () => p.random() < params.seedProbability ? 1 : 0)
+
+// After:
+import { rngRandom } from "../../utils/seeded-random.js";
+// In create({ p, theme, params, rng }):
+Array.from({ length: cols }, () => rngRandom(rng, 0, 1) < params.seedProbability ? 1 : 0)
+```
+**Note:** `reseedFrames` triggers `randomBoard()` periodically — this remains deterministic because `rng` state continues sequentially.
+
+#### 4.2 `mona-lisa-circles/sketch.ts`
+**Change:** Replace 3 `p.random()` calls in `drawCircles()`:
+```typescript
+// Before:
+const x = p.random(canvasWidth);
+const y = p.random(canvasHeight);
+const radius = p.random(params.radiusMin, params.radiusMax);
+
+// After (with rng in context):
+const x = rngRandom(rng, 0, canvasWidth);
+const y = rngRandom(rng, 0, canvasHeight);
+const radius = rngRandom(rng, params.radiusMin, params.radiusMax);
+```
+
+#### 4.3 `grid-variations/sketch.ts`
+**Change:** Replace 5 `p.random()` calls in `p.draw`:
+```typescript
+// Before:
+p.rotate(Math.floor(p.random(4)) * 90);
+p.stroke(p.random(palette));
+const mode = Math.floor(p.random(4));
+p.square(0, 0, cellSize * p.random(0.2, 0.8));
+p.circle(0, 0, cellSize * p.random(0.18, 0.7));
+
+// After:
+import { rngInt, rngChoice, rngRandom } from "../../utils/seeded-random.js";
+p.rotate(rngInt(rng, 4) * 90);
+p.stroke(rngChoice(rng, palette));
+const mode = rngInt(rng, 4);
+p.square(0, 0, cellSize * rngRandom(rng, 0.2, 0.8));
+p.circle(0, 0, cellSize * rngRandom(rng, 0.18, 0.7));
+```
+
+#### 4.4 `changing-circle-line/sketch.ts`
+**Change:** Replace `p.random()` for control points + `Math.random()` for reversal:
+```typescript
+// Before:
+x: p.random(margin, p.width - margin),
+y: p.random(margin, p.height - margin),
+// ...
+if (Math.random() * 100 < params.reverseProbability) {
+
+// After:
+x: rngRandom(rng, margin, p.width - margin),
+y: rngRandom(rng, margin, p.height - margin),
+// ...
+if (rngRandom(rng, 0, 100) < params.reverseProbability) {
+```
+
+#### 4.5 `flow-field-particles/sketch.ts`
+**Change:** Replace `p.random()` in `spawnParticle()`:
+```typescript
+// Before:
+return {
+  x: p.random(p.width),
+  y: p.random(p.height),
+  age: 0,
+  ttl: p.random(ttlMin, ttlMax),
+};
+
+// After:
+return {
+  x: rngRandom(rng, 0, p.width),
+  y: rngRandom(rng, 0, p.height),
+  age: 0,
+  ttl: rngRandom(rng, ttlMin, ttlMax),
+};
+```
+**Note:** `p.noise()` is deterministic per (x, y, z) input. Since particle positions are now seeded, the entire animation becomes deterministic for a given seed.
+
+#### 4.6 `fractal-tree/sketch.ts`
+**Change:** Replace `p.random()` in `branch()`:
+```typescript
+// Before:
+length * p.random(minShrink, maxShrink),
+
+// After:
+length * rngRandom(rng, minShrink, maxShrink),
+```
+
+#### 4.7 `stereogram/sketch.ts` — No changes needed
+Already deterministic via `hashUint(seed, row, column)`.
+
+#### 4.8 `l-system-plant/sketch.ts` — No changes needed
+Pure deterministic L-system; no randomness.
+
+---
+
+### Step 5: Verification
+
+After migration, verify determinism:
+
+1. **Manual test:** Open `?seed=42` twice, confirm identical output for each sketch
+2. **Different seeds:** `?seed=42` vs `?seed=99` should produce different outputs
+3. **No seed:** Random seed should still work (different each load)
+4. **Run `pnpm tsc --noEmit`** — no type errors
+5. **Run `pnpm biome check`** — formatting/linting passes
+6. **Run `pnpm dev`** — all sketches still render correctly
+
+---
+
+### Phase 2 Success Criteria
+
+- [ ] `src/utils/seeded-random.ts` created with `createRng()`, `rngRandom()`, `rngInt()`, `rngChoice()`
+- [ ] `SketchContext` type updated with `rng: Rng` field
+- [ ] Seed parsing from URL `?seed=N` implemented in `src/utils/seed.ts`
+- [ ] All 6 non-deterministic sketches migrated to use `rng` instead of `p.random()` / `Math.random()`
+- [ ] 2 deterministic sketches (stereogram, l-system-plant) confirmed unchanged
+- [ ] Manual verification: `?seed=42` produces identical output across reloads
+- [ ] `pnpm tsc --noEmit` passes
+- [ ] `pnpm biome check --write` passes
+- [ ] `pnpm dev` and `pnpm build` still work
+
+---
+
+### Effort Estimate (Revised)
+
+| Task | Effort |
+|------|--------|
+| Create `seeded-random.ts` + tests | 1 hr |
+| Update types + wire seed through app | 1 hr |
+| Migrate 6 sketches (avg 5 min each) | 0.5 hr |
+| Verification + fixes | 0.5 hr |
+| **Total** | **3 hrs** |
 
 ---
 
