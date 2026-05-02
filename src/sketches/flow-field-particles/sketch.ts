@@ -135,9 +135,13 @@ export default defineSketch({
 		});
 
 		p.draw = () => {
-			// Dispatch event after first frame for visual tests
+			// Stop animation after first frame for visual tests
 			if (p.frameCount === 1) {
+				// Dispatch event first
 				window.dispatchEvent(new CustomEvent("sketch-rendered"));
+				// Then stop the loop so no more frames render
+				p.noLoop();
+				return;
 			}
 
 			p.fill(

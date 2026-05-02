@@ -25,29 +25,26 @@ export async function waitForRender(
 	page: Page,
 	sketchId: string,
 ): Promise<void> {
-	const animatedSketches = ["flow-field-particles", "cellular-automata"];
-
 	try {
-		// Wait for custom event with timeout
-		await page.waitForEvent("sketch-rendered" as any, { timeout: 2000 });
+		// Wait for custom event (all sketches should fire this after first frame)
+		await page.waitForEvent("sketch-rendered" as any, { timeout: 3000 });
+		// Brief wait for paint to flush
+		await page.waitForTimeout(100);
 	} catch {
-		// Event didn't fire (static sketches) - wait appropriate time
-		if (animatedSketches.includes(sketchId)) {
-			// Animated sketches should have fired the event
-			await page.waitForTimeout(100);
-		} else if (sketchId === "mona-lisa-circles") {
+		// Event didn't fire - use appropriate fallback
+		if (sketchId === "mona-lisa-circles") {
 			// Wait for image to load
 			await page
 				.waitForFunction(() => {
 					const img = document.querySelector(
 						"img[data-mona-lisa]",
 					) as HTMLImageElement;
-					return img && img.complete;
+					return img?.complete ?? false;
 				})
 				.catch(() => {});
 			await page.waitForTimeout(500);
 		} else {
-			// Static sketches: brief wait for paint
+			// Static sketches or fallback: brief wait
 			await page.waitForTimeout(500);
 		}
 	}
