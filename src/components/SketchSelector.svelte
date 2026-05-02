@@ -1,9 +1,9 @@
 <script>
-  let { sketches, currentSketch, onchange } = $props();
+let { sketches, currentSketch, onchange } = $props();
 
-  function handleChange(event) {
-    onchange(event.target.value);
-  }
+function handleChange(event) {
+	onchange(event.target.value);
+}
 </script>
 
 <select id="sketch-select" value={currentSketch} onchange={handleChange}>

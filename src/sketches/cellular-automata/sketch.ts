@@ -1,5 +1,6 @@
 import type {
 	InferParams,
+	SketchAnimationController,
 	SketchContext,
 	SketchParameter,
 } from "../../types/sketch.js";
@@ -62,7 +63,13 @@ export default defineSketch({
 	description: "A Game of Life variant with periodic reseeding.",
 	date: "2026-04-26",
 	parameters,
-	create({ p, theme = "light", params, rng }: SketchContext<Params>) {
+	create({
+		p,
+		theme = "light",
+		params,
+		rng,
+		animation,
+	}: SketchContext<Params> & { animation?: SketchAnimationController }) {
 		const isDark = theme === "dark";
 		const backgroundColor: [number, number, number] = isDark
 			? [9, 9, 11]
@@ -118,43 +125,46 @@ export default defineSketch({
 			},
 		});
 
-		p.draw = () => {
-			p.background(...backgroundColor);
+		// Animated sketch: use animation controller (no fallback - static mode not supported)
+		if (animation) {
+			animation.onFrame((frameCount) => {
+				p.background(...backgroundColor);
 
-			const cellSize = Math.max(1, Math.floor(params.cellSize));
-			const cellInset = Math.max(0, Math.floor(params.cellPadding));
-			const drawSize = Math.max(1, cellSize - cellInset);
+				const cellSize = Math.max(1, Math.floor(params.cellSize));
+				const cellInset = Math.max(0, Math.floor(params.cellPadding));
+				const drawSize = Math.max(1, cellSize - cellInset);
 
-			for (let y = 0; y < rows; y += 1) {
-				for (let x = 0; x < cols; x += 1) {
-					if (board[y][x] === 1) {
-						p.fill(...cellColor);
-						p.rect(x * cellSize, y * cellSize, drawSize, drawSize);
+				for (let y = 0; y < rows; y += 1) {
+					for (let x = 0; x < cols; x += 1) {
+						if (board[y][x] === 1) {
+							p.fill(...cellColor);
+							p.rect(x * cellSize, y * cellSize, drawSize, drawSize);
+						}
 					}
 				}
-			}
 
-			const next = Object.fromEntries(
-				Object.entries(board).map(([k, row]) => [k, [...row]]),
-			) as Board;
-			for (let y = 0; y < rows; y += 1) {
-				for (let x = 0; x < cols; x += 1) {
-					const state = board[y][x];
-					const n = countNeighbors(x, y);
+				const next = Object.fromEntries(
+					Object.entries(board).map(([k, row]) => [k, [...row]]),
+				) as Board;
+				for (let y = 0; y < rows; y += 1) {
+					for (let x = 0; x < cols; x += 1) {
+						const state = board[y][x];
+						const n = countNeighbors(x, y);
 
-					if (state === 1 && (n < 2 || n > 3)) {
-						next[y][x] = 0;
-					} else if (state === 0 && n === 3) {
-						next[y][x] = 1;
+						if (state === 1 && (n < 2 || n > 3)) {
+							next[y][x] = 0;
+						} else if (state === 0 && n === 3) {
+							next[y][x] = 1;
+						}
 					}
 				}
-			}
 
-			board = next;
+				board = next;
 
-			if (p.frameCount % Math.max(1, Math.floor(params.reseedFrames)) === 0) {
-				board = randomBoard();
-			}
-		};
+				if (frameCount % Math.max(1, Math.floor(params.reseedFrames)) === 0) {
+					board = randomBoard();
+				}
+			});
+		}
 	},
 });

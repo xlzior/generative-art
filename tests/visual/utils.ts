@@ -8,15 +8,28 @@ export async function gotoSketch(
 	sketchId: string,
 	seed = 42,
 ): Promise<void> {
+	// Inject a test-friendly animation controller factory before the app loads
+	// The controller stores the callback without calling it immediately
+	await page.addInitScript(() => {
+		window.__CREATE_TEST_CTRL__ = () => ({
+			onFrame: (cb: (frameCount: number) => void) => {
+				// Store callback for later invocation by waitForRender
+				window.__TEST_FRAME_CB__ = cb;
+			},
+			stop: () => {},
+		});
+	});
+
 	await page.goto(`/?sketch=${sketchId}&seed=${seed}`, {
 		waitUntil: "load",
 	});
+	// Wait for canvas to be created by p5's setup()
 	await page.waitForSelector("canvas", { state: "visible" });
 }
 
 /**
  * Wait for sketch rendering to complete.
- * Uses generous fixed timeouts based on sketch type.
+ * For animated sketches, calls the stored frame callback exactly once.
  */
 export async function waitForRender(
 	page: Page,
@@ -25,8 +38,20 @@ export async function waitForRender(
 	const animatedSketches = ["flow-field-particles", "cellular-automata"];
 
 	if (animatedSketches.includes(sketchId)) {
-		// Animated sketches: wait for first frame to render
-		await page.waitForTimeout(2000);
+		// Wait for frame callback to be registered by the sketch
+		await page.waitForFunction(() => window.__TEST_FRAME_CB__ !== undefined, {
+			timeout: 5000,
+		});
+
+		// Call the frame callback exactly once (frameCount starts at 0, matching p5)
+		await page.evaluate(() => {
+			if (window.__TEST_FRAME_CB__) {
+				window.__TEST_FRAME_CB__(0);
+			}
+		});
+
+		// Wait for the canvas to finish painting
+		await page.waitForTimeout(500);
 	} else if (sketchId === "mona-lisa-circles") {
 		// Wait for image to load
 		await page
@@ -45,9 +70,29 @@ export async function waitForRender(
 }
 
 /**
- * Capture canvas screenshot.
+ * Capture canvas screenshot;
  */
 export async function captureCanvas(page: Page): Promise<Buffer> {
 	const canvas = page.locator("canvas").first();
-	return await canvas.screenshot({ type: "png" });
+	return (await canvas.screenshot({ type: "png" })) as Promise<Buffer>;
+}
+
+/**
+ * Get all sketch IDs from the application.
+ */
+export async function getAllSketchIds(page: Page): Promise<string[]> {
+	await page.goto("/", { waitUntil: "load" });
+	await page.waitForSelector("#sketch-select", { state: "visible" });
+
+	const sketchIds = await page.$$eval("#sketch-select option", (elements) => {
+		return elements
+			.map((el) => el.getAttribute("value"))
+			.filter((id): id is string => id !== null && id !== "");
+	});
+
+	if (sketchIds.length === 0) {
+		throw new Error("No sketch IDs found on page.");
+	}
+
+	return sketchIds;
 }

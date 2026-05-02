@@ -1,35 +1,35 @@
 <script>
-  let { sketch, params, onchange } = $props();
+let { sketch, params, onchange } = $props();
 
-  function formatParamValue(parameter, value) {
-    if (parameter.type === 'boolean') {
-      return value ? 'On' : 'Off';
-    }
-    if (parameter.type === 'string') {
-      return String(value);
-    }
-    const num = value;
-    if (Number.isInteger(num)) {
-      return String(num);
-    }
-    return num
-      .toFixed(3)
-      .replace(/\.0+$/, '')
-      .replace(/(\.\d*?)0+$/, '$1');
-  }
+function formatParamValue(parameter, value) {
+	if (parameter.type === "boolean") {
+		return value ? "On" : "Off";
+	}
+	if (parameter.type === "string") {
+		return String(value);
+	}
+	const num = value;
+	if (Number.isInteger(num)) {
+		return String(num);
+	}
+	return num
+		.toFixed(3)
+		.replace(/\.0+$/, "")
+		.replace(/(\.\d*?)0+$/, "$1");
+}
 
-  function handleNumberChange(parameter, event) {
-    const value = Number(event.target.value);
-    onchange(parameter.key, value);
-  }
+function handleNumberChange(parameter, event) {
+	const value = Number(event.target.value);
+	onchange(parameter.key, value);
+}
 
-  function handleStringChange(parameter, event) {
-    onchange(parameter.key, event.target.value);
-  }
+function handleStringChange(parameter, event) {
+	onchange(parameter.key, event.target.value);
+}
 
-  function handleBooleanChange(parameter, event) {
-    onchange(parameter.key, event.target.checked);
-  }
+function handleBooleanChange(parameter, event) {
+	onchange(parameter.key, event.target.checked);
+}
 </script>
 
 <div id="params-list">

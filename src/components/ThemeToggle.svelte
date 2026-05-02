@@ -1,9 +1,9 @@
 <script>
-  let { currentTheme, ontoggle } = $props();
+let { currentTheme, ontoggle } = $props();
 
-  function handleClick() {
-    ontoggle();
-  }
+function handleClick() {
+	ontoggle();
+}
 </script>
 
 <button id="theme-toggle" type="button" aria-pressed={currentTheme === 'dark'} onclick={handleClick}>

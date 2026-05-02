@@ -5,6 +5,23 @@ export type Theme = "light" | "dark";
 
 export type Rng = ReturnType<typeof createRng>;
 
+/**
+ * Animation controller for animated sketches.
+ * Allows external control of the animation loop (for testing or unified speed control).
+ */
+export interface SketchAnimationController {
+	/**
+	 * Register a callback to be called on each animation frame.
+	 * The callback receives the current frame count (starts at 0, matching p5's frameCount).
+	 * Only one callback can be registered per controller.
+	 */
+	onFrame: (renderer: (frameCount: number) => void) => void;
+	/**
+	 * Stop the animation loop.
+	 */
+	stop: () => void;
+}
+
 export type SketchParameter =
 	| {
 			type: "number";
@@ -32,6 +49,11 @@ export interface SketchContext<TParams extends Record<string, unknown>> {
 	theme: Theme;
 	params: TParams;
 	rng: Rng;
+	/**
+	 * Animation controller - only present for animated sketches.
+	 * When provided, sketches should use this instead of p.draw().
+	 */
+	animation?: SketchAnimationController;
 }
 
 export interface SketchModule<TParams extends Record<string, unknown>> {

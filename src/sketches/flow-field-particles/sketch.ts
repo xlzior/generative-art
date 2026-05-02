@@ -1,5 +1,6 @@
 import type {
 	InferParams,
+	SketchAnimationController,
 	SketchContext,
 	SketchParameter,
 } from "../../types/sketch.js";
@@ -89,7 +90,13 @@ export default defineSketch({
 	description: "Particle trails following a noise-driven vector field.",
 	date: "2026-04-26",
 	parameters,
-	create({ p, theme = "light", params, rng }: SketchContext<Params>) {
+	create({
+		p,
+		theme = "light",
+		params,
+		rng,
+		animation,
+	}: SketchContext<Params> & { animation?: SketchAnimationController }) {
 		const isDark = theme === "dark";
 		const backgroundColor: [number, number, number] = isDark
 			? [11, 13, 14]
@@ -134,47 +141,50 @@ export default defineSketch({
 			},
 		});
 
-		p.draw = () => {
-			p.fill(
-				backgroundColor[0],
-				backgroundColor[1],
-				backgroundColor[2],
-				params.trailAlpha,
-			);
-			p.noStroke();
-			p.rect(0, 0, p.width, p.height);
-
-			for (const part of particles) {
-				const angle =
-					p.noise(
-						part.x * params.noiseScale,
-						part.y * params.noiseScale,
-						p.frameCount * 0.002,
-					) *
-					p.TWO_PI *
-					1.8;
-				const vx = Math.cos(angle) * params.stepSize;
-				const vy = Math.sin(angle) * params.stepSize;
-
-				p.stroke(
-					strokeBase[0],
-					strokeBase[1],
-					strokeBase[2],
-					params.strokeAlpha,
+		// Animated sketch: use animation controller (no fallback - static mode not supported)
+		if (animation) {
+			animation.onFrame((frameCount) => {
+				p.fill(
+					backgroundColor[0],
+					backgroundColor[1],
+					backgroundColor[2],
+					params.trailAlpha,
 				);
-				p.strokeWeight(params.strokeWeight);
-				p.line(part.x, part.y, part.x + vx, part.y + vy);
+				p.noStroke();
+				p.rect(0, 0, p.width, p.height);
 
-				part.x += vx;
-				part.y += vy;
-				part.age += 1;
+				for (const part of particles) {
+					const angle =
+						p.noise(
+							part.x * params.noiseScale,
+							part.y * params.noiseScale,
+							frameCount * 0.002,
+						) *
+						p.TWO_PI *
+						1.8;
+					const vx = Math.cos(angle) * params.stepSize;
+					const vy = Math.sin(angle) * params.stepSize;
 
-				const out =
-					part.x < 0 || part.x > p.width || part.y < 0 || part.y > p.height;
-				if (out || part.age > part.ttl) {
-					Object.assign(part, spawnParticle());
+					p.stroke(
+						strokeBase[0],
+						strokeBase[1],
+						strokeBase[2],
+						params.strokeAlpha,
+					);
+					p.strokeWeight(params.strokeWeight);
+					p.line(part.x, part.y, part.x + vx, part.y + vy);
+
+					part.x += vx;
+					part.y += vy;
+					part.age += 1;
+
+					const out =
+						part.x < 0 || part.x > p.width || part.y < 0 || part.y > p.height;
+					if (out || part.age > part.ttl) {
+						Object.assign(part, spawnParticle());
+					}
 				}
-			}
-		};
+			});
+		}
 	},
 });
