@@ -854,12 +854,399 @@ Snapshots will be stored in `tests/visual/__snapshots__/` (configured via `snaps
 
 Only if UI behavior regressions are a concern.
 
-**Potential tests:**
-- `ParameterControls` renders correct input types (range/checkbox/text)
-- `SketchSelector` lists all sketches sorted correctly
-- Theme toggle updates document class
+**Goal:** Catch regressions in UI component behavior when refactoring. Tests focus on user-visible behavior (input rendering, event handling, label correctness), not DOM structure.
 
-Use `@testing-library/svelte` — focus on user behavior, not DOM structure.
+**Resilience strategy:**
+- Use `@testing-library/svelte` with queries by role, label, or `data-testid` (not classes or DOM structure)
+- Test behavior contracts: "what does the user see and interact with"
+- Avoid testing implementation details (internal state, private functions)
+- Use `testid` attributes sparingly and only on stable, meaningful elements
+
+---
+
+### Install Dependencies
+
+```bash
+pnpm add -D @testing-library/svelte @testing-library/jest-dom
+```
+
+- `@testing-library/svelte`: Svelte 5-compatible component testing with behavior-focused queries
+- `@testing-library/jest-dom`: Readable DOM assertion matchers (`.toBeInTheDocument()`, `.toHaveValue()`, etc.)
+
+---
+
+### Component Test Candidates
+
+#### 4.1 `ParameterControls.svelte` ⭐ Primary candidate
+
+**Why:** Most complex UI component with three distinct input types. Regressions here break user ability to adjust sketch parameters. The parameter contract (number/string/boolean types) is stable.
+
+**Behavior contract:**
+1. Renders the correct input element for each parameter type
+2. Displays parameter label and formatted value
+3. Calls `onchange` callback with correct key/value when user interacts
+4. Input constraints (min/max/step) are passed through for number inputs
+
+**Test file:** `src/components/__tests__/ParameterControls.test.ts`
+
+```typescript
+import { render, screen, fireEvent } from '@testing-library/svelte';
+import ParameterControls from '../ParameterControls.svelte';
+import type { SketchModuleWithDefaults } from '../../types/sketch';
+
+// Mock sketch module with one parameter of each type
+function createMockSketch(parameters: SketchParameter[]) {
+  return {
+    id: 'test-sketch',
+    title: 'Test',
+    date: '2026-01-01',
+    description: 'Test',
+    parameters,
+    defaults: Object.fromEntries(parameters.map(p => [p.key, p.default])),
+  } as SketchModuleWithDefaults;
+}
+
+const numberParam = {
+  key: 'size',
+  label: 'Size',
+  type: 'number' as const,
+  min: 0,
+  max: 100,
+  step: 1,
+  default: 50,
+};
+
+const booleanParam = {
+  key: 'enabled',
+  label: 'Enabled',
+  type: 'boolean' as const,
+  default: true,
+};
+
+const stringParam = {
+  key: 'label',
+  label: 'Label',
+  type: 'string' as const,
+  default: 'hello',
+};
+
+describe('ParameterControls', () => {
+  // Track onchange calls
+  let onChangeCalls: [string, unknown][] = [];
+  function handleChange(key: string, value: unknown) {
+    onChangeCalls.push([key, value]);
+  }
+
+  beforeEach(() => {
+    onChangeCalls = [];
+  });
+
+  // --- Input type rendering ---
+  test('renders range input for number parameters', () => {
+    const sketch = createMockSketch([numberParam]);
+    render(ParameterControls, {
+      props: { sketch, params: { size: 50 }, onchange: handleChange },
+    });
+
+    const input = screen.getByRole('slider', { name: /size/i });
+    expect(input).toBeInTheDocument();
+    expect(input).toHaveAttribute('min', '0');
+    expect(input).toHaveAttribute('max', '100');
+    expect(input).toHaveValue(50);
+  });
+
+  test('renders checkbox for boolean parameters', () => {
+    const sketch = createMockSketch([booleanParam]);
+    render(ParameterControls, {
+      props: { sketch, params: { enabled: true }, onchange: handleChange },
+    });
+
+    const input = screen.getByRole('checkbox', { name: /enabled/i });
+    expect(input).toBeInTheDocument();
+    expect(input).toBeChecked();
+  });
+
+  test('renders text input for string parameters', () => {
+    const sketch = createMockSketch([stringParam]);
+    render(ParameterControls, {
+      props: { sketch, params: { label: 'hello' }, onchange: handleChange },
+    });
+
+    const input = screen.getByRole('textbox', { name: /label/i });
+    expect(input).toBeInTheDocument();
+    expect(input).toHaveValue('hello');
+  });
+
+  // --- Label and value display ---
+  test('displays parameter label for each control', () => {
+    const sketch = createMockSketch([numberParam, booleanParam]);
+    render(ParameterControls, {
+      props: { sketch, params: { size: 50, enabled: true }, onchange: handleChange },
+    });
+
+    expect(screen.getByText('Size')).toBeInTheDocument();
+    expect(screen.getByText('Enabled')).toBeInTheDocument();
+  });
+
+  test('displays formatted numeric values (3 decimal places, trimmed)', () => {
+    const param = { ...numberParam, default: 50.1234 };
+    const sketch = createMockSketch([param]);
+    render(ParameterControls, {
+      props: { sketch, params: { size: 50.1234 }, onchange: handleChange },
+    });
+
+    // Should show trimmed decimal: "50.123"
+    expect(screen.getByText('50.123')).toBeInTheDocument();
+  });
+
+  test('displays "On"/"Off" for boolean values', () => {
+    const sketch = createMockSketch([booleanParam]);
+    const { rerender } = render(ParameterControls, {
+      props: { sketch, params: { enabled: true }, onchange: handleChange },
+    });
+
+    expect(screen.getByText('On')).toBeInTheDocument();
+
+    rerender({ sketch, params: { enabled: false }, onchange: handleChange });
+    expect(screen.getByText('Off')).toBeInTheDocument();
+  });
+
+  // --- Event handling ---
+  test('calls onchange with correct key/value when slider changes', async () => {
+    const sketch = createMockSketch([numberParam]);
+    render(ParameterControls, {
+      props: { sketch, params: { size: 50 }, onchange: handleChange },
+    });
+
+    const input = screen.getByRole('slider', { name: /size/i });
+    await fireEvent.input(input, { target: { value: '75' } });
+
+    expect(onChangeCalls).toHaveLength(1);
+    expect(onChangeCalls[0]).toEqual(['size', 75]);
+  });
+
+  test('calls onchange with correct key/value when checkbox toggles', async () => {
+    const sketch = createMockSketch([booleanParam]);
+    render(ParameterControls, {
+      props: { sketch, params: { enabled: true }, onchange: handleChange },
+    });
+
+    const input = screen.getByRole('checkbox', { name: /enabled/i });
+    await fireEvent.click(input);
+
+    expect(onChangeCalls).toHaveLength(1);
+    expect(onChangeCalls[0]).toEqual(['enabled', false]);
+  });
+
+  test('calls onchange with correct key/value when text input changes', async () => {
+    const sketch = createMockSketch([stringParam]);
+    render(ParameterControls, {
+      props: { sketch, params: { label: 'hello' }, onchange: handleChange },
+    });
+
+    const input = screen.getByRole('textbox', { name: /label/i });
+    await fireEvent.input(input, { target: { value: 'world' } });
+
+    expect(onChangeCalls).toHaveLength(1);
+    expect(onChangeCalls[0]).toEqual(['label', 'world']);
+  });
+
+  // --- Multiple parameters ---
+  test('renders all parameters in order', () => {
+    const sketch = createMockSketch([numberParam, booleanParam, stringParam]);
+    render(ParameterControls, {
+      props: {
+        sketch,
+        params: { size: 50, enabled: true, label: 'hello' },
+        onchange: handleChange,
+      },
+    });
+
+    const labels = screen.getAllByText(/Size|Enabled|Label/i);
+    expect(labels).toHaveLength(3);
+  });
+});
+```
+
+---
+
+#### 4.2 `ThemeToggle.svelte` — Secondary candidate
+
+**Why:** Simple component, but testing ensures the label toggling logic and `aria-pressed` state are correct. A regression here would break theme switching UX.
+
+**Behavior contract:**
+1. Displays "Dark Mode" when current theme is light, "Light Mode" when dark
+2. Has `aria-pressed="true"` when theme is dark
+3. Calls `ontoggle` callback when clicked
+
+**Test file:** `src/components/__tests__/ThemeToggle.test.ts`
+
+```typescript
+import { render, screen, fireEvent } from '@testing-library/svelte';
+import ThemeToggle from '../ThemeToggle.svelte';
+
+describe('ThemeToggle', () => {
+  let toggleCalls = 0;
+  function handleToggle() {
+    toggleCalls++;
+  }
+
+  beforeEach(() => {
+    toggleCalls = 0;
+  });
+
+  test('displays "Dark Mode" when current theme is light', () => {
+    render(ThemeToggle, {
+      props: { currentTheme: 'light', ontoggle: handleToggle },
+    });
+
+    expect(screen.getByText('Dark Mode')).toBeInTheDocument();
+  });
+
+  test('displays "Light Mode" when current theme is dark', () => {
+    render(ThemeToggle, {
+      props: { currentTheme: 'dark', ontoggle: handleToggle },
+    });
+
+    expect(screen.getByText('Light Mode')).toBeInTheDocument();
+  });
+
+  test('sets aria-pressed based on current theme', () => {
+    const { rerender } = render(ThemeToggle, {
+      props: { currentTheme: 'light', ontoggle: handleToggle },
+    });
+
+    const button = screen.getByRole('button', { name: /dark mode/i });
+    expect(button).toHaveAttribute('aria-pressed', 'false');
+
+    rerender({ currentTheme: 'dark', ontoggle: handleToggle });
+    expect(button).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  test('calls ontoggle when clicked', async () => {
+    render(ThemeToggle, {
+      props: { currentTheme: 'light', ontoggle: handleToggle },
+    });
+
+    const button = screen.getByRole('button', { name: /dark mode/i });
+    await fireEvent.click(button);
+
+    expect(toggleCalls).toBe(1);
+  });
+});
+```
+
+---
+
+#### 4.3 `SketchSelector.svelte` — Tertiary candidate
+
+**Why:** Very simple component (just a `<select>`). The sorting logic is already tested in Phase 1 contract tests. Only add this test if you want to guard against changes to the option formatting (`date - title`).
+
+**Behavior contract:**
+1. Renders an `<option>` for each sketch
+2. Displays `date - title` format for each option
+3. Sets `value` attribute to sketch `id`
+4. Calls `onchange` callback with selected sketch id when selection changes
+
+**Test file:** `src/components/__tests__/SketchSelector.test.ts`
+
+```typescript
+import { render, screen, fireEvent } from '@testing-library/svelte';
+import SketchSelector from '../SketchSelector.svelte';
+import type { SketchModuleWithDefaults } from '../../types/sketch';
+
+const mockSketches: SketchModuleWithDefaults[] = [
+  { id: 'sketch-b', title: 'Beta Sketch', date: '2026-02-01' } as SketchModuleWithDefaults,
+  { id: 'sketch-a', title: 'Alpha Sketch', date: '2026-01-01' } as SketchModuleWithDefaults,
+];
+
+describe('SketchSelector', () => {
+  let selectedId: string | null = null;
+  function handleChange(id: string) {
+    selectedId = id;
+  }
+
+  beforeEach(() => {
+    selectedId = null;
+  });
+
+  test('renders an option for each sketch', () => {
+    render(SketchSelector, {
+      props: { sketches: mockSketches, currentSketch: 'sketch-a', onchange: handleChange },
+    });
+
+    expect(screen.getByRole('option', { name: /beta sketch/i })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: /alpha sketch/i })).toBeInTheDocument();
+  });
+
+  test('displays date and title in option text', () => {
+    render(SketchSelector, {
+      props: { sketches: mockSketches, currentSketch: 'sketch-a', onchange: handleChange },
+    });
+
+    // The format is "date - title"
+    expect(screen.getByText('2026-02-01 - Beta Sketch')).toBeInTheDocument();
+    expect(screen.getByText('2026-01-01 - Alpha Sketch')).toBeInTheDocument();
+  });
+
+  test('sets currentSketch as selected value', () => {
+    render(SketchSelector, {
+      props: { sketches: mockSketches, currentSketch: 'sketch-b', onchange: handleChange },
+    });
+
+    const select = screen.getByRole('combobox');
+    expect(select).toHaveValue('sketch-b');
+  });
+
+  test('calls onchange with sketch id when selection changes', async () => {
+    render(SketchSelector, {
+      props: { sketches: mockSketches, currentSketch: 'sketch-a', onchange: handleChange },
+    });
+
+    const select = screen.getByRole('combobox');
+    await fireEvent.change(select, { target: { value: 'sketch-b' } });
+
+    expect(selectedId).toBe('sketch-b');
+  });
+});
+```
+
+---
+
+### What NOT to Test (to avoid brittle tests)
+
+1. **`App.svelte`** — Too many integration points (p5, canvas, sketches, animation controller). This is better covered by Phase 3 visual regression tests.
+
+2. **CSS/styling details** — Don't test class names, inline styles, or layout. These change frequently during redesigns.
+
+3. **DOM structure** — Don't test the exact nesting of `<div>` elements. Use role/label queries which are resilient to restructuring.
+
+4. **Internal state** — Don't test Svelte `$state` variables directly. Only test publicly observable behavior.
+
+---
+
+### Phase 4 Success Criteria
+
+- [ ] `@testing-library/svelte` and `@testing-library/jest-dom` installed
+- [ ] `ParameterControls.test.ts` passes — all input types, formatting, and events verified
+- [ ] `ThemeToggle.test.ts` passes — label toggling, aria-pressed, and click events verified
+- [ ] `SketchSelector.test.ts` passes (optional) — option rendering and change events verified
+- [ ] Tests use behavior-focused queries (role, label) not DOM structure
+- [ ] `pnpm test:run` passes with all component tests
+- [ ] `pnpm tsc --noEmit` passes
+- [ ] `pnpm biome check --write` passes
+
+---
+
+### Effort Estimate (Phase 4)
+
+| Task | Effort |
+|------|--------|
+| Install @testing-library/svelte + jest-dom | 0.25 hr |
+| Write ParameterControls tests | 1 hr |
+| Write ThemeToggle tests | 0.5 hr |
+| Write SketchSelector tests (optional) | 0.25 hr |
+| **Total** | **1-2 hrs** |
 
 ---
 
