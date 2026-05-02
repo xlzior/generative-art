@@ -856,6 +856,8 @@ Only if UI behavior regressions are a concern.
 
 **Goal:** Catch regressions in UI component behavior when refactoring. Tests focus on user-visible behavior (input rendering, event handling, label correctness), not DOM structure.
 
+**Setup:** Reuses Phase 1's `vitest.config.ts` — no separate config needed. Component tests live in `src/**/__tests__/*.test.ts` (matches the `include` pattern). Add `import '@testing-library/jest-dom'` to your `vitest.setup.ts` (or to each test file) to enable DOM matchers.
+
 **Resilience strategy:**
 - Use `@testing-library/svelte` with queries by role, label, or `data-testid` (not classes or DOM structure)
 - Test behavior contracts: "what does the user see and interact with"
@@ -867,11 +869,13 @@ Only if UI behavior regressions are a concern.
 ### Install Dependencies
 
 ```bash
-pnpm add -D @testing-library/svelte @testing-library/jest-dom
+# Pin to ^5 for Svelte 5 runes compatibility (v4 is incompatible with Svelte 5)
+pnpm add -D @testing-library/svelte@^5 @testing-library/jest-dom
 ```
 
-- `@testing-library/svelte`: Svelte 5-compatible component testing with behavior-focused queries
+- `@testing-library/svelte@^5`: Svelte 5-compatible component testing with behavior-focused queries
 - `@testing-library/jest-dom`: Readable DOM assertion matchers (`.toBeInTheDocument()`, `.toHaveValue()`, etc.)
+- **Setup note**: Enable matchers by adding `import '@testing-library/jest-dom'` to test files, or create a Vitest setup file (e.g., `vitest.setup.ts`) with the import and add `test.setupFiles: ['./vitest.setup.ts']` to `vitest.config.ts`.
 
 ---
 
@@ -902,12 +906,12 @@ function createMockSketch(parameters: SketchParameter[]) {
     date: '2026-01-01',
     description: 'Test',
     parameters,
-    defaults: Object.fromEntries(parameters.map(p => [p.key, p.default])),
+    defaults: Object.fromEntries(parameters.map(p => [p.id, p.default])),
   } as SketchModuleWithDefaults;
 }
 
 const numberParam = {
-  key: 'size',
+  id: 'size',
   label: 'Size',
   type: 'number' as const,
   min: 0,
@@ -917,14 +921,14 @@ const numberParam = {
 };
 
 const booleanParam = {
-  key: 'enabled',
+  id: 'enabled',
   label: 'Enabled',
   type: 'boolean' as const,
   default: true,
 };
 
 const stringParam = {
-  key: 'label',
+  id: 'label',
   label: 'Label',
   type: 'string' as const,
   default: 'hello',
