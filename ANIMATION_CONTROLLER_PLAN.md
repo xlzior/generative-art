@@ -46,14 +46,17 @@ export interface SketchContext<TParams extends Record<string, unknown>> {
 
 Drives animation via `requestAnimationFrame`, calling the sketch's render callback continuously.
 
+**Important**: `attachToP5(p)` MUST be called before the sketch's `create()` function to prevent p5 from starting its internal draw loop.
+
 ```typescript
 import type p5 from "p5";
 import type { SketchAnimationController } from "../types/sketch.js";
 
 export function createAnimationController(): SketchAnimationController & {
   attachToP5(p: p5): void;
+  destroy(): void;
 } {
-  let frameCount = 0;
+  let frameCount = -1; // Initialized to -1 so first increment results in 0, matching p5's frameCount (starts at 0)
   let renderer: ((frameCount: number) => void) | null = null;
   let animating = false;
   let rafId: number | null = null;
@@ -81,8 +84,17 @@ export function createAnimationController(): SketchAnimationController & {
       }
     },
     attachToP5(p: p5) {
-      // Prevent p5's default draw loop - we drive externally
+      // MUST be called before sketch.create() to prevent p5's draw loop
       p.noLoop();
+    },
+    destroy() {
+      // Cleanup on sketch unmount
+      animating = false;
+      if (rafId !== null) {
+        cancelAnimationFrame(rafId);
+        rafId = null;
+      }
+      renderer = null;
     },
   };
 }
@@ -92,7 +104,7 @@ export function createAnimationController(): SketchAnimationController & {
 
 ### 3. Test Controller (`tests/visual/utils.ts`)
 
-Calls the frame callback **exactly once** with `frameCount=1`, then stops.
+Calls the frame callback **exactly once** with `frameCount=0`, then stops. This matches p5's `frameCount` which starts at 0.
 
 ```typescript
 // In tests/visual/utils.ts gotoSketch():
@@ -101,7 +113,7 @@ await page.addInitScript(() => {
   window.__CREATE_TEST_CTRL__ = () => ({
     onFrame: (cb) => {
       // Call exactly once for deterministic output
-      cb(1);
+      cb(0);
     },
     stop: () => {},
   });
@@ -112,24 +124,47 @@ await page.addInitScript(() => {
 
 ### 4. App Integration (`src/App.svelte`)
 
-Creates the appropriate controller based on environment.
+Creates the appropriate controller based on environment, attaches to p5 **before** sketch initialization, and cleans up on unmount.
 
 ```typescript
 import { createAnimationController } from './utils/animation-controller.js';
 
-function mountSketch(sketchId, options = {}) {
-  // ... existing setup ...
+// Store current controller for cleanup
+let currentController: ReturnType<typeof createAnimationController> | null = null;
 
-  const controller = window.__CREATE_TEST_CTRL__ 
-    ? window.__CREATE_TEST_CTRL__() 
+function unmountSketch() {
+  if (currentController) {
+    currentController.destroy();
+    currentController = null;
+  }
+  if (currentP5) {
+    currentP5.remove();
+    currentP5 = null;
+  }
+}
+
+function mountSketch(sketchId, options = {}) {
+  unmountSketch(); // Clean up previous sketch/controller first
+
+  // ... existing setup (load sketch, theme, params, rng) ...
+
+  const isTest = !!window.__CREATE_TEST_CTRL__;
+  const controller = isTest
+    ? window.__CREATE_TEST_CTRL__()
     : createAnimationController();
+
+  if (!isTest) {
+    currentController = controller as ReturnType<typeof createAnimationController>;
+  }
 
   currentP5 = new p5(
     (p) => {
-      sketch.create({ p, theme: currentTheme, params, rng, animation: controller });
-      if (controller.attachToP5) {
+      // Attach to p5 FIRST to prevent default draw loop
+      if (!isTest) {
         controller.attachToP5(p);
       }
+      // Then initialize sketch with controller
+      sketch.create({ p, theme: currentTheme, params, rng, animation: controller });
     },
     container,
   );
@@ -189,9 +224,8 @@ create({ p, theme, params, rng, animation }: SketchContext<Params> & { animation
 
 Before implementing, I need to verify:
 
-1. **p5's `noLoop()` works synchronously** - When called in `attachToP5`, p5 should NOT start its internal draw loop
-   - Testing: Check p5 source/docs - `noLoop()` sets an internal flag that prevents the draw loop from starting
-   - **Confidence**: Medium - need to verify p5's behavior
+1. ~~**p5's `noLoop()` works synchronously**~~ - **RESOLVED**: `attachToP5(p)` is now called before `sketch.create()`, ensuring `p.noLoop()` executes before any sketch setup.
+   - **Confidence**: High - `noLoop()` sets an internal flag synchronously
 
 2. **`p.draw()` override works** - Setting `p.draw = () => {}` in `attachToP5` should prevent the default empty draw
    - Testing: Add console.log to verify p5 doesn't call draw
@@ -200,33 +234,34 @@ Before implementing, I need to verify:
 3. **Test controller calls callback exactly once** - The test's `onFrame` implementation calls `cb(1)` synchronously
    - Testing: The sketch registers its callback via `onFrame(cb)`, then the test controller immediately calls it once
    - **Confidence**: High - straightforward callback pattern
+   - **Note**: Verify canvas is ready when `cb(1)` is called synchronously during `create()`
 
 4. **No frameCount leakage** - Using `frameCount` parameter instead of `p.frameCount` ensures deterministic output
    - Testing: `flow-field-particles` uses `frameCount * 0.002` in noise function
    - **Confidence**: High - `frameCount` is controlled externally
+   - **Note**: Production controller starts at 0 (initialized to -1, increments before first call), matching p5's `frameCount` behavior (p5 starts at 0)
 
 5. **Static sketches unaffected** - Non-animated sketches don't receive `animation`, continue using `p.draw()` or `noLoop()`
    - Testing: `grid-variations`, `stereogram`, etc. should work unchanged
    - **Confidence**: High - they simply don't use the `animation` parameter
 
+6. **Controller cleanup on unmount** - `destroy()` cancels pending `requestAnimationFrame` and nulls renderer
+   - Testing: Switch sketches rapidly, verify no stale animation frames
+   - **Confidence**: High - explicit cleanup via `unmountSketch()`
+
 ---
 
 ## Open Questions / Risks
 
-1. **p5 Instance Creation Timing**: When `new p5(sketchFn, container)` is called, p5:
-   - Calls `sketchFn(p)` immediately
-   - Inside `sketchFn`, we call `sketch.create({..., animation: controller })`
-   - The sketch may call `p.setup()` and potentially start the draw loop BEFORE `controller.attachToP5(p)` is called
-   
-   **Risk**: Medium - If p5 starts draw loop before we call `p.noLoop()`, we have a race condition.
-   
-   **Mitigation**: Call `p.noLoop()` INSIDE the sketch's `create()` function, before any setup that might trigger draw.
+1. **p5 Instance Creation Timing** ~~(RESOLVED)~~: `attachToP5(p)` is now called **before** `sketch.create()` inside the p5 sketch function. This ensures `p.noLoop()` executes before the sketch can set up any draw behavior.
 
 2. **Test Controller Injection**: Using `window.__CREATE_TEST_CTRL__` with `addInitScript` should work because:
    - `addInitScript` runs BEFORE page scripts
    - When `mountSketch` runs, `window.__CREATE_TEST_CTRL__` should be available
    
    **Risk**: Low - Playwright's `addInitScript` is designed for this purpose.
+
+3. **Controller Cleanup on Unmount**: `destroy()` method added to production controller. `unmountSketch()` calls it before removing p5 instance to cancel any pending `requestAnimationFrame`.
 
 ---
 
@@ -249,9 +284,9 @@ Before implementing, I need to verify:
 | Aspect | Confidence | Notes |
 |---------|-------------|-------|
 | Interface design | High | Clean separation, follows seeded RNG pattern |
-| Production controller | Medium | Need to verify p5 noLoop() timing |
-| Test controller | High | Simple callback pattern |
+| Production controller | High | frameCount starts at 0 (matching p5), noLoop() called before sketch init |
+| Test controller | High | Simple callback pattern, calls cb(0) for consistency |
 | Sketch refactoring | High | No branching, single code path |
-| App integration | Medium | Race condition risk with p5 initialization |
+| App integration | High | Race condition resolved, cleanup via destroy() |
 
 **Overall**: The design is sound. Main risk is p5 initialization timing. Recommend adding `p.noLoop()` at the start of the sketch's `create()` function as a safety measure.
