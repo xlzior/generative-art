@@ -1231,14 +1231,14 @@ describe('SketchSelector', () => {
 
 ### Phase 4 Success Criteria
 
-- [ ] `@testing-library/svelte` and `@testing-library/jest-dom` installed
-- [ ] `ParameterControls.test.ts` passes — all input types, formatting, and events verified
-- [ ] `ThemeToggle.test.ts` passes — label toggling, aria-pressed, and click events verified
-- [ ] `SketchSelector.test.ts` passes (optional) — option rendering and change events verified
-- [ ] Tests use behavior-focused queries (role, label) not DOM structure
-- [ ] `pnpm test:run` passes with all component tests
-- [ ] `pnpm tsc --noEmit` passes
-- [ ] `pnpm biome check --write` passes
+- [x] `@testing-library/svelte@^5` and `@testing-library/jest-dom` installed
+- [x] `ParameterControls.test.ts` passes — all input types, formatting, and events verified
+- [x] `ThemeToggle.test.ts` passes — label toggling, aria-pressed, and click events verified
+- [x] `SketchSelector.test.ts` passes — option rendering and change events verified
+- [x] Tests use behavior-focused queries (role, label) not DOM structure
+- [x] `pnpm test:run` passes with all component tests
+- [x] `pnpm tsc --noEmit` passes
+- [x] `pnpm biome check --write` passes
 
 ---
 
