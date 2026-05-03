@@ -7,3 +7,7 @@ pre-commit:
       stage_fixed: true
     - name: type check
       run: pnpm tsc --noEmit
+    - name: unit tests
+      run: pnpm test:run
+    - name: visual regression tests
+      run: pnpm test:visual

@@ -6,6 +6,8 @@
 - `pnpm build` — production build
 - `pnpm biome check --write` — format + lint (runs on pre-commit)
 - `pnpm tsc --noEmit` — typecheck (runs on pre-commit, after biome)
+- `pnpm test:run` — unit tests (runs on pre-commit, after biome and typecheck)
+- `pnpm test:visual` — visual regression tests (runs on pre-commit, after unit tests)
 
 No test framework is configured.
 
