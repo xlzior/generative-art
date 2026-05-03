@@ -38,8 +38,6 @@
 
 ## Build & Configuration
 
-- [ ] **Add `.env.example`** — Document any environment variables or add environment variable handling if needed.
-
 ## Testing
 
 - [ ] **Test `src/sketches/index.ts` auto-discovery** — Add tests for glob discovery, defaults merging, duplicate detection integration, and sort behavior.
