@@ -17,13 +17,19 @@ Add a gallery home page to the app using the existing query parameter method for
 Renders a ~300×300 p5 canvas for a sketch using a fixed seed (`42`) and a no-op animation controller. Calls `p.noLoop()` so it renders once. Cleans up the p5 instance on destroy.
 
 **Props:**
-- `sketch` — the sketch module object
+- `sketch` — the sketch module object (must be `SketchModuleWithDefaults`)
 - `theme` — current theme ('light' | 'dark')
 
 **Behavior:**
 - Creates a `new p5((p) => { ... }, container)`
-- Passes a mock `animation` controller: `{ onFrame: () => {}, stop: () => {} }`
+- Passes a mock `animation` controller matching `SketchAnimationController` interface (`src/types/sketch.ts:12-23`): `{ onFrame: () => {}, stop: () => {} }`
+  - Note: `attachToP5()` is NOT part of the interface — it is called by `App.svelte` before `sketch.create()`, not by sketches themselves. The mock only needs `onFrame` and `stop`.
 - Uses `createRng(42)` for deterministic rendering
+- Wraps `p.createCanvas` to force 300×300 regardless of what the sketch calls:
+  ```js
+  const originalCreateCanvas = p.createCanvas.bind(p);
+  p.createCanvas = (w, h, ...args) => originalCreateCanvas(300, 300, ...args);
+  ```
 - After calling `sketch.create()`, calls `p.noLoop()` to prevent any draw loop
 - P5 instance is removed on component destroy via `onMount` return
 
@@ -48,6 +54,20 @@ A clickable card wrapping a `SketchThumbnail` plus metadata (title, date, descri
     <p class="card-desc">{sketch.description}</p>
   </div>
 </div>
+```
+
+**Note:** `sketch.description` may be long. Add CSS truncation in `src/styles.css`:
+```css
+.card-desc {
+  margin: 0.3rem 0 0;
+  font-size: 0.86rem;
+  color: var(--muted-ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
 ```
 
 ### 3. `src/components/SketchGallery.svelte`
@@ -79,6 +99,8 @@ Full-page gallery layout: header ("Sketchbook" / "Generative Art Playground") wi
 </div>
 ```
 
+**Performance note:** All thumbnails mount a p5 instance simultaneously. For initial implementation this is acceptable, but consider adding lazy loading with Intersection Observer in a follow-up if sketch count grows beyond ~10.
+
 ### 4. `src/components/SketchView.svelte`
 
 Extracted from current `App.svelte` — owns all sketch-rendering state (`currentSketch`, `paramsBySketch`, `currentP5`, `currentController`, etc.), the controls sidebar, the canvas, and the back button.
@@ -88,6 +110,9 @@ Extracted from current `App.svelte` — owns all sketch-rendering state (`curren
 - `currentTheme` — current theme
 - `onback` — callback to navigate back to gallery
 - `onthemechange` — callback to toggle theme
+
+**Imports (moved from App.svelte):**
+- `import { sketches } from "./sketches/index.js"` — the sketches array (same import as `App.svelte:8`)
 
 **State (moved from App.svelte):**
 - `currentP5`, `currentController`, `paramsBySketch`, `currentParams`, `currentSketchModule`, `currentRng`
@@ -128,15 +153,18 @@ Extracted from current `App.svelte` — owns all sketch-rendering state (`curren
   }
   ```
 
-- `popstate` listener for browser back/forward:
+- `popstate` listener for browser back/forward (store handler reference for proper cleanup):
   ```js
   onMount(() => {
     applyTheme(resolveInitialTheme());
     currentSketchId = resolveSketchFromUrl();
-    window.addEventListener('popstate', () => {
+
+    function handlePopState() {
       currentSketchId = resolveSketchFromUrl();
-    });
-    return () => window.removeEventListener('popstate', ...);
+    }
+    window.addEventListener('popstate', handlePopState);
+
+    return () => window.removeEventListener('popstate', handlePopState);
   });
   ```
 
@@ -308,10 +336,10 @@ http://localhost:5174/?sketch=mona-lisa-circles  → Full sketch view
   - `theme` — current theme
   - `params` — sketch defaults
   - `rng` — `createRng(42)`
-  - `animation` — `{ onFrame: () => {}, stop: () => {} }`
-- After `sketch.create()` completes, call `p.noLoop()` if p5 is in draw mode
+  - `animation` — mock matching `SketchAnimationController` interface: `{ onFrame: () => {}, stop: () => {} }`
+- Wrap `p.createCanvas` to force 300×300 regardless of what the sketch calls (see SketchThumbnail section above)
+- After `sketch.create()` completes, call `p.noLoop()` to prevent any draw loop
 - Cleanup: `p.remove()` on component destroy
-- Fixed canvas size: 300x300 (set via `p.createCanvas(300, 300)` inside the wrapper)
 
 ---
 
@@ -329,7 +357,20 @@ http://localhost:5174/?sketch=mona-lisa-circles  → Full sketch view
 
 ## Testing
 
-- `pnpm test:run` — run unit tests
+### Unit Tests (new files)
+
+- `src/components/__tests__/SketchThumbnail.test.ts` — test that p5 is created with fixed seed, canvas is forced to 300×300, and cleanup removes p5 instance
+- `src/components/__tests__/SketchCard.test.ts` — test click handler emits sketch id, description truncation CSS is applied
+- `src/components/__tests__/SketchGallery.test.ts` — test gallery renders all sketches, navigate callback fires with correct id
+- `src/components/__tests__/SketchView.test.ts` — test sketch rendering, back callback, theme toggle callback (use `window.__CREATE_TEST_CTRL__` test path like existing `App.test.ts`)
+
+### Existing Tests
+
+- `pnpm test:run` — run all unit tests (existing + new)
+- `src/__tests__/App.test.ts` — will need updates since `App.svelte` is being refactored (routing logic changes)
+
+### Manual Testing
+
 - `pnpm dev` — manual testing of gallery and sketch views
 - Verify query param routing works (back/forward buttons)
 - Verify thumbnails render correctly for all sketches
