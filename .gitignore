@@ -4,4 +4,4 @@ dist
 .opencode_history
 test-results
 playwright-report
-
+.stryker-tmp
