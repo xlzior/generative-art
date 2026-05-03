@@ -72,15 +72,15 @@ describe("ParameterControls", () => {
 			expect(input).toHaveValue("50");
 		});
 
-		it("renders checkbox for boolean parameters", () => {
+		it("renders toggle for boolean parameters", () => {
 			const sketch = createMockSketch([booleanParam]);
 			render(ParameterControls, {
 				props: { sketch, params: { enabled: true }, onchange: handleChange },
 			});
 
-			const input = screen.getByRole("checkbox", { name: /enabled/i });
-			expect(input).toBeInTheDocument();
-			expect(input).toBeChecked();
+			const toggle = screen.getByRole("switch", { name: /enabled/i });
+			expect(toggle).toBeInTheDocument();
+			expect(toggle).toHaveAttribute("aria-checked", "true");
 		});
 
 		it("renders text input for string parameters", () => {
@@ -119,18 +119,6 @@ describe("ParameterControls", () => {
 
 			expect(screen.getByText("50.123")).toBeInTheDocument();
 		});
-
-		it("displays 'On'/'Off' for boolean values", () => {
-			const sketch = createMockSketch([booleanParam]);
-			const { rerender } = render(ParameterControls, {
-				props: { sketch, params: { enabled: true }, onchange: handleChange },
-			});
-
-			expect(screen.getByText("On")).toBeInTheDocument();
-
-			rerender({ sketch, params: { enabled: false }, onchange: handleChange });
-			expect(screen.getByText("Off")).toBeInTheDocument();
-		});
 	});
 
 	describe("event handling", () => {
@@ -147,14 +135,14 @@ describe("ParameterControls", () => {
 			expect(onChangeCalls[0]).toEqual(["size", 75]);
 		});
 
-		it("calls onchange with correct key/value when checkbox toggles", async () => {
+		it("calls onchange with correct key/value when toggle clicks", async () => {
 			const sketch = createMockSketch([booleanParam]);
 			render(ParameterControls, {
 				props: { sketch, params: { enabled: true }, onchange: handleChange },
 			});
 
-			const input = screen.getByRole("checkbox", { name: /enabled/i });
-			await fireEvent.click(input);
+			const toggle = screen.getByRole("switch", { name: /enabled/i });
+			await fireEvent.click(toggle);
 
 			expect(onChangeCalls).toHaveLength(1);
 			expect(onChangeCalls[0]).toEqual(["enabled", false]);

@@ -1,10 +1,8 @@
 <script>
+// biome-ignore-all lint/correctness/noUnusedVariables: false positives - vars used in Svelte template
 let { sketch, params, onchange } = $props();
 
 function formatParamValue(parameter, value) {
-	if (parameter.type === "boolean") {
-		return value ? "On" : "Off";
-	}
 	if (parameter.type === "string") {
 		return String(value);
 	}
@@ -25,10 +23,6 @@ function handleNumberChange(parameter, event) {
 
 function handleStringChange(parameter, event) {
 	onchange(parameter.key, event.target.value);
-}
-
-function handleBooleanChange(parameter, event) {
-	onchange(parameter.key, event.target.checked);
 }
 </script>
 
@@ -58,13 +52,19 @@ function handleBooleanChange(parameter, event) {
         />
       {:else if parameter.type === 'boolean'}
         <label for="param-{sketch.id}-{parameter.key}">{parameter.label}</label>
-        <span class="param-value">{formatParamValue(parameter, params[parameter.key])}</span>
-        <input
-          type="checkbox"
-          id="param-{sketch.id}-{parameter.key}"
-          checked={Boolean(params[parameter.key])}
-          onchange={(e) => handleBooleanChange(parameter, e)}
-        />
+        <label class="toggle">
+          <input
+            type="checkbox"
+            role="switch"
+            id="param-{sketch.id}-{parameter.key}"
+            checked={Boolean(params[parameter.key])}
+            aria-checked={Boolean(params[parameter.key])}
+            onchange={(e) => onchange(parameter.key, e.target.checked)}
+          />
+          <span class="toggle-track">
+            <span class="toggle-thumb"></span>
+          </span>
+        </label>
       {/if}
     </div>
   {/each}
@@ -100,12 +100,57 @@ function handleBooleanChange(parameter, event) {
     accent-color: var(--accent);
   }
 
-  label {
-    font-weight: 500;
+  input[type='text'] {
+    font: inherit;
   }
 
-  input[type='text'],
-  input[type='checkbox'] {
-    font: inherit;
+  .toggle {
+    display: inline-flex;
+    cursor: pointer;
+  }
+
+  .toggle input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+
+  .toggle-track {
+    position: relative;
+    display: inline-block;
+    width: 40px;
+    height: 22px;
+    background: var(--stroke);
+    border-radius: 11px;
+    transition: background 120ms ease;
+  }
+
+  .toggle input:checked + .toggle-track {
+    background: var(--accent);
+  }
+
+  .toggle-thumb {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 18px;
+    height: 18px;
+    background: white;
+    border-radius: 50%;
+    transition: transform 120ms ease;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+  }
+
+  .toggle input:checked + .toggle-track .toggle-thumb {
+    transform: translateX(18px);
+  }
+
+  .toggle:hover .toggle-track {
+    background: color-mix(in srgb, var(--stroke), var(--accent) 30%);
+  }
+
+  .toggle input:checked:hover + .toggle-track {
+    background: color-mix(in srgb, var(--accent), transparent 15%);
   }
 </style>

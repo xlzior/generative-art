@@ -37,7 +37,6 @@
 
 - [ ] Add URL as a parameter to mona lisa sketch to allow for background images besides mona lisa
 - [ ] Check if mona lisa is drawing in an infinite loop and if that is undesirable, find another way to implement it
-- [ ] Use a reasonably-sized toggle for boolean parameters instead of a tiny checkbox (see depth map boolean parameter for stereogram)
 
 ## Gallery view
 
@@ -46,6 +45,6 @@
 ## Canvas size
 
 - [ ] Add support for default parameters which all sketches support
-- [ ] Add canvas size (height and width) as a parameter for all sketches
+- [ ] Add canvas size (height and width) as a parameter for all sketches. This is slightly different from a regular number param that's implemented using a slider. The UI for this should be 2 textboxes which take in numbers, separated by an 'x' between them. Maybe a dedicated, separate param type called "dimensions".
 - [ ] Update the sketch renderer to use height and width if provided
 - [ ] There should be a button to reset the height and width to the default
