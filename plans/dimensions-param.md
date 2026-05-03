@@ -19,11 +19,13 @@ Add a new `dimensions` parameter type rendered as two text inputs (W × H) with 
 ### 3. `src/components/ParameterControls.svelte`
 - Add `{:else if parameter.type === 'dimensions'}` block: two text inputs + "x" separator
 - Add `handleDimensionsChange(parameter, dimension, event)` — parses input, emits `{ width, height }` object
+  - Empty or non-numeric input → `null`; valid number → parsed integer
 - Add CSS for `.dimensions-input` (flex row, monospace inputs, "x" separator)
 
 ### 4. `src/utils/responsive-canvas.ts`
-- Destructure `width`/`height` from options
+- Add `width?: number | null` and `height?: number | null` to the destructured options
 - `resolveSize()` returns `{ width: width ?? autoSize.width, height: height ?? autoSize.height }`
+- **Behavior note**: Explicit dimensions (non-null) take precedence over auto-size and persist across `windowResized`. `null` means "fill screen" (auto-size), which does respond to resize. This matches the intent that explicit dimensions are a fixed override.
 
 ### 5. `src/sketches/grid-variations/sketch.ts`
 - Add `{ type: "dimensions", key: "dimensions", label: "Canvas Size" }` to parameters
@@ -31,6 +33,10 @@ Add a new `dimensions` parameter type rendered as two text inputs (W × H) with 
 
 ### 6. `src/sketches/grid-variations/defaults.json`
 - Add `"dimensions": { "width": null, "height": null }`
+
+### 7. Verify null preservation in params loading path
+- Ensure `null` values from `defaults.json` are preserved as `null` (not `undefined`) when loaded into `params`
+- Check the defaults-loading utility (likely in `defineSketch.ts` or sketch discovery) handles `null` JSON values correctly
 
 ### 7. `src/components/__tests__/ParameterControls.test.ts`
 - Add `dimensionsParam` test fixture
