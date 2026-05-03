@@ -3,7 +3,7 @@ pre-commit:
   jobs:
     - name: biome format & lint
       run: pnpm biome check --write {staged_files}
-      glob: "*.{js,ts,tsx,jsx,json,css}"
+      glob: "*.{js,ts,tsx,jsx,svelte,json,css}"
       stage_fixed: true
     - name: type check
       run: pnpm tsc --noEmit
