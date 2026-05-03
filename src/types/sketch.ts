@@ -32,7 +32,10 @@ export type SketchParameter =
 			step?: number;
 	  }
 	| { type: "string"; key: string; label: string }
-	| { type: "boolean"; key: string; label: string };
+	| { type: "boolean"; key: string; label: string }
+	| { type: "dimensions"; key: string; label: string };
+
+export type DimensionsValue = { width: number | null; height: number | null };
 
 export type InferParams<T extends readonly SketchParameter[]> = {
 	[K in T[number] as K["key"]]: K extends { type: "number" }
@@ -41,7 +44,9 @@ export type InferParams<T extends readonly SketchParameter[]> = {
 			? string
 			: K extends { type: "boolean" }
 				? boolean
-				: never;
+				: K extends { type: "dimensions" }
+					? DimensionsValue
+					: never;
 };
 
 export interface SketchContext<TParams extends Record<string, unknown>> {
@@ -76,6 +81,8 @@ export interface SketchModuleWithDefaults<
 export interface ResponsiveCanvasOptions {
 	containerId?: string;
 	minSize?: number;
+	width?: number | null;
+	height?: number | null;
 	onSetup?: (size: { width: number; height: number }) => void;
 	onResize?: (size: { width: number; height: number }) => void;
 }

@@ -9,21 +9,27 @@ export function attachResponsiveCanvas(
 		minSize = 320,
 		onSetup,
 		onResize,
+		width = null,
+		height = null,
 	}: ResponsiveCanvasOptions = {},
 ): void {
 	function resolveSize() {
-		return getCanvasSize(containerId, minSize);
+		const autoSize = getCanvasSize(containerId, minSize);
+		return {
+			width: width ?? autoSize.width,
+			height: height ?? autoSize.height,
+		};
 	}
 
 	p.setup = () => {
-		const { width, height } = resolveSize();
-		p.createCanvas(width, height);
-		onSetup?.({ width, height });
+		const { width: w, height: h } = resolveSize();
+		p.createCanvas(w, h);
+		onSetup?.({ width: w, height: h });
 	};
 
 	p.windowResized = () => {
-		const { width, height } = resolveSize();
-		p.resizeCanvas(width, height);
-		onResize?.({ width, height });
+		const { width: w, height: h } = resolveSize();
+		p.resizeCanvas(w, h);
+		onResize?.({ width: w, height: h });
 	};
 }

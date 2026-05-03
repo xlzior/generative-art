@@ -1,6 +1,6 @@
 import type { SketchModule, SketchParameter } from "../types/sketch.js";
 
-const VALID_TYPES = ["number", "string", "boolean"] as const;
+const VALID_TYPES = ["number", "string", "boolean", "dimensions"] as const;
 
 function validateParameter(sketchId: string, parameter: SketchParameter): void {
 	if (!parameter || typeof parameter !== "object") {
@@ -9,45 +9,43 @@ function validateParameter(sketchId: string, parameter: SketchParameter): void {
 		);
 	}
 
-	const { key, label, type } = parameter;
-
-	if (typeof key !== "string" || key.trim() === "") {
+	if (typeof parameter.key !== "string" || parameter.key.trim() === "") {
 		throw new TypeError(
 			`Sketch module ${sketchId} parameter key must be a non-empty string.`,
 		);
 	}
 
-	if (typeof label !== "string" || label.trim() === "") {
+	if (typeof parameter.label !== "string" || parameter.label.trim() === "") {
 		throw new TypeError(
-			`Sketch module ${sketchId} parameter ${key} must include a label.`,
+			`Sketch module ${sketchId} parameter ${parameter.key} must include a label.`,
 		);
 	}
 
-	if (type !== "number" && type !== "string" && type !== "boolean") {
+	if (!VALID_TYPES.includes(parameter.type as (typeof VALID_TYPES)[number])) {
 		throw new TypeError(
-			`Sketch module ${sketchId} parameter ${key} has invalid type "${type}". Must be one of: ${VALID_TYPES.join(
+			`Sketch module ${sketchId} parameter ${parameter.key} has invalid type "${parameter.type}". Must be one of: ${VALID_TYPES.join(
 				", ",
 			)}.`,
 		);
 	}
 
-	if (type === "number") {
+	if (parameter.type === "number") {
 		const { min, max, step } = parameter;
 		if (!Number.isFinite(min) || !Number.isFinite(max)) {
 			throw new TypeError(
-				`Sketch module ${sketchId} parameter ${key} must use numeric min/max.`,
+				`Sketch module ${sketchId} parameter ${parameter.key} must use numeric min/max.`,
 			);
 		}
 
 		if (min >= max) {
 			throw new TypeError(
-				`Sketch module ${sketchId} parameter ${key} requires min < max.`,
+				`Sketch module ${sketchId} parameter ${parameter.key} requires min < max.`,
 			);
 		}
 
 		if (step !== undefined && (!Number.isFinite(step) || step <= 0)) {
 			throw new TypeError(
-				`Sketch module ${sketchId} parameter ${key} uses an invalid step.`,
+				`Sketch module ${sketchId} parameter ${parameter.key} uses an invalid step.`,
 			);
 		}
 	}
