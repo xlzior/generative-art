@@ -13,12 +13,15 @@ export interface DefaultsPayload {
 export function readJsonBody(req: IncomingMessage): Promise<DefaultsPayload> {
 	return new Promise((resolve, reject) => {
 		const chunks: Buffer[] = [];
+		let totalLength = 0;
 
 		req.on("data", (chunk: Buffer) => {
-			chunks.push(chunk);
-			if (Buffer.concat(chunks).length > 2_000_000) {
+			totalLength += chunk.length;
+			if (totalLength > 2_000_000) {
 				reject(new Error("Request body too large"));
+				return;
 			}
+			chunks.push(chunk);
 		});
 
 		req.on("end", () => {
@@ -38,9 +41,9 @@ export function isWithinSketchesRoot(
 	filePath: string,
 	root: string = sketchesRoot,
 ): boolean {
-	const normalizedRoot = path.normalize(root + path.sep);
-	const normalizedPath = path.normalize(filePath);
-	return normalizedPath.startsWith(normalizedRoot);
+	const normalizedRoot = path.resolve(root);
+	const normalizedPath = path.resolve(filePath);
+	return normalizedPath.startsWith(normalizedRoot + path.sep);
 }
 
 export function createSaveDefaultsHandler() {
