@@ -1,12 +1,5 @@
 <script>
-import {
-	createIcons,
-	Download,
-	Moon,
-	RefreshCw,
-	RotateCcw,
-	Save,
-} from "lucide";
+import { Download, RefreshCw, RotateCcw, Save } from "lucide-svelte";
 import p5 from "p5";
 import { onMount } from "svelte";
 import ParameterControls from "./components/ParameterControls.svelte";
@@ -215,7 +208,6 @@ function handleParamChange(key, value) {
 
 onMount(() => {
 	applyTheme(resolveInitialTheme());
-	createIcons({ icons: { Download, Moon, RefreshCw, RotateCcw, Save } });
 	currentSketch = resolveInitialSketch();
 	mountSketch(currentSketch);
 
@@ -254,14 +246,14 @@ onMount(() => {
 
     <button id="regenerate" type="button" onclick={handleRegenerate}>
       <span class="button-content">
-        <i class="button-icon" data-lucide="refresh-cw" aria-hidden="true"></i>
+        <RefreshCw class="button-icon" aria-hidden="true" />
         <span>Regenerate</span>
       </span>
     </button>
 
     <button id="save-frame" type="button" onclick={handleSavePNG}>
       <span class="button-content">
-        <i class="button-icon" data-lucide="download" aria-hidden="true"></i>
+        <Download class="button-icon" aria-hidden="true" />
         <span>Save PNG</span>
       </span>
     </button>
@@ -281,13 +273,13 @@ onMount(() => {
       <div class="params-actions">
         <button id="reset-params" type="button" onclick={handleResetParams}>
           <span class="button-content">
-            <i class="button-icon" data-lucide="rotate-ccw" aria-hidden="true"></i>
+            <RotateCcw class="button-icon" aria-hidden="true" />
             <span>Reset To Defaults</span>
           </span>
         </button>
         <button id="save-defaults" type="button" onclick={handleSaveDefaults}>
           <span class="button-content">
-            <i class="button-icon" data-lucide="save" aria-hidden="true"></i>
+            <Save class="button-icon" aria-hidden="true" />
             <span id="save-defaults-label">Save As Default</span>
           </span>
         </button>

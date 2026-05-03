@@ -11,6 +11,9 @@ importers:
       lucide:
         specifier: ^1.11.0
         version: 1.11.0
+      lucide-svelte:
+        specifier: ^1.0.1
+        version: 1.0.1(svelte@5.55.5)
       p5:
         specifier: ^1.11.10
         version: 1.11.13
@@ -702,6 +705,11 @@ packages:
   lru-cache@11.3.5:
     resolution: {integrity: sha512-NxVFwLAnrd9i7KUBxC4DrUhmgjzOs+1Qm50D3oF1/oL+r1NpZ4gA7xvG0/zJ8evR7zIKn4vLf7qTNduWFtCrRw==}
     engines: {node: 20 || >=22}
+
+  lucide-svelte@1.0.1:
+    resolution: {integrity: sha512-WvzZgk0pqzgda+AErLvgWxHkfg/+GgUwqKMRHvzt0IqyMdmyEDzDCk3Z+Wo/3y753oIgx8u9Q4eUbWkghFa8Jg==}
+    peerDependencies:
+      svelte: ^3 || ^4 || ^5.0.0-next.42
 
   lucide@1.11.0:
     resolution: {integrity: sha512-2uvbGlcztUY+z0Ef++YCaxD6mtzrPsUJ1qWbIfqZrZGRxZBCL3icE6g2nzRTtJ6YywOoXC5blL/NmkLI66en5g==}
@@ -1530,6 +1538,10 @@ snapshots:
   locate-character@3.0.0: {}
 
   lru-cache@11.3.5: {}
+
+  lucide-svelte@1.0.1(svelte@5.55.5):
+    dependencies:
+      svelte: 5.55.5
 
   lucide@1.11.0: {}
 

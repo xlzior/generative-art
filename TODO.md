@@ -31,7 +31,7 @@
 ## Developer Experience
 
 - [ ] **Add UI feedback for save defaults** — `App.svelte` has a `#save-status` element but never updates it. Show success/error message to user when saving defaults succeeds or fails.
-- [ ] **Switch to `lucide-svelte`** — `App.svelte` uses `lucide` + `createIcons()` with `data-lucide` attributes (vanilla JS approach). Use `lucide-svelte` for proper Svelte 5 component integration.
+
 - [ ] **Add sketch generator script** — Create a script or CLI command to scaffold new sketches (create folder, `sketch.ts`, `defaults.json`) following the established pattern.
 
 ## Documentation
