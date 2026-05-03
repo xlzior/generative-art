@@ -10,7 +10,16 @@
 - `pnpm test:run` — unit tests (runs on pre-commit, after biome and typecheck)
 - `pnpm test:visual` — visual regression tests (runs on pre-commit, after unit tests)
 
-No test framework is configured.
+## Testing
+
+Test framework: Vitest with @testing-library/svelte (jsdom) and Playwright for visual tests.
+
+Commands:
+- `pnpm test:run` — run all unit tests
+- `pnpm test` — watch mode
+- `pnpm test:visual` — Playwright visual regression tests
+
+Test files go in `__tests__/` folders adjacent to source files. Node environment is default; use jsdom for components via `environmentMatchGlobs` in `vitest.config.ts`.
 
 ## Toolchain quirks
 

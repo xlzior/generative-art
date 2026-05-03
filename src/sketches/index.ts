@@ -5,6 +5,47 @@ import {
 	validateSketchModule,
 } from "./validation.js";
 
+export function discoverSketches(
+	sketchEntries: [
+		string,
+		{ default: SketchModuleWithDefaults<Record<string, unknown>> },
+	][],
+	defaultsByFolder: Record<string, Record<string, unknown>>,
+): SketchModuleWithDefaults<Record<string, unknown>>[] {
+	const sketchModules = sketchEntries.map(([path, module]) => {
+		if (!module || typeof module.default !== "object") {
+			throw new TypeError(
+				`Sketch module at ${path} must export a default sketch object.`,
+			);
+		}
+
+		const folderMatch = path.match(/^\.\/([^/]+)\/sketch\.ts$/);
+		if (!folderMatch) {
+			throw new TypeError(`Sketch module path has invalid shape: ${path}`);
+		}
+
+		const folder = folderMatch[1];
+		const defaults = defaultsByFolder[folder];
+		if (!defaults || typeof defaults !== "object") {
+			throw new TypeError(`Missing defaults.json for sketch folder: ${folder}`);
+		}
+
+		const sketch = module.default;
+		validateSketchModule(sketch, defaults);
+
+		return {
+			...sketch,
+			defaults,
+			defaultsFile: `${folder}/defaults.json`,
+			filePath: path,
+		};
+	});
+
+	checkDuplicateIds(sketchModules);
+
+	return sortSketches(sketchModules);
+}
+
 const sketchEntries = Object.entries(
 	import.meta.glob<{
 		default: SketchModuleWithDefaults<Record<string, unknown>>;
@@ -30,36 +71,5 @@ const defaultsByFolder = Object.fromEntries(
 		),
 );
 
-const sketchModules = sketchEntries.map(([path, module]) => {
-	if (!module || typeof module.default !== "object") {
-		throw new TypeError(
-			`Sketch module at ${path} must export a default sketch object.`,
-		);
-	}
-
-	const folderMatch = path.match(/^\.\/([^/]+)\/sketch\.ts$/);
-	if (!folderMatch) {
-		throw new TypeError(`Sketch module path has invalid shape: ${path}`);
-	}
-
-	const folder = folderMatch[1];
-	const defaults = defaultsByFolder[folder];
-	if (!defaults || typeof defaults !== "object") {
-		throw new TypeError(`Missing defaults.json for sketch folder: ${folder}`);
-	}
-
-	const sketch = module.default;
-	validateSketchModule(sketch, defaults);
-
-	return {
-		...sketch,
-		defaults,
-		defaultsFile: `${folder}/defaults.json`,
-		filePath: path,
-	};
-});
-
-checkDuplicateIds(sketchModules);
-
 export const sketches: SketchModuleWithDefaults<Record<string, unknown>>[] =
-	sortSketches(sketchModules);
+	discoverSketches(sketchEntries, defaultsByFolder);
