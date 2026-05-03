@@ -14,7 +14,11 @@
   };
   ```
 - [ ] **Add error boundaries around sketches** — If a sketch throws during `create()` or `draw()`, it breaks the entire app. Wrap each sketch in try-catch with graceful fallback (e.g., show error state in canvas container).
-- [ ] **Decouple sketch context from DOM structure** — Sketches implicitly depend on `#sketch-container` DOM structure via `responsive-canvas.ts`. Consider passing container reference explicitly to reduce coupling and improve testability.
+- [ ] **Decouple sketch context from DOM structure** — `getCanvasSize()` uses `document.getElementById(containerId)` to locate the container by string ID. While `containerId` is configurable in `attachResponsiveCanvas()`, the sketch context doesn't receive the container element directly. Changes needed:
+  - Add `container: HTMLElement` to `SketchContext` type
+  - Update `getCanvasSize()` to accept `HTMLElement` instead of `string`
+  - Pass container from `App.svelte:100` through sketch context instead of relying on DOM ID lookup
+  - This improves testability by removing implicit DOM dependencies
 
 ## Performance
 
