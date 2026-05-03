@@ -33,20 +33,6 @@
 
 - [ ] **Add sketch generator script** — Create a script or CLI command to scaffold new sketches (create folder, `sketch.ts`, `defaults.json`) following the established pattern.
 
-## Documentation
-
-## Build & Configuration
-
-## Testing
-
-- [ ] **Test `src/sketches/index.ts` auto-discovery** — Add tests for glob discovery, defaults merging, duplicate detection integration, and sort behavior.
-- [ ] **Test `src/utils/seeded-random.ts`** — Add unit tests for `createRng()` determinism, `rngRandom()` range, `rngInt()` bounds, `rngChoice()` distribution.
-- [ ] **Test `src/utils/seed.ts`** — Add tests for `getSeedFromUrl()` and `setSeedInUrl()` (requires jsdom environment).
-- [ ] **Test `src/utils/animation-controller.ts`** — Add tests for animation loop start/stop/loop behavior.
-- [ ] **Test `src/utils/canvas-size.ts`** — Add tests for canvas dimension calculations.
-- [ ] **Test `src/utils/responsive-canvas.ts`** — Add tests for responsive canvas behavior.
-- [ ] **Test `src/App.svelte`** — Add component tests for the main app component.
-
 ## Sketches
 
 - [ ] Add URL as a parameter to mona lisa sketch to allow for background images besides mona lisa
