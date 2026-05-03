@@ -12,17 +12,18 @@ export interface DefaultsPayload {
 
 export function readJsonBody(req: IncomingMessage): Promise<DefaultsPayload> {
 	return new Promise((resolve, reject) => {
-		let body = "";
+		const chunks: Buffer[] = [];
 
 		req.on("data", (chunk: Buffer) => {
-			body += chunk;
-			if (body.length > 2_000_000) {
+			chunks.push(chunk);
+			if (Buffer.concat(chunks).length > 2_000_000) {
 				reject(new Error("Request body too large"));
 			}
 		});
 
 		req.on("end", () => {
 			try {
+				const body = Buffer.concat(chunks).toString("utf8");
 				resolve(JSON.parse(body || "{}"));
 			} catch {
 				reject(new Error("Invalid JSON payload"));

@@ -4,7 +4,6 @@
 
 - [ ] **Fix `Object.freeze()` preventing defaults update** — `defineSketch()` freezes the sketch object, but `App.svelte:137` tries to mutate `sketch.defaults` after saving. Either remove `Object.freeze()` in `src/utils/defineSketch.ts:101` or store defaults separately from the frozen sketch object.
 - [ ] **Fix mona-lisa-circles image loading race condition** — `loadImage` callback in `preload` may not block `setup`. Use synchronous `p.loadImage(MONA_LISA_URL)` instead so p5 blocks until the image is loaded (`src/sketches/mona-lisa-circles/sketch.ts:134-139`).
-- [ ] **Fix `readJsonBody` string concatenation** — `vite.config.ts` uses `body += chunk` for buffer concatenation which can cause issues with non-UTF8 data. Use `Buffer` or proper stream handling.
 
 ## Architecture & Structure
 
