@@ -28,17 +28,17 @@ describe("defineSketch()", () => {
 			expect(sketch.parameters).toHaveLength(1);
 		});
 
-		it("should return a frozen object", () => {
+		it("should return a mutable object", () => {
 			const sketch = defineSketch({
-				id: "frozen-test",
-				title: "Frozen Test",
+				id: "mutable-test",
+				title: "Mutable Test",
 				date: "2026-01-01",
-				description: "Test frozen object",
+				description: "Test mutable object",
 				parameters: [],
 				create: validCreate,
 			});
 
-			expect(Object.isFrozen(sketch)).toBe(true);
+			expect(Object.isFrozen(sketch)).toBe(false);
 		});
 	});
 

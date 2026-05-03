@@ -55,7 +55,7 @@ function validateParameter(sketchId: string, parameter: SketchParameter): void {
 
 export function defineSketch<TParams extends Record<string, unknown>>(
 	sketch: SketchModule<TParams>,
-): Readonly<SketchModule<TParams>> {
+): SketchModule<TParams> {
 	if (!sketch || typeof sketch !== "object") {
 		throw new TypeError("Sketch module must be an object.");
 	}
@@ -98,5 +98,5 @@ export function defineSketch<TParams extends Record<string, unknown>>(
 		throw new TypeError(`Sketch module ${id} must provide a create function.`);
 	}
 
-	return Object.freeze(sketch);
+	return sketch;
 }
