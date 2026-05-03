@@ -15,6 +15,12 @@ The project currently has partial test coverage:
 
 **Config**: `vitest.config.ts` — `src/components/**/__tests__/**` uses jsdom; `src/**/__tests__/**` uses node by default.
 
+**Note**: AGENTS.md states "No test framework is configured" — this is outdated. Verify tooling is installed via:
+```bash
+grep -E "vitest|@testing-library/svelte|playwright" package.json
+```
+before proceeding.
+
 ---
 
 ## 1. Test `src/sketches/index.ts` — Auto-Discovery
@@ -22,40 +28,34 @@ The project currently has partial test coverage:
 **File**: `src/sketches/__tests__/index.test.ts`
 **Environment**: Node
 
-The module uses `import.meta.glob` with `{ eager: true }`, which is hard to mock directly. Test the composite behavior by testing the helper functions it imports, plus add integration tests that temporarily manipulate the filesystem or mock `import.meta.glob`.
-
 ### Test Cases
 
 **Glob discovery & defaults merging:**
 - `validateSketchModule()` already tested in `validation.test.ts` — index.ts wiring just calls it
-- Test that `defaultsByFolder` correctly maps folder names to defaults JSON
+- Test that `defaultsByFolder` correctly maps folder names to defaults JSON (test against extracted `discoverSketches` function)
 
 **Duplicate detection integration:**
 - `checkDuplicateIds()` already tested in `validation.test.ts`
-- Add test: create a mock module array with duplicates and verify index.ts throws at module level
+- Add test: pass mock modules with duplicates to `discoverSketches` and verify it throws
 
 **Sort behavior:**
 - `sortSketches()` already tested in `validation.test.ts`
-- Verify index.ts exports sketches in correct order (newest first, then title)
+- Verify `discoverSketches` returns sketches sorted by date descending, then title
 
 **Missing defaults.json:**
-- Test that a sketch folder without `defaults.json` throws a TypeError
+- Test that `discoverSketches` with a mock glob result missing defaults for a module throws TypeError
 
 **Invalid sketch module shape:**
-- Test that a module not exporting a default object throws
+- Test that `discoverSketches` with a mock module not exporting default throws
 
 ### Approach
 
-Since `import.meta.glob` is difficult to mock, the pragmatic approach is:
-1. Test the pure helper functions it delegates to (already done in `validation.test.ts`)
-2. Add an integration test that creates temporary sketch folders in a test fixture directory and dynamically imports them (complex, may not be worth the effort)
-3. Alternatively, directly test `sketchModules` array construction logic by extracting it into a testable function
+`import.meta.glob` is difficult to mock directly. The recommended approach is:
+1. **Extract testable logic (Priority)**: Refactor `src/sketches/index.ts` to extract sketch array construction into a pure `discoverSketches(globResult: Record<string, { default: any }>, defaultsMap: Record<string, any>): Sketch[]` function. This allows direct unit testing of all edge cases without mocking `import.meta.glob`.
+2. Test the pure helper functions it delegates to (already done in `validation.test.ts`)
+3. Add a secondary smoke test that imports `sketches` from `src/sketches/index.ts` to validate current state (not a replacement for edge case testing)
 
-**Recommendation**: The helpers are already well-tested. Add a smoke test that imports `sketches` from `src/sketches/index.ts` and asserts:
-- It is an array
-- All items have `id`, `title`, `defaults`, `defaultsFile` fields
-- No duplicate IDs (the module would have thrown otherwise)
-- Sorted by date descending
+**Recommendation**: Prioritize Approach 1 to enable full coverage of edge cases. The smoke test only validates the current sketch set, not error handling for missing/invalid modules.
 
 ---
 
@@ -69,7 +69,7 @@ Since `import.meta.glob` is difficult to mock, the pragmatic approach is:
 **`createRng(seed)` — determinism:**
 - Same seed produces identical sequences: create two RNGs with same seed, call each 100 times, assert sequences match
 - Different seeds produce different sequences: verify two RNGs with different seeds produce different first values
-- Known seed output: for seed=42, first call returns expected value (calculate manually or snapshot)
+- Known seed output: For seed=42, use Vitest snapshots to capture the first 10 values. Generate once with `pnpm test:run -- src/utils/__tests__/seeded-random.test.ts --updateSnapshot` and commit the snapshot file.
 
 **`rngRandom(rng, min, max)` — range:**
 - `rngRandom(rng, 10)` returns value in [0, 10)
@@ -85,14 +85,20 @@ Since `import.meta.glob` is difficult to mock, the pragmatic approach is:
 - Edge case: `rngInt(rng, 1)` always returns 0
 
 **`rngChoice(rng, arr)` — distribution:**
-- Throws or returns undefined for empty array (check current behavior)
+- First, check `src/utils/seeded-random.ts` for `rngChoice` implementation to confirm behavior for empty arrays. Add explicit test matching current behavior (e.g., throws `RangeError` or returns `undefined`).
 - Correctly picks from array indices
 - For array of length 1, always returns that element
 - Statistical test: call many times with known seed, verify distribution is roughly uniform (e.g., within 5% of expected for 1000 calls)
 
+### Notes
+- Prefer Vitest snapshots for deterministic seed output validation over manual value calculation.
+
 ### Example Structure
 
 ```typescript
+import { describe, expect, it, vi } from "vitest";
+import { createRng, rngRandom } from "../seeded-random.ts";
+
 describe("createRng()", () => {
   it("produces deterministic output for same seed", () => {
     const a = createRng(12345);
@@ -100,6 +106,12 @@ describe("createRng()", () => {
     for (let i = 0; i < 100; i++) {
       expect(a()).toBe(b());
     }
+  });
+
+  it("matches snapshot for seed=42", () => {
+    const rng = createRng(42);
+    const values = Array.from({ length: 10 }, () => rng());
+    expect(values).toMatchSnapshot();
   });
 });
 
@@ -144,6 +156,7 @@ describe("rngRandom()", () => {
 
 ```typescript
 import { beforeEach, describe, expect, it } from "vitest";
+import { getSeedFromUrl, setSeedInUrl } from "../seed.ts";
 
 describe("seed.ts", () => {
   beforeEach(() => {
@@ -217,20 +230,28 @@ describe("animation-controller", () => {
 ### Test Cases
 
 **`getCanvasSize(containerId, minSize)`:**
-
 - Container exists with specific dimensions → returns container's `clientWidth`/`clientHeight`
 - Container not found → falls back to `window.innerWidth`/`window.innerHeight`
 - Result respects `minSize` constraint: if container is smaller than minSize, returns minSize
 - Default `containerId` is `"canvas-container"`
 - Default `minSize` is 320
 - Returns integer values (uses `Math.floor`)
+- Asymmetric container dimensions: Container 800x100 with minSize 320 → returns `{ width: 800, height: 320 }` (applies minSize to height only)
+- Float container dimensions: Container with `clientWidth: 799.9` → returns 799 (verifies `Math.floor` is applied)
+- Non-existent container with custom minSize: Container not found, minSize 500 → falls back to `window.innerWidth`/`window.innerHeight`, then applies minSize 500
 
 ### Setup
 
 ```typescript
+import { beforeEach, describe, expect, it } from "vitest";
+import { getCanvasSize } from "../canvas-size.ts";
+
 describe("getCanvasSize()", () => {
   beforeEach(() => {
     document.body.innerHTML = "";
+    // Reset window dimensions for fallback tests
+    Object.defineProperty(window, "innerWidth", { value: 1024 });
+    Object.defineProperty(window, "innerHeight", { value: 768 });
   });
 
   it("uses container client dimensions when available", () => {
@@ -254,6 +275,17 @@ describe("getCanvasSize()", () => {
     const size = getCanvasSize("canvas-container", 320);
     expect(size).toEqual({ width: 320, height: 320 });
   });
+
+  it("handles asymmetric container dimensions with minSize", () => {
+    const container = document.createElement("div");
+    container.id = "canvas-container";
+    Object.defineProperty(container, "clientWidth", { value: 800 });
+    Object.defineProperty(container, "clientHeight", { value: 100 });
+    document.body.appendChild(container);
+
+    const size = getCanvasSize("canvas-container", 320);
+    expect(size).toEqual({ width: 800, height: 320 });
+  });
 });
 ```
 
@@ -262,20 +294,30 @@ describe("getCanvasSize()", () => {
 ## 6. Test `src/utils/responsive-canvas.ts`
 
 **File**: `src/utils/__tests__/responsive-canvas.test.ts`
-**Environment**: Node (mock p5 instance)
+**Environment**: jsdom (or mock `getCanvasSize`)
 
 ### Test Cases
 
 **`attachResponsiveCanvas(p, options)`:
-
 - Sets `p.setup` to a function that calls `p.createCanvas(width, height)`
 - Sets `p.windowResized` to a function that calls `p.resizeCanvas(width, height)`
 - Calls `onSetup` callback after canvas creation in `p.setup`
 - Calls `onResize` callback after resize in `p.windowResized`
 - Uses custom `containerId` and `minSize` when provided
 
-### Mocking p5
+### Mocking `getCanvasSize`
+Mock `getCanvasSize` to avoid DOM dependencies:
+```typescript
+import { vi } from "vitest";
+import { attachResponsiveCanvas } from "../responsive-canvas.ts";
 
+// Mock getCanvasSize to return fixed dimensions
+vi.mock("../canvas-size.ts", () => ({
+  getCanvasSize: vi.fn().mockReturnValue({ width: 400, height: 400 }),
+}));
+```
+
+### Example Test
 ```typescript
 describe("attachResponsiveCanvas()", () => {
   it("sets up p.setup and p.windowResized", () => {
@@ -293,19 +335,16 @@ describe("attachResponsiveCanvas()", () => {
 
     // Trigger setup
     p.setup();
-    expect(p.createCanvas).toHaveBeenCalled();
+    expect(p.createCanvas).toHaveBeenCalledWith(400, 400);
 
     // Trigger resize
     p.windowResized();
-    expect(p.resizeCanvas).toHaveBeenCalled();
+    expect(p.resizeCanvas).toHaveBeenCalledWith(400, 400);
   });
 });
 ```
 
-**Note**: This test currently has a limitation — `getCanvasSize` is called inside `p.setup`, which requires DOM. Either:
-1. Mock `getCanvasSize` (vi.mock)
-2. Use jsdom environment
-3. Refactor `attachResponsiveCanvas` to accept a `resolveSize` function (more testable)
+**Note**: `getCanvasSize` is called inside `p.setup` and requires DOM access. The mock approach above resolves this without jsdom.
 
 ---
 
@@ -338,11 +377,21 @@ describe("attachResponsiveCanvas()", () => {
 - Seed is passed to sketch context
 
 ### Component Test Setup
-
 ```typescript
+import { vi } from "vitest";
 import "@testing-library/jest-dom";
 import { render, screen } from "@testing-library/svelte";
 import App from "../App.svelte";
+
+// Mock sketch index to prevent loading real sketches/p5
+vi.mock("../sketches/index.ts", () => ({
+  sketches: [],
+}));
+
+// Mock p5 constructor to avoid canvas initialization errors
+vi.mock("p5", () => ({
+  default: vi.fn(),
+}));
 
 describe("App.svelte", () => {
   it("renders sketch selector", () => {
@@ -357,10 +406,7 @@ describe("App.svelte", () => {
 });
 ```
 
-**Challenge**: `App.svelte` mounts p5 sketches which need a real canvas. May need to:
-1. Mock p5 globally
-2. Use `vi.mock` to replace sketch `create()` functions with no-ops
-3. Test App in "non-animated" mode or with mocked sketches
+**Challenge**: `App.svelte` mounts p5 sketches which need a real canvas. The mocks above resolve this by preventing real sketch/p5 initialization.
 
 ---
 
@@ -370,9 +416,9 @@ describe("App.svelte", () => {
 2. **`seed.test.ts`** — jsdom tests, straightforward
 3. **`canvas-size.test.ts`** — jsdom tests, straightforward
 4. **`animation-controller.test.ts`** — requires RAF mocking but isolated
-5. **`responsive-canvas.test.ts`** — requires p5 mock or refactor
-6. **`index.test.ts`** — integration test, may require refactoring for full coverage
-7. **`App.test.ts`** — most complex, requires component mocking
+5. **`responsive-canvas.test.ts`** — requires `getCanvasSize` mock (now resolved)
+6. **`index.test.ts`** — requires refactoring `discoverSketches` first for full coverage
+7. **`App.test.ts`** — requires component mocks (now resolved)
 
 ---
 
@@ -382,8 +428,8 @@ describe("App.svelte", () => {
 # Run all unit tests
 pnpm test:run
 
-# Run specific test file
-pnpm test:run src/utils/__tests__/seeded-random.test.ts
+# Run specific test file (use -- to forward args to vitest)
+pnpm test:run -- src/utils/__tests__/seeded-random.test.ts
 
 # Watch mode during development
 pnpm test
@@ -391,6 +437,8 @@ pnpm test
 # Run visual regression tests (requires dev server)
 pnpm test:visual
 ```
+
+**Note**: pnpm requires the `--` separator to pass arguments to the underlying vitest runner. Omitting `--` will cause the file path to be ignored.
 
 ---
 
@@ -400,3 +448,4 @@ pnpm test:visual
 - Node environment is default for `src/**/__tests__/**` per vitest.config.ts
 - Use `environmentMatchGlobs` to override to jsdom when needed
 - Follow existing patterns: `describe`/`it` blocks, clear assertions, mock setup in `beforeEach`
+- Commit Vitest snapshot files generated for seeded-random tests
