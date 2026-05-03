@@ -24,7 +24,7 @@
 
 ## Code Quality
 
-- [ ] **Consolidate duplicate CSS** — CSS in `App.svelte:261-387` duplicates much of `styles.css`. Move all global styles to `styles.css` and keep only component-scoped styles in Svelte files.
+
 - [ ] **Standardize color formats across sketches** — Some sketches use RGB arrays `[9, 9, 11]` (cellular-automata, flow-field-particles, mona-lisa-circles) while others use hex strings `"#0A0E15"` (fractal-tree, grid-variations, changing-circle-line). Create a helper or pick one format.
 - [ ] **Add explicit type to `paramsBySketch` Map** — `App.svelte` uses `new Map()` without type parameters. Add: `new Map<string, Record<string, number | string | boolean>>()`.
 
@@ -38,15 +38,6 @@
 
 ## Build & Configuration
 
-- [ ] **Add Vite build optimizations** — Configure `manualChunks` for p5.js (large library) in `vite.config.ts`:
-  ```typescript
-  build: {
-    target: 'es2022',
-    rollupOptions: {
-      output: { manualChunks: { p5: ['p5'] } }
-    }
-  }
-  ```
 - [ ] **Add `.env.example`** — Document any environment variables or add environment variable handling if needed.
 
 ## Testing
