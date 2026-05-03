@@ -52,6 +52,14 @@ body {
 }
 
 .app-shell {
+	min-height: 100vh;
+}
+
+.app-shell:has(.gallery-shell) {
+	height: auto;
+}
+
+.app-shell:not(:has(.gallery-shell)) {
 	height: 100vh;
 	display: grid;
 	grid-template-columns: var(--sidebar-width) minmax(0, 1fr);

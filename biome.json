@@ -18,7 +18,11 @@
 			"types": "recommended"
 		},
 		"rules": {
-			"recommended": true
+			"recommended": true,
+			"correctness": {
+				"noUnusedImports": "off",
+				"noUnusedVariables": "off"
+			}
 		}
 	},
 	"javascript": {

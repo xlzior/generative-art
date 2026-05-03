@@ -78,6 +78,11 @@ vi.mock("../utils/animation-controller.js", () => ({
 }));
 
 describe("App.svelte", () => {
+	beforeEach(() => {
+		// Set URL with sketch param so App renders SketchView
+		window.history.pushState({}, "", "/?sketch=test-sketch");
+	});
+
 	it("renders sketch selector", () => {
 		render(App);
 		expect(screen.getByRole("combobox")).toBeInTheDocument();
@@ -96,5 +101,10 @@ describe("App.svelte", () => {
 	it("renders save PNG button", () => {
 		render(App);
 		expect(screen.getByText(/save png/i)).toBeInTheDocument();
+	});
+
+	it("renders back to gallery button", () => {
+		render(App);
+		expect(screen.getByText(/back to gallery/i)).toBeInTheDocument();
 	});
 });

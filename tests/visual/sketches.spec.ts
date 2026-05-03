@@ -84,7 +84,8 @@ test("canvas has consistent dimensions", async ({ page }) => {
 	await waitForRender(page, "grid-variations");
 
 	const canvasSize = await page.evaluate(() => {
-		const canvas = document.querySelector("canvas")!;
+		const canvas = document.querySelector("canvas");
+		if (!canvas) return { width: 0, height: 0 };
 		return { width: canvas.width, height: canvas.height };
 	});
 
