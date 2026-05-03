@@ -14,6 +14,8 @@ function createMockSketch(parameters: SketchParameter[]) {
 		if (p.type === "number") defaults[p.key] = 50;
 		else if (p.type === "string") defaults[p.key] = "hello";
 		else if (p.type === "boolean") defaults[p.key] = true;
+		else if (p.type === "dimensions")
+			defaults[p.key] = { width: null, height: null };
 	}
 	return {
 		id: "test-sketch",
@@ -46,6 +48,12 @@ const stringParam: SketchParameter = {
 	key: "label",
 	label: "Label",
 	type: "string",
+};
+
+const dimensionsParam: SketchParameter = {
+	key: "dimensions",
+	label: "Canvas Size",
+	type: "dimensions",
 };
 
 describe("ParameterControls", () => {
@@ -159,6 +167,104 @@ describe("ParameterControls", () => {
 
 			expect(onChangeCalls).toHaveLength(1);
 			expect(onChangeCalls[0]).toEqual(["label", "world"]);
+		});
+	});
+
+	describe("dimensions parameter", () => {
+		it("renders two text inputs and an 'x' separator", () => {
+			const sketch = createMockSketch([dimensionsParam]);
+			render(ParameterControls, {
+				props: {
+					sketch,
+					params: { dimensions: { width: null, height: null } },
+					onchange: handleChange,
+				},
+			});
+
+			expect(screen.getByText(/canvas size/i)).toBeInTheDocument();
+			expect(screen.getByPlaceholderText("W")).toBeInTheDocument();
+			expect(screen.getByPlaceholderText("H")).toBeInTheDocument();
+			expect(screen.getByText("×")).toBeInTheDocument();
+		});
+
+		it("calls onchange with correct object when width changes", async () => {
+			const sketch = createMockSketch([dimensionsParam]);
+			render(ParameterControls, {
+				props: {
+					sketch,
+					params: { dimensions: { width: null, height: null } },
+					onchange: handleChange,
+				},
+			});
+
+			const widthInput = screen.getByPlaceholderText("W");
+			await fireEvent.input(widthInput, { target: { value: "800" } });
+
+			expect(onChangeCalls).toHaveLength(1);
+			expect(onChangeCalls[0]).toEqual([
+				"dimensions",
+				{ width: 800, height: null },
+			]);
+		});
+
+		it("calls onchange with correct object when height changes", async () => {
+			const sketch = createMockSketch([dimensionsParam]);
+			render(ParameterControls, {
+				props: {
+					sketch,
+					params: { dimensions: { width: 800, height: null } },
+					onchange: handleChange,
+				},
+			});
+
+			const heightInput = screen.getByPlaceholderText("H");
+			await fireEvent.input(heightInput, { target: { value: "600" } });
+
+			expect(onChangeCalls).toHaveLength(1);
+			expect(onChangeCalls[0]).toEqual([
+				"dimensions",
+				{ width: 800, height: 600 },
+			]);
+		});
+
+		it("handles empty input as null", async () => {
+			const sketch = createMockSketch([dimensionsParam]);
+			render(ParameterControls, {
+				props: {
+					sketch,
+					params: { dimensions: { width: 800, height: 600 } },
+					onchange: handleChange,
+				},
+			});
+
+			const widthInput = screen.getByPlaceholderText("W");
+			await fireEvent.input(widthInput, { target: { value: "" } });
+
+			expect(onChangeCalls).toHaveLength(1);
+			expect(onChangeCalls[0]).toEqual([
+				"dimensions",
+				{ width: null, height: 600 },
+			]);
+		});
+
+		it("handles non-numeric input as null", async () => {
+			const sketch = createMockSketch([dimensionsParam]);
+			render(ParameterControls, {
+				props: {
+					sketch,
+					params: { dimensions: { width: 800, height: 600 } },
+					onchange: handleChange,
+				},
+			});
+
+			const heightInput = screen.getByPlaceholderText("H");
+			await fireEvent.input(heightInput, { target: { value: "abc" } });
+
+			expect(onChangeCalls).toHaveLength(1);
+			expect(onChangeCalls[0]).toEqual([
+				"dimensions",
+				{ width: 800, height: null },
+			]);
 		});
 	});
 

@@ -48,6 +48,3 @@
 ## Canvas size
 
 - [ ] Add support for default parameters which all sketches support
-- [ ] Add a new param type called "dimensions". this will be used for canvas size (height and width) as a parameter for a sketch. This is slightly different from a regular number param that's implemented using a slider. The UI for this should be 2 textboxes which take in numbers, separated by an 'x' between them. the default for this param should be null for both height and width. when the consumer sees the null, it should be the same as the current behaviour which i believe is to fill the screen (i.e. max out the height and width). for a start, implement this for the grid variations sketch.
-- [ ] Update the sketch renderer to use height and width if provided
-- [ ] There should be a button to reset the height and width to the default

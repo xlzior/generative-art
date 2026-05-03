@@ -1,5 +1,6 @@
 {
 	"cellSize": 38,
 	"margin": 36,
-	"strokeWeight": 1.4
+	"strokeWeight": 1.4,
+	"dimensions": { "width": null, "height": null }
 }

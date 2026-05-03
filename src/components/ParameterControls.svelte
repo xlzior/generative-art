@@ -24,6 +24,28 @@ function handleNumberChange(parameter, event) {
 function handleStringChange(parameter, event) {
 	onchange(parameter.key, event.target.value);
 }
+
+function handleDimensionsChange(parameter, event) {
+	const raw = event.target.value.trim();
+	const value = raw === "" ? null : Number.parseInt(raw, 10);
+	const dimension = event.target.dataset.dimension;
+	const current = params[parameter.key] ?? { width: null, height: null };
+	const updated = {
+		width:
+			dimension === "width"
+				? Number.isFinite(value)
+					? value
+					: null
+				: current.width,
+		height:
+			dimension === "height"
+				? Number.isFinite(value)
+					? value
+					: null
+				: current.height,
+	};
+	onchange(parameter.key, updated);
+}
 </script>
 
 <div id="params-list">
@@ -64,6 +86,29 @@ function handleStringChange(parameter, event) {
             <span class="toggle-thumb"></span>
           </span>
         </label>
+      {:else if parameter.type === 'dimensions'}
+        <label for="param-{sketch.id}-{parameter.key}">{parameter.label}</label>
+        <div class="dimensions-input">
+          <input
+            type="text"
+            inputmode="numeric"
+            id="param-{sketch.id}-{parameter.key}-width"
+            value={params[parameter.key]?.width ?? ''}
+            data-dimension="width"
+            oninput={(e) => handleDimensionsChange(parameter, e)}
+            placeholder="W"
+          />
+          <span class="dimensions-separator">×</span>
+          <input
+            type="text"
+            inputmode="numeric"
+            id="param-{sketch.id}-{parameter.key}-height"
+            value={params[parameter.key]?.height ?? ''}
+            data-dimension="height"
+            oninput={(e) => handleDimensionsChange(parameter, e)}
+            placeholder="H"
+          />
+        </div>
       {/if}
     </div>
   {/each}
@@ -151,5 +196,25 @@ function handleStringChange(parameter, event) {
 
   .toggle input:checked:hover + .toggle-track {
     background: color-mix(in srgb, var(--accent), transparent 15%);
+  }
+
+  .dimensions-input {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.35rem;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.86rem;
+  }
+
+  .dimensions-input input[type='text'] {
+    width: 4.5rem;
+    font-family: inherit;
+    font-size: inherit;
+    padding: 0.15rem 0.3rem;
+  }
+
+  .dimensions-separator {
+    color: var(--eyebrow-ink);
   }
 </style>

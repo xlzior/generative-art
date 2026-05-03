@@ -25,6 +25,7 @@ const parameters = [
 		max: 4,
 		step: 0.1,
 	},
+	{ type: "dimensions", key: "dimensions", label: "Canvas Size" },
 ] as const satisfies readonly SketchParameter[];
 
 type Params = InferParams<typeof parameters>;
@@ -68,6 +69,8 @@ export default defineSketch({
 		}
 
 		attachResponsiveCanvas(p, {
+			width: params.dimensions?.width,
+			height: params.dimensions?.height,
 			onSetup: () => {
 				p.noLoop();
 				p.angleMode(p.DEGREES);
