@@ -23,6 +23,26 @@ export function validateDefaultValue(
 				`Sketch ${sketchId} defaults.json key ${parameter.key} must be a boolean.`,
 			);
 		}
+	} else if (parameter.type === "dimensions") {
+		if (value === null) {
+			return;
+		}
+		if (typeof value !== "object" || value === null) {
+			throw new TypeError(
+				`Sketch ${sketchId} defaults.json key ${parameter.key} must be an object with width and height as numbers or null.`,
+			);
+		}
+		const obj = value as Record<string, unknown>;
+		if (
+			!("width" in obj) ||
+			!("height" in obj) ||
+			(obj.width !== null && typeof obj.width !== "number") ||
+			(obj.height !== null && typeof obj.height !== "number")
+		) {
+			throw new TypeError(
+				`Sketch ${sketchId} defaults.json key ${parameter.key} must be an object with width and height as numbers or null.`,
+			);
+		}
 	}
 }
 

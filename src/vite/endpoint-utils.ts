@@ -7,7 +7,7 @@ const sketchesRoot = path.resolve(projectRoot, "..", "sketches");
 
 export interface DefaultsPayload {
 	defaultsFile: string;
-	defaults: Record<string, number>;
+	defaults: Record<string, number | Record<string, number | null> | null>;
 }
 
 export function readJsonBody(req: IncomingMessage): Promise<DefaultsPayload> {
@@ -69,9 +69,23 @@ export function createSaveDefaultsHandler() {
 			}
 
 			for (const value of Object.values(defaults)) {
-				if (!Number.isFinite(value)) {
-					throw new Error("defaults values must be numeric");
+				if (typeof value === "number" && Number.isFinite(value)) {
+					continue;
 				}
+				if (value !== null && typeof value === "object") {
+					const obj = value as Record<string, unknown>;
+					if (
+						"width" in obj &&
+						"height" in obj &&
+						(obj.width === null || typeof obj.width === "number") &&
+						(obj.height === null || typeof obj.height === "number")
+					) {
+						continue;
+					}
+				}
+				throw new Error(
+					"defaults values must be numeric or valid dimensions objects",
+				);
 			}
 
 			const outputPath = path.resolve(sketchesRoot, defaultsFile);
