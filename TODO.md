@@ -57,11 +57,13 @@
 
 ## Testing
 
-- [ ] **Add unit tests** — For `defineSketch` validation logic and `src/sketches/index.ts` auto-discovery behavior.
-- [ ] Refactor the code to make it more testable (if necessary)
-- [ ] Add component tests where relevant and appropriate.
-- [ ] Seeded randomness: Make all sketches take in a seed which controls all sources of randomness within the sketch. Given the same seed, a sketch should always produce the same output.
-- [ ] Add Visual Regression Testing using Playwright. Playwright will load your Svelte page, wait for the p5 canvas to render, and take a snapshot. (Requires seeded randomness)
+- [ ] **Test `src/sketches/index.ts` auto-discovery** — Add tests for glob discovery, defaults merging, duplicate detection integration, and sort behavior.
+- [ ] **Test `src/utils/seeded-random.ts`** — Add unit tests for `createRng()` determinism, `rngRandom()` range, `rngInt()` bounds, `rngChoice()` distribution.
+- [ ] **Test `src/utils/seed.ts`** — Add tests for `getSeedFromUrl()` and `setSeedInUrl()` (requires jsdom environment).
+- [ ] **Test `src/utils/animation-controller.ts`** — Add tests for animation loop start/stop/loop behavior.
+- [ ] **Test `src/utils/canvas-size.ts`** — Add tests for canvas dimension calculations.
+- [ ] **Test `src/utils/responsive-canvas.ts`** — Add tests for responsive canvas behavior.
+- [ ] **Test `src/App.svelte`** — Add component tests for the main app component.
 
 ## Sketches
 
