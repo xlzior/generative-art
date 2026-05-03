@@ -52,17 +52,8 @@ test.describe("Sketch Visual Regression", () => {
 	// Test theme switching doesn't break rendering
 	test("sketch renders correctly in dark mode", async ({ page }) => {
 		await gotoSketch(page, "grid-variations", VISUAL_TEST_SEED);
-		// Try to toggle dark mode via UI
-		const themeToggle = page.locator("[data-theme-toggle]");
-		if ((await themeToggle.count()) > 0) {
-			await themeToggle.click();
-		} else {
-			// Fallback to URL param if theme toggle doesn't exist
-			await page.goto(
-				`/?sketch=grid-variations&seed=${VISUAL_TEST_SEED}&theme=dark`,
-			);
-			await page.waitForSelector("canvas", { state: "visible" });
-		}
+		// Toggle dark mode via UI
+		await page.click("#theme-toggle");
 		await waitForRender(page, "grid-variations");
 
 		const screenshot = await captureCanvas(page);
