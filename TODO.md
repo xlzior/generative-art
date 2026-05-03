@@ -37,10 +37,6 @@
 
 - [ ] **Add sketch generator script** — Create a script or CLI command to scaffold new sketches (create folder, `sketch.ts`, `defaults.json`) following the established pattern.
 
-## Sketches
-
-- [ ] Check if mona lisa is drawing in an infinite loop and if that is undesirable, find another way to implement it
-
 ## Gallery view
 
 - [ ] Implement home page as a gallery of all sketches. Each sketch should be represented as a card, with a thumbnail-sized render of the sketch. Clicking on the card should bring you to to the full sketch.
