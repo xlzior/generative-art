@@ -27,7 +27,8 @@ export function createAnimationController(): SketchAnimationController & {
 			renderer = cb;
 			if (!animating) {
 				animating = true;
-				loop();
+				// Use requestAnimationFrame to give p5 time to call setup() and create the canvas
+				rafId = requestAnimationFrame(loop);
 			}
 		},
 		stop: () => {
