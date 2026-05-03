@@ -7,6 +7,8 @@ pre-commit:
       stage_fixed: true
     - name: type check
       run: pnpm tsc --noEmit
+    - name: svelte check
+      run: pnpm svelte-check --threshold warning
     - name: unit tests
       run: pnpm test:run
       glob: '*.{js,ts,tsx,jsx,svelte,css,json,html}'

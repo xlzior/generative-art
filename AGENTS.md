@@ -6,6 +6,7 @@
 - `pnpm build` — production build
 - `pnpm biome check --write` — format + lint (runs on pre-commit)
 - `pnpm tsc --noEmit` — typecheck (runs on pre-commit, after biome)
+- `pnpm svelte-check --threshold warning` — Svelte type checking (runs on pre-commit, after tsc)
 - `pnpm test:run` — unit tests (runs on pre-commit, after biome and typecheck)
 - `pnpm test:visual` — visual regression tests (runs on pre-commit, after unit tests)
 
