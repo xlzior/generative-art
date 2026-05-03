@@ -24,7 +24,6 @@
 
 ## Code Quality
 
-
 - [ ] **Standardize color formats across sketches** — Some sketches use RGB arrays `[9, 9, 11]` (cellular-automata, flow-field-particles, mona-lisa-circles) while others use hex strings `"#0A0E15"` (fractal-tree, grid-variations, changing-circle-line). Create a helper or pick one format.
 - [ ] **Add explicit type to `paramsBySketch` Map** — `App.svelte` uses `new Map()` without type parameters. Add: `new Map<string, Record<string, number | string | boolean>>()`.
 
@@ -57,3 +56,10 @@
 ## Gallery view
 
 - [ ] Implement home page as a gallery of all sketches. Each sketch should be represented as a card, with a thumbnail-sized render of the sketch. Clicking on the card should bring you to to the full sketch.
+
+## Canvas size
+
+- [ ] Add support for default parameters which all sketches support
+- [ ] Add canvas size (height and width) as a parameter for all sketches
+- [ ] Update the sketch renderer to use height and width if provided
+- [ ] There should be a button to reset the height and width to the default
