@@ -103,8 +103,8 @@ describe("App.svelte", () => {
 		expect(screen.getByText(/save png/i)).toBeInTheDocument();
 	});
 
-	it("renders back to gallery button", () => {
+	it("renders sketch selector in sketch view", () => {
 		render(App);
-		expect(screen.getByText(/back to gallery/i)).toBeInTheDocument();
+		expect(screen.getByRole("combobox")).toBeInTheDocument();
 	});
 });
