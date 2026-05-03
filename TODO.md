@@ -1,9 +1,5 @@
 # TODO
 
-## Bug Fixes
-
-- [ ] **Fix mona-lisa-circles image loading race condition** — `loadImage` callback in `preload` may not block `setup`. Use synchronous `p.loadImage(MONA_LISA_URL)` instead so p5 blocks until the image is loaded (`src/sketches/mona-lisa-circles/sketch.ts:134-139`).
-
 ## Architecture & Structure
 
 - [ ] **Chain lifecycle methods instead of overwriting** — `responsive-canvas.ts` replaces `p.setup` and `p.windowResized` entirely, preventing sketches from defining their own hooks. Use decorator/chain pattern:

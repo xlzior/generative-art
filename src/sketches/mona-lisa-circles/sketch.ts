@@ -63,14 +63,9 @@ export default defineSketch({
 			? [11, 13, 14]
 			: [248, 250, 252];
 
-		let monaLisaImage: p5.Image | null = null;
-		let isImageLoaded = false;
+		let monaLisaImage: p5.Image;
 
 		function drawCircles() {
-			if (!isImageLoaded || !monaLisaImage) {
-				return;
-			}
-
 			const canvasWidth = p.width;
 			const canvasHeight = p.height;
 
@@ -134,10 +129,7 @@ export default defineSketch({
 		}
 
 		p.preload = () => {
-			p.loadImage(params.imageUrl, (img: p5.Image) => {
-				monaLisaImage = img;
-				isImageLoaded = true;
-			});
+			monaLisaImage = p.loadImage(params.imageUrl);
 		};
 
 		attachResponsiveCanvas(p, {
