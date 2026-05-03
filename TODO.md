@@ -35,7 +35,6 @@
 
 ## Sketches
 
-- [ ] Add URL as a parameter to mona lisa sketch to allow for background images besides mona lisa
 - [ ] Check if mona lisa is drawing in an infinite loop and if that is undesirable, find another way to implement it
 
 ## Gallery view

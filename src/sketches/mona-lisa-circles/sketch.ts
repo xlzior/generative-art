@@ -10,6 +10,11 @@ import { rngRandom } from "../../utils/seeded-random.js";
 
 const parameters = [
 	{
+		type: "string",
+		key: "imageUrl",
+		label: "Image URL",
+	},
+	{
 		type: "number",
 		key: "totalCircles",
 		label: "Total Circles",
@@ -60,10 +65,6 @@ export default defineSketch({
 
 		let monaLisaImage: p5.Image | null = null;
 		let isImageLoaded = false;
-
-		// Mona Lisa image URL (public domain)
-		const MONA_LISA_URL =
-			"https://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/Mona_Lisa%2C_by_Leonardo_da_Vinci%2C_from_C2RMF_retouched.jpg/960px-Mona_Lisa%2C_by_Leonardo_da_Vinci%2C_from_C2RMF_retouched.jpg";
 
 		function drawCircles() {
 			if (!isImageLoaded || !monaLisaImage) {
@@ -133,7 +134,7 @@ export default defineSketch({
 		}
 
 		p.preload = () => {
-			p.loadImage(MONA_LISA_URL, (img: p5.Image) => {
+			p.loadImage(params.imageUrl, (img: p5.Image) => {
 				monaLisaImage = img;
 				isImageLoaded = true;
 			});

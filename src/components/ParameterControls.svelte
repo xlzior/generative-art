@@ -43,7 +43,6 @@ function handleStringChange(parameter, event) {
         />
       {:else if parameter.type === 'string'}
         <label for="param-{sketch.id}-{parameter.key}">{parameter.label}</label>
-        <span class="param-value">{formatParamValue(parameter, params[parameter.key])}</span>
         <input
           type="text"
           id="param-{sketch.id}-{parameter.key}"
