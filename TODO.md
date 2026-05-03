@@ -41,7 +41,6 @@
 
 ## Build & Configuration
 
-- [ ] **Add `**/.DS_Store`to`.gitignore`** — Currently only ignores root-level `.DS_Store`. Add `\*\*/.DS_Store` pattern.
 - [ ] **Add Vite build optimizations** — Configure `manualChunks` for p5.js (large library) in `vite.config.ts`:
   ```typescript
   build: {
