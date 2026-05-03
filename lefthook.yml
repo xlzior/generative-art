@@ -9,5 +9,7 @@ pre-commit:
       run: pnpm tsc --noEmit
     - name: unit tests
       run: pnpm test:run
+      glob: '*.{js,ts,tsx,jsx,svelte,css,json,html}'
     - name: visual regression tests
       run: pnpm test:visual
+      glob: '*.{js,ts,tsx,jsx,svelte,css,json,html}'
