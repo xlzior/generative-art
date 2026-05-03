@@ -37,16 +37,16 @@ Use the sketch selector and Regenerate button to quickly explore variations.
 ## Sketchbook workflow
 
 1. Create a folder under `src/sketches/<sketch-name>`.
-2. Add `sketch.js` and `defaults.json` inside that folder.
-3. Export a default `defineSketch(...)` module from `sketch.js`.
-4. The app auto-discovers `./*/sketch.js`, so no manual registry entry is required.
+2. Add `sketch.ts` and `defaults.json` inside that folder.
+3. Export a default `defineSketch(...)` module from `sketch.ts`.
+4. The app auto-discovers `./*/sketch.ts`, so no manual registry entry is required.
 5. Save strong outputs as PNGs and curate your favorite series.
 
 ## Sketch contract
 
-The sketch contract is enforced in code by [src/utils/defineSketch.js](src/utils/defineSketch.js). App-shell changes should primarily touch shared helpers such as [src/utils/canvas-size.js](src/utils/canvas-size.js) and [src/utils/responsive-canvas.js](src/utils/responsive-canvas.js), while each sketch only owns its own drawing logic and theme-aware styling.
+The sketch contract is enforced in code by [src/utils/defineSketch.ts](src/utils/defineSketch.ts). App-shell changes should primarily touch shared helpers such as [src/utils/canvas-size.ts](src/utils/canvas-size.ts) and [src/utils/responsive-canvas.ts](src/utils/responsive-canvas.ts), while each sketch only owns its own drawing logic and theme-aware styling.
 
-Each sketch also defines numeric slider metadata (`parameters`) in `sketch.js`, while default values live in `defaults.json`.
+Each sketch also defines numeric slider metadata (`parameters`) in `sketch.ts`, while default values live in `defaults.json`.
 
 ## Folder split
 

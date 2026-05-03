@@ -39,8 +39,6 @@
 
 ## Documentation
 
-- [ ] **Fix README references** — README.md:41 references `sketch.js` but actual files are `sketch.ts`. Update to `sketch.ts`.
-
 ## Build & Configuration
 
 - [ ] **Add `**/.DS_Store`to`.gitignore`** — Currently only ignores root-level `.DS_Store`. Add `\*\*/.DS_Store` pattern.
