@@ -11,6 +11,9 @@ onMount(() => {
 	const rng = createRng(42);
 	const params = sketch.defaults;
 
+	// Get container size after layout
+	const size = Math.floor(container.getBoundingClientRect().width);
+
 	// Mock animation controller matching SketchAnimationController interface
 	const mockAnimation = {
 		onFrame: () => {},
@@ -18,10 +21,10 @@ onMount(() => {
 	};
 
 	const instance = new p5((p) => {
-		// Force 300x300 canvas regardless of what the sketch calls
+		// Create canvas to match container size
 		const originalCreateCanvas = p.createCanvas.bind(p);
 		p.createCanvas = (_w, _h, ...args) =>
-			originalCreateCanvas(300, 300, ...args);
+			originalCreateCanvas(size, size, ...args);
 
 		// Initialize sketch
 		sketch.create({
@@ -46,15 +49,13 @@ onMount(() => {
 
 <style>
 	.thumbnail-container {
+		width: 100%;
 		aspect-ratio: 1;
 		overflow: hidden;
 		background: rgba(255, 255, 255, 0.65);
 	}
 
 	.thumbnail-container :global(canvas) {
-		width: 100%;
-		height: 100%;
-		object-fit: cover;
 		display: block;
 	}
 </style>

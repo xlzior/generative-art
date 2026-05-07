@@ -39,12 +39,10 @@
 
 ## Gallery view bug fixes
 
-- [ ] the sketch view should still maintain the header with "Sketchbook | Generative Art Playground | Study pattern, noise, recursion, and emergence through small focused sketches.", currently the header is gone in the sketch view. the gallery view should maintain the left panel with the header, currently the header is taking the full width and the gallery is below. the gallery view should look the same as a sketch view with the main difference being that instead of the right side being the sketch, the right side contains the thumbnail cards. most of the params will be hidden in gallery view since there are no params. the only param relevant to gallery view is the light/dark theme toggle
 - [ ] Animated sketches thumbnails are not showing, only showing a white screen
-- [ ] Thumbnail is sized a bit strangely, the sketch is not taking up the full card and is only taking up the top left of the space provided. there is a gap on the right side and the bottom side
-- [ ] Can't scroll up and down in gallery view
 - [ ] Gallery view thumbnails are not respecting dark mode theme
 
 ## Canvas size
 
 - [ ] Add support for default parameters which all sketches support
+- [ ] background of the text input is still white in dark mode

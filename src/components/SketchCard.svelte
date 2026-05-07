@@ -5,9 +5,7 @@ let { sketch, theme, onclick } = $props();
 </script>
 
 <div class="sketch-card" role="button" tabindex="0" onclick={() => onclick(sketch.id)} onkeydown={(e) => { if (e.key === "Enter" || e.key === " ") onclick(sketch.id); }}>
-	<div class="thumbnail-container">
-		<SketchThumbnail {sketch} {theme} />
-	</div>
+	<SketchThumbnail {sketch} {theme} />
 	<div class="card-info">
 		<p class="card-date">{sketch.date}</p>
 		<h3 class="card-title">{sketch.title}</h3>
@@ -29,19 +27,6 @@ let { sketch, theme, onclick } = $props();
 	.sketch-card:hover {
 		transform: translateY(-3px);
 		border-color: var(--accent);
-	}
-
-	.thumbnail-container {
-		aspect-ratio: 1;
-		overflow: hidden;
-		background: rgba(255, 255, 255, 0.65);
-	}
-
-	.thumbnail-container :global(canvas) {
-		width: 100%;
-		height: 100%;
-		object-fit: cover;
-		display: block;
 	}
 
 	.card-info {

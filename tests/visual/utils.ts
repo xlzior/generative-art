@@ -24,7 +24,8 @@ export async function gotoSketch(
 		waitUntil: "load",
 	});
 	// Wait for canvas to be created by p5's setup()
-	await page.waitForSelector("canvas", { state: "visible" });
+	// Use longer timeout for sketches that preload images (e.g., mona-lisa-circles)
+	await page.waitForSelector("canvas", { state: "visible", timeout: 30000 });
 }
 
 /**
