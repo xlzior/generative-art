@@ -1,6 +1,12 @@
 import type { SketchModule, SketchParameter } from "../types/sketch.js";
 
-const VALID_TYPES = ["number", "string", "boolean", "dimensions"] as const;
+const VALID_TYPES = [
+	"number",
+	"string",
+	"boolean",
+	"colour",
+	"dimensions",
+] as const;
 
 function validateParameter(sketchId: string, parameter: SketchParameter): void {
 	if (!parameter || typeof parameter !== "object") {

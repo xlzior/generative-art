@@ -6,5 +6,6 @@
 	"reverseProbability": 5,
 	"numPoints": 8,
 	"curveIterations": 3,
-	"strokeWeight": 1.2
+	"strokeWeight": 1.2,
+	"accentColour": "#64748B"
 }

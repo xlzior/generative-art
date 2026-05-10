@@ -3,5 +3,6 @@
 	"seedProbability": 0.3,
 	"frameRate": 12,
 	"reseedFrames": 420,
-	"cellPadding": 1
+	"cellPadding": 1,
+	"accentColour": "#6EE7B7"
 }

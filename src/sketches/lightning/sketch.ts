@@ -4,6 +4,7 @@ import type {
 	SketchContext,
 	SketchParameter,
 } from "../../types/sketch.js";
+import { hexToRgb, themeAccent } from "../../utils/colour.js";
 import { defineSketch } from "../../utils/defineSketch.js";
 import { attachResponsiveCanvas } from "../../utils/responsive-canvas.js";
 import { rngRandom } from "../../utils/seeded-random.js";
@@ -65,6 +66,7 @@ const parameters = [
 		max: 4,
 		step: 0.25,
 	},
+	{ type: "colour", key: "accentColour", label: "Accent Colour" },
 ] as const satisfies readonly SketchParameter[];
 
 type Params = InferParams<typeof parameters>;
@@ -96,12 +98,8 @@ export default defineSketch({
 		global,
 	}: SketchContext<Params> & { animation?: SketchAnimationController }) {
 		const isDark = theme === "dark";
-		const backgroundColor: [number, number, number] = isDark
-			? [10, 14, 21]
-			: [252, 251, 247];
-		const glowColor: [number, number, number] = isDark
-			? [100, 160, 255]
-			: [60, 100, 200];
+		const backgroundColor = isDark ? "#0A0E15" : "#FCFBF7";
+		const glowRGB = hexToRgb(themeAccent(params.accentColour, theme));
 		const coreColor: [number, number, number] = [255, 255, 255];
 
 		let bolts: LightningBolt[] = [];
@@ -230,13 +228,13 @@ export default defineSketch({
 
 			const a = Math.min(1, Math.max(0, alpha));
 
-			p.stroke(glowColor[0], glowColor[1], glowColor[2], 30 * a);
+			p.stroke(glowRGB[0], glowRGB[1], glowRGB[2], 30 * a);
 			p.strokeWeight(params.glowWidth);
 			for (let i = 0; i < pts.length - 1; i++) {
 				p.line(pts[i].x, pts[i].y, pts[i + 1].x, pts[i + 1].y);
 			}
 
-			p.stroke(glowColor[0], glowColor[1], glowColor[2], 80 * a);
+			p.stroke(glowRGB[0], glowRGB[1], glowRGB[2], 80 * a);
 			p.strokeWeight(params.glowWidth * 0.5);
 			for (let i = 0; i < pts.length - 1; i++) {
 				p.line(pts[i].x, pts[i].y, pts[i + 1].x, pts[i + 1].y);
@@ -261,7 +259,7 @@ export default defineSketch({
 
 		if (animation) {
 			animation.onFrame(() => {
-				p.background(...backgroundColor);
+				p.background(backgroundColor);
 
 				const interval = Math.max(10, Math.floor(params.strikeInterval));
 				if (frameCount % interval === 0) {

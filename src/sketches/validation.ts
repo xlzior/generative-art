@@ -23,6 +23,12 @@ export function validateDefaultValue(
 				`Sketch ${sketchId} defaults.json key ${parameter.key} must be a boolean.`,
 			);
 		}
+	} else if (parameter.type === "colour") {
+		if (typeof value !== "string" || !/^#[0-9a-fA-F]{6}$/.test(value)) {
+			throw new TypeError(
+				`Sketch ${sketchId} defaults.json key ${parameter.key} must be a valid hex colour (e.g. "#FF00AA").`,
+			);
+		}
 	} else if (parameter.type === "dimensions") {
 		if (value === null) {
 			return;

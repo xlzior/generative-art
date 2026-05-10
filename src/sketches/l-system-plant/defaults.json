@@ -3,5 +3,6 @@
 	"initialSegment": 92,
 	"iterations": 4,
 	"shrinkFactor": 0.56,
-	"strokeWeight": 1
+	"strokeWeight": 1,
+	"accentColour": "#6EE7B7"
 }

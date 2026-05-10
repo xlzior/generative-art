@@ -3,6 +3,7 @@ import type {
 	SketchContext,
 	SketchParameter,
 } from "../../types/sketch.js";
+import { themeAccent } from "../../utils/colour.js";
 import { defineSketch } from "../../utils/defineSketch.js";
 import { attachResponsiveCanvas } from "../../utils/responsive-canvas.js";
 import { rngRandom } from "../../utils/seeded-random.js";
@@ -57,6 +58,7 @@ const parameters = [
 		max: 4,
 		step: 0.05,
 	},
+	{ type: "colour", key: "accentColour", label: "Accent Colour" },
 ] as const satisfies readonly SketchParameter[];
 
 type Params = InferParams<typeof parameters>;
@@ -70,7 +72,6 @@ export default defineSketch({
 	create({ p, theme = "light", params, rng, global }: SketchContext<Params>) {
 		const isDark = theme === "dark";
 		const backgroundColor = isDark ? "#0A0E15" : "#FCFBF7";
-		const strokeColor = isDark ? "#E2E8F0" : "#1C1917";
 
 		function branch(
 			x: number,
@@ -125,7 +126,7 @@ export default defineSketch({
 
 		p.draw = () => {
 			p.background(backgroundColor);
-			p.stroke(strokeColor);
+			p.stroke(themeAccent(params.accentColour, theme));
 			p.strokeWeight(params.strokeWeight);
 
 			const baseLength = p.height * params.baseLengthRatio;

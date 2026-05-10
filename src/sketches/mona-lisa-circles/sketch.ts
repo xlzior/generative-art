@@ -59,9 +59,7 @@ export default defineSketch({
 	parameters,
 	create({ p, theme = "light", params, rng, global }: SketchContext<Params>) {
 		const isDark = theme === "dark";
-		const backgroundColor: [number, number, number] = isDark
-			? [11, 13, 14]
-			: [248, 250, 252];
+		const backgroundColor = isDark ? "#0B0D0E" : "#F8FAFC";
 
 		let monaLisaImage: p5.Image;
 
@@ -69,7 +67,7 @@ export default defineSketch({
 			const canvasWidth = p.width;
 			const canvasHeight = p.height;
 
-			p.background(...backgroundColor);
+			p.background(backgroundColor);
 
 			// Load pixels once, outside the loop
 			monaLisaImage.loadPixels();

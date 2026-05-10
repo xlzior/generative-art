@@ -24,7 +24,6 @@
 
 ## Code Quality
 
-- [ ] **Standardize color formats across sketches** — Some sketches use RGB arrays `[9, 9, 11]` (cellular-automata, flow-field-particles, mona-lisa-circles) while others use hex strings `"#0A0E15"` (fractal-tree, grid-variations, changing-circle-line). Create a helper or pick one format.
 - [ ] **Add explicit type to `paramsBySketch` Map** — `App.svelte` uses `new Map()` without type parameters. Add: `new Map<string, Record<string, number | string | boolean>>()`.
 
 ## Developer Experience
@@ -39,4 +38,4 @@
 
 ## Features
 
-- [ ] Add color picker parameter control
+- [ ] Cross-view mode for stereogram

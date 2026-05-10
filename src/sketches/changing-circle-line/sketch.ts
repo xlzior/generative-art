@@ -3,6 +3,7 @@ import type {
 	SketchContext,
 	SketchParameter,
 } from "../../types/sketch.js";
+import { themeAccent } from "../../utils/colour.js";
 import { defineSketch } from "../../utils/defineSketch.js";
 import { attachResponsiveCanvas } from "../../utils/responsive-canvas.js";
 import { rngRandom } from "../../utils/seeded-random.js";
@@ -72,6 +73,7 @@ const parameters = [
 		max: 4,
 		step: 0.25,
 	},
+	{ type: "colour", key: "accentColour", label: "Accent Colour" },
 ] as const satisfies readonly SketchParameter[];
 
 type Params = InferParams<typeof parameters>;
@@ -87,7 +89,6 @@ export default defineSketch({
 		const isDark = theme === "dark";
 		const backgroundColor = isDark ? "#0A0E15" : "#FCFBF7";
 		const strokeColor = isDark ? "#E2E8F0" : "#1C1917";
-		const fillColor = isDark ? "#64748B" : "#CBD5E1";
 
 		attachResponsiveCanvas(p, {
 			width: global.dimensions.width,
@@ -194,7 +195,7 @@ export default defineSketch({
 
 			for (const point of sampledPoints) {
 				// Draw circle
-				p.fill(fillColor);
+				p.fill(themeAccent(params.accentColour, theme));
 				p.stroke(strokeColor);
 				p.strokeWeight(params.strokeWeight);
 				p.circle(point.x, point.y, radius * 2);

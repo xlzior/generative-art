@@ -33,6 +33,7 @@ export type SketchParameter =
 	  }
 	| { type: "string"; key: string; label: string }
 	| { type: "boolean"; key: string; label: string }
+	| { type: "colour"; key: string; label: string }
 	| { type: "dimensions"; key: string; label: string };
 
 export type DimensionsValue = { width: number | null; height: number | null };
@@ -44,9 +45,11 @@ export type InferParams<T extends readonly SketchParameter[]> = {
 			? string
 			: K extends { type: "boolean" }
 				? boolean
-				: K extends { type: "dimensions" }
-					? DimensionsValue
-					: never;
+				: K extends { type: "colour" }
+					? string
+					: K extends { type: "dimensions" }
+						? DimensionsValue
+						: never;
 };
 
 export interface SketchContext<TParams extends Record<string, unknown>> {

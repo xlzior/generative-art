@@ -4,6 +4,7 @@ import type {
 	SketchContext,
 	SketchParameter,
 } from "../../types/sketch.js";
+import { themeAccent } from "../../utils/colour.js";
 import { defineSketch } from "../../utils/defineSketch.js";
 import { attachResponsiveCanvas } from "../../utils/responsive-canvas.js";
 import { rngRandom } from "../../utils/seeded-random.js";
@@ -49,6 +50,7 @@ const parameters = [
 		max: 4,
 		step: 1,
 	},
+	{ type: "colour", key: "accentColour", label: "Accent Colour" },
 ] as const satisfies readonly SketchParameter[];
 
 type Params = InferParams<typeof parameters>;
@@ -72,12 +74,7 @@ export default defineSketch({
 		global,
 	}: SketchContext<Params> & { animation?: SketchAnimationController }) {
 		const isDark = theme === "dark";
-		const backgroundColor: [number, number, number] = isDark
-			? [9, 9, 11]
-			: [248, 250, 252];
-		const cellColor: [number, number, number] = isDark
-			? [110, 231, 183]
-			: [5, 150, 105];
+		const backgroundColor = isDark ? "#09090B" : "#F8FAFC";
 		let cols: number;
 		let rows: number;
 		let board: Board;
@@ -131,7 +128,7 @@ export default defineSketch({
 		// Animated sketch: use animation controller (no fallback - static mode not supported)
 		if (animation) {
 			animation.onFrame((frameCount) => {
-				p.background(...backgroundColor);
+				p.background(backgroundColor);
 
 				const cellSize = Math.max(1, Math.floor(params.cellSize));
 				const cellInset = Math.max(0, Math.floor(params.cellPadding));
@@ -140,7 +137,7 @@ export default defineSketch({
 				for (let y = 0; y < rows; y += 1) {
 					for (let x = 0; x < cols; x += 1) {
 						if (board[y][x] === 1) {
-							p.fill(...cellColor);
+							p.fill(themeAccent(params.accentColour, theme));
 							p.rect(x * cellSize, y * cellSize, drawSize, drawSize);
 						}
 					}

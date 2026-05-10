@@ -1,9 +1,11 @@
 <script>
 // biome-ignore-all lint/correctness/noUnusedVariables: false positives - vars used in Svelte template
-let { sketch, params, onchange } = $props();
+import { themeAccent } from "../utils/colour.js";
+
+let { sketch, params, onchange, theme = "light" } = $props();
 
 function formatParamValue(parameter, value) {
-	if (parameter.type === "string") {
+	if (parameter.type === "colour" || parameter.type === "string") {
 		return String(value);
 	}
 	const num = value;
@@ -86,6 +88,14 @@ function handleDimensionsChange(parameter, event) {
             <span class="toggle-thumb"></span>
           </span>
         </label>
+      {:else if parameter.type === 'colour'}
+        <label for="param-{sketch.id}-{parameter.key}">{parameter.label}</label>
+        <input
+          type="color"
+          id="param-{sketch.id}-{parameter.key}"
+          value={themeAccent(params[parameter.key] ?? '#000000', theme)}
+          oninput={(e) => onchange(parameter.key, themeAccent(e.target.value, theme))}
+        />
       {:else if parameter.type === 'dimensions'}
         <label for="param-{sketch.id}-{parameter.key}">{parameter.label}</label>
         <div class="dimensions-input">

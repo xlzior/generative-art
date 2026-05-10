@@ -6,5 +6,6 @@
 	"ttlMax": 280,
 	"strokeWeight": 2.4,
 	"trailAlpha": 12,
-	"strokeAlpha": 90
+	"strokeAlpha": 90,
+	"accentColour": "#ffffff"
 }

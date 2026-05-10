@@ -4,6 +4,7 @@ import type {
 	SketchContext,
 	SketchParameter,
 } from "../../types/sketch.js";
+import { hexToRgb, themeAccent } from "../../utils/colour.js";
 import { defineSketch } from "../../utils/defineSketch.js";
 import { attachResponsiveCanvas } from "../../utils/responsive-canvas.js";
 import { rngRandom } from "../../utils/seeded-random.js";
@@ -73,6 +74,7 @@ const parameters = [
 		max: 255,
 		step: 1,
 	},
+	{ type: "colour", key: "accentColour", label: "Accent Colour" },
 ] as const satisfies readonly SketchParameter[];
 
 type Params = InferParams<typeof parameters>;
@@ -99,12 +101,9 @@ export default defineSketch({
 		global,
 	}: SketchContext<Params> & { animation?: SketchAnimationController }) {
 		const isDark = theme === "dark";
-		const backgroundColor: [number, number, number] = isDark
-			? [11, 13, 14]
-			: [248, 250, 252];
-		const strokeBase: [number, number, number] = isDark
-			? [220, 227, 231]
-			: [15, 23, 42];
+		const backgroundColor = isDark ? "#0B0D0E" : "#F8FAFC";
+		const bgRGB = hexToRgb(backgroundColor);
+		const strokeRGB = hexToRgb(themeAccent(params.accentColour, theme));
 		let particles: Particle[] = [];
 
 		function spawnParticle(): Particle {
@@ -133,12 +132,12 @@ export default defineSketch({
 			width: global.dimensions.width,
 			height: global.dimensions.height,
 			onSetup: () => {
-				p.background(...backgroundColor);
+				p.background(backgroundColor);
 				p.strokeWeight(params.strokeWeight);
 				resetParticles();
 			},
 			onResize: () => {
-				p.background(...backgroundColor);
+				p.background(backgroundColor);
 				p.strokeWeight(params.strokeWeight);
 				resetParticles();
 			},
@@ -147,12 +146,7 @@ export default defineSketch({
 		// Animated sketch: use animation controller (no fallback - static mode not supported)
 		if (animation) {
 			animation.onFrame((frameCount) => {
-				p.fill(
-					backgroundColor[0],
-					backgroundColor[1],
-					backgroundColor[2],
-					params.trailAlpha,
-				);
+				p.fill(bgRGB[0], bgRGB[1], bgRGB[2], params.trailAlpha);
 				p.noStroke();
 				p.rect(0, 0, p.width, p.height);
 
@@ -169,9 +163,9 @@ export default defineSketch({
 					const vy = Math.sin(angle) * params.stepSize;
 
 					p.stroke(
-						strokeBase[0],
-						strokeBase[1],
-						strokeBase[2],
+						strokeRGB[0],
+						strokeRGB[1],
+						strokeRGB[2],
 						params.strokeAlpha,
 					);
 					p.strokeWeight(params.strokeWeight);

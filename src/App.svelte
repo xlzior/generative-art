@@ -15,7 +15,7 @@ import { createAnimationController } from "./utils/animation-controller.js";
 import { getSeedFromUrl } from "./utils/seed.js";
 import { createRng } from "./utils/seeded-random.js";
 
-let currentTheme = $state("light");
+let currentTheme = $state("dark");
 let currentSketchId = $state(null);
 let currentP5 = $state(null);
 let currentController = $state(null);
@@ -52,7 +52,7 @@ function resolveInitialTheme() {
 	if (stored === "light" || stored === "dark") {
 		return stored;
 	}
-	return prefersDark.matches ? "dark" : "light";
+	return "dark";
 }
 
 function applyTheme(theme) {
@@ -342,6 +342,7 @@ onMount(() => {
 								sketch={currentSketchModule}
 								params={currentParams}
 								onchange={handleParamChange}
+								theme={currentTheme}
 							/>
 						{/if}
 

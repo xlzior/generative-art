@@ -3,6 +3,7 @@ import type {
 	SketchContext,
 	SketchParameter,
 } from "../../types/sketch.js";
+import { themeAccent } from "../../utils/colour.js";
 import { defineSketch } from "../../utils/defineSketch.js";
 import { attachResponsiveCanvas } from "../../utils/responsive-canvas.js";
 
@@ -40,6 +41,7 @@ const parameters = [
 		max: 3,
 		step: 0.05,
 	},
+	{ type: "colour", key: "accentColour", label: "Accent Colour" },
 ] as const satisfies readonly SketchParameter[];
 
 type Params = InferParams<typeof parameters>;
@@ -63,7 +65,6 @@ export default defineSketch({
 		let segment = params.initialSegment;
 		const isDark = theme === "dark";
 		const backgroundColor = isDark ? "#060B0D" : "#F4F4F5";
-		const strokeColor = isDark ? "#6EE7B7" : "#14532D";
 
 		function rebuild(): void {
 			sentence = "F";
@@ -96,7 +97,7 @@ export default defineSketch({
 		p.draw = () => {
 			p.background(backgroundColor);
 			p.translate(p.width * 0.5, p.height - 8);
-			p.stroke(strokeColor);
+			p.stroke(themeAccent(params.accentColour, theme));
 			p.strokeWeight(params.strokeWeight);
 
 			for (const ch of sentence) {
