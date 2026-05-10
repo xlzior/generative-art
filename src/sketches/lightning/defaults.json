@@ -1,0 +1,9 @@
+{
+	"segments": 5,
+	"jitter": 0.25,
+	"branchChance": 0.05,
+	"glowWidth": 14,
+	"fadeSpeed": 12,
+	"strikeInterval": 80,
+	"strokeWeight": 1.5
+}

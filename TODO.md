@@ -36,7 +36,9 @@
 ## Bug fixes
 
 - [ ] Dimensions in ParameterControls.svelte does not respect light/dark mode. background of the input is always white regardless of mode
+- [ ] Add sketch specific speed multiplier so that each animated sketch can be scaled to animate at a speed that makes sense for it rather than a constant frame rate for all animated sketches
 
-## Canvas size
+## Features
 
 - [ ] Add support for default parameters which all sketches support
+- [ ] Add color picker parameter control
