@@ -25,7 +25,6 @@ const parameters = [
 		max: 4,
 		step: 0.1,
 	},
-	{ type: "dimensions", key: "dimensions", label: "Canvas Size" },
 ] as const satisfies readonly SketchParameter[];
 
 type Params = InferParams<typeof parameters>;
@@ -36,7 +35,7 @@ export default defineSketch({
 	description: "Controlled randomness on a geometric grid.",
 	date: "2026-04-26",
 	parameters,
-	create({ p, theme = "light", params, rng }: SketchContext<Params>) {
+	create({ p, theme = "light", params, rng, global }: SketchContext<Params>) {
 		let palette: string[];
 		const isDark = theme === "dark";
 		const backgroundColor = isDark ? "#070B12" : "#FCFBF7";
@@ -69,8 +68,8 @@ export default defineSketch({
 		}
 
 		attachResponsiveCanvas(p, {
-			width: params.dimensions?.width,
-			height: params.dimensions?.height,
+			width: global.dimensions.width,
+			height: global.dimensions.height,
 			onSetup: () => {
 				p.noLoop();
 				p.angleMode(p.DEGREES);

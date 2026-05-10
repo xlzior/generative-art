@@ -54,7 +54,7 @@ export default defineSketch({
 	description: "String-rewriting fractal grown with turtle graphics.",
 	date: "2026-04-26",
 	parameters,
-	create({ p, theme = "light", params }: SketchContext<Params>) {
+	create({ p, theme = "light", params, global }: SketchContext<Params>) {
 		const rules: Rules = {
 			F: "FF+[+F-F-F]-[-F+F+F]",
 		};
@@ -80,6 +80,8 @@ export default defineSketch({
 		}
 
 		attachResponsiveCanvas(p, {
+			width: global.dimensions.width,
+			height: global.dimensions.height,
 			onSetup: () => {
 				p.angleMode(p.DEGREES);
 				p.noLoop();

@@ -57,7 +57,7 @@ export default defineSketch({
 		"Random circles colored by the Mona Lisa painting at their coordinates.",
 	date: "2026-04-27",
 	parameters,
-	create({ p, theme = "light", params, rng }: SketchContext<Params>) {
+	create({ p, theme = "light", params, rng, global }: SketchContext<Params>) {
 		const isDark = theme === "dark";
 		const backgroundColor: [number, number, number] = isDark
 			? [11, 13, 14]
@@ -133,6 +133,8 @@ export default defineSketch({
 		};
 
 		attachResponsiveCanvas(p, {
+			width: global.dimensions.width,
+			height: global.dimensions.height,
 			onSetup: () => {
 				p.noLoop();
 				drawCircles();

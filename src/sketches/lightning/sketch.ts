@@ -93,6 +93,7 @@ export default defineSketch({
 		params,
 		rng,
 		animation,
+		global,
 	}: SketchContext<Params> & { animation?: SketchAnimationController }) {
 		const isDark = theme === "dark";
 		const backgroundColor: [number, number, number] = isDark
@@ -249,6 +250,8 @@ export default defineSketch({
 		}
 
 		attachResponsiveCanvas(p, {
+			width: global.dimensions.width,
+			height: global.dimensions.height,
 			onSetup: () => {},
 			onResize: () => {
 				bolts = [];

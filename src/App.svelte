@@ -2,9 +2,14 @@
 import { ArrowLeft, Download, RefreshCw, RotateCcw, Save } from "lucide-svelte";
 import p5 from "p5";
 import { onMount } from "svelte";
+import DimensionsControl from "./components/DimensionsControl.svelte";
 import ParameterControls from "./components/ParameterControls.svelte";
 import SketchGallery from "./components/SketchGallery.svelte";
 import ThemeToggle from "./components/ThemeToggle.svelte";
+import {
+	globalDefaults,
+	globalParameters,
+} from "./sketches/global-parameters.js";
 import { sketches } from "./sketches/index.js";
 import { createAnimationController } from "./utils/animation-controller.js";
 import { getSeedFromUrl } from "./utils/seed.js";
@@ -119,12 +124,22 @@ function mountSketch(sketchId, options = {}) {
 	const sketch = getSketchById(sketchId);
 	if (!sketch) return;
 
-	const params = getParamsForSketch(sketch);
+	const allParams = getParamsForSketch(sketch);
+
+	const globalParams = {};
+	for (const param of globalParameters) {
+		globalParams[param.key] = allParams[param.key] ?? globalDefaults[param.key];
+	}
+
+	const sketchParams = {};
+	for (const param of sketch.parameters) {
+		sketchParams[param.key] = allParams[param.key];
+	}
 
 	unmountSketch();
 
 	currentSketchModule = sketch;
-	currentParams = params;
+	currentParams = allParams;
 
 	const container = document.getElementById("canvas-container");
 	if (!container) return;
@@ -147,7 +162,8 @@ function mountSketch(sketchId, options = {}) {
 		sketch.create({
 			p,
 			theme: currentTheme,
-			params,
+			params: sketchParams,
+			global: globalParams,
 			rng,
 			animation: controller,
 		});
@@ -218,6 +234,16 @@ function handleSketchChange(sketchId) {
 }
 
 function handleParamChange(key, value) {
+	const sketch = getSketchById(currentSketchId);
+	if (!sketch) return;
+	const params = getParamsForSketch(sketch);
+	params[key] = value;
+	paramsBySketch.set(sketch.id, { ...params });
+	paramsBySketch = new Map(paramsBySketch);
+	mountSketch(currentSketchId, { updateUrl: false, redrawControls: false });
+}
+
+function handleGlobalParamChange(key, value) {
 	const sketch = getSketchById(currentSketchId);
 	if (!sketch) return;
 	const params = getParamsForSketch(sketch);
@@ -316,6 +342,13 @@ onMount(() => {
 								sketch={currentSketchModule}
 								params={currentParams}
 								onchange={handleParamChange}
+							/>
+						{/if}
+
+						{#if currentSketchModule}
+							<DimensionsControl
+								dimensions={(currentParams?.dimensions ?? globalDefaults.dimensions)}
+								onchange={(d) => handleGlobalParamChange("dimensions", d)}
 							/>
 						{/if}
 

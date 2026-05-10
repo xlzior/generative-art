@@ -116,8 +116,10 @@ export default defineSketch({
 		"A random-dot autostereogram for parallel viewing. Toggle to show the depth map.",
 	date: "2026-04-28",
 	parameters,
-	create({ p, params }: SketchContext<Params>) {
+	create({ p, params, global }: SketchContext<Params>) {
 		attachResponsiveCanvas(p, {
+			width: global.dimensions.width,
+			height: global.dimensions.height,
 			onSetup: () => {
 				p.pixelDensity(1);
 				p.noSmooth();

@@ -67,7 +67,7 @@ export default defineSketch({
 	description: "Recursive branching with angle jitter.",
 	date: "2026-04-26",
 	parameters,
-	create({ p, theme = "light", params, rng }: SketchContext<Params>) {
+	create({ p, theme = "light", params, rng, global }: SketchContext<Params>) {
 		const isDark = theme === "dark";
 		const backgroundColor = isDark ? "#0A0E15" : "#FCFBF7";
 		const strokeColor = isDark ? "#E2E8F0" : "#1C1917";
@@ -113,6 +113,8 @@ export default defineSketch({
 		}
 
 		attachResponsiveCanvas(p, {
+			width: global.dimensions.width,
+			height: global.dimensions.height,
 			onSetup: () => {
 				p.noLoop();
 			},

@@ -53,6 +53,7 @@ export interface SketchContext<TParams extends Record<string, unknown>> {
 	p: p5;
 	theme: Theme;
 	params: TParams;
+	global: import("../sketches/global-parameters.js").GlobalParams;
 	rng: Rng;
 	/**
 	 * Animation controller - only present for animated sketches.

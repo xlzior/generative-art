@@ -28,7 +28,24 @@ Test files go in `__tests__/` folders adjacent to source files. Node environment
 - **Git hooks**: lefthook (not husky), config in `lefthook.yml`. Pre-commit runs biome then tsc.
 - **Svelte 5** with runes. Vite plugin: `@sveltejs/vite-plugin-svelte`.
 
-## Sketch system
+## Global parameters
+
+Global parameters (defined in `src/sketches/global-parameters.ts`) are framework-managed parameters available to every sketch via `context.global`. They auto-inject into the sketch pipeline — no per-sketch declaration needed.
+
+Current global parameters:
+- `dimensions` — canvas size (`{ width: number|null, height: number|null }`). `null` = auto-size to container.
+
+To use global parameters in a sketch, destructure `global` from `SketchContext` and pass values to `attachResponsiveCanvas`:
+```ts
+create: ({ p, params, global }: SketchContext<Params>) => {
+  attachResponsiveCanvas(p, {
+    width: global.dimensions.width,
+    height: global.dimensions.height,
+    onSetup: ...,
+    onResize: ...,
+  });
+}
+```
 
 Sketches auto-discover via `import.meta.glob` in `src/sketches/index.ts`. No manual registry.
 

@@ -39,6 +39,9 @@ $effect(() => {
 			p,
 			theme,
 			params,
+			global: {
+				dimensions: { width: null, height: null },
+			},
 			rng,
 			animation: mockAnimation,
 		});

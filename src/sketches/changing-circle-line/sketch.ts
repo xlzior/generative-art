@@ -83,13 +83,15 @@ export default defineSketch({
 		"Circles along a line with sizes that increase and randomly reverse direction.",
 	date: "2026-04-27",
 	parameters,
-	create({ p, theme = "light", params, rng }: SketchContext<Params>) {
+	create({ p, theme = "light", params, rng, global }: SketchContext<Params>) {
 		const isDark = theme === "dark";
 		const backgroundColor = isDark ? "#0A0E15" : "#FCFBF7";
 		const strokeColor = isDark ? "#E2E8F0" : "#1C1917";
 		const fillColor = isDark ? "#64748B" : "#CBD5E1";
 
 		attachResponsiveCanvas(p, {
+			width: global.dimensions.width,
+			height: global.dimensions.height,
 			onSetup: () => {
 				p.angleMode(p.DEGREES);
 				p.noLoop();
