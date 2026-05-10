@@ -149,16 +149,6 @@ button:hover {
 	background: var(--ui-surface-hover);
 }
 
-#theme-toggle {
-	margin-top: 0.3rem;
-	border-color: color-mix(in srgb, var(--accent), var(--stroke) 70%);
-}
-
-#theme-toggle[aria-pressed="true"] {
-	background: color-mix(in srgb, var(--accent), transparent 82%);
-	border-color: var(--accent);
-}
-
 .params-panel {
 	margin-top: 0.55rem;
 	padding-top: 0.55rem;

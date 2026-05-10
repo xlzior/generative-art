@@ -53,7 +53,7 @@ test.describe("Sketch Visual Regression", () => {
 	test("sketch renders correctly in dark mode", async ({ page }) => {
 		await gotoSketch(page, "grid-variations", VISUAL_TEST_SEED);
 		// Toggle dark mode via UI
-		await page.click("#theme-toggle");
+		await page.click(".theme-toggle button");
 		await waitForRender(page, "grid-variations");
 
 		const screenshot = await captureCanvas(page);

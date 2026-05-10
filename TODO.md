@@ -35,7 +35,6 @@
 
 ## Bug fixes
 
-- [ ] Make a nicer light/dark mode toggle with one side showing a moon and the other side showing a sun, that shows the current state of light/dark mode.
 - [ ] "Back to gallery" button in the sketch view
 
 ## Canvas size

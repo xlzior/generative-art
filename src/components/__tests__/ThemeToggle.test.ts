@@ -12,42 +12,39 @@ describe("ThemeToggle", () => {
 		toggleCalls = 0;
 	});
 
-	it("displays 'Dark Mode' when current theme is light", () => {
+	it("shows both Light and Dark labels", () => {
 		render(ThemeToggle, {
 			props: { currentTheme: "light", ontoggle: handleToggle },
 		});
 
-		expect(screen.getByText("Dark Mode")).toBeInTheDocument();
+		expect(screen.getByText("Light")).toBeInTheDocument();
+		expect(screen.getByText("Dark")).toBeInTheDocument();
 	});
 
-	it("displays 'Light Mode' when current theme is dark", () => {
-		render(ThemeToggle, {
-			props: { currentTheme: "dark", ontoggle: handleToggle },
-		});
-
-		expect(screen.getByText("Light Mode")).toBeInTheDocument();
-	});
-
-	it("sets aria-pressed based on current theme", () => {
+	it("sets aria-checked on the active radio button", () => {
 		const { rerender } = render(ThemeToggle, {
 			props: { currentTheme: "light", ontoggle: handleToggle },
 		});
 
-		const button = screen.getByRole("button", { name: /dark mode/i });
-		expect(button).toHaveAttribute("aria-pressed", "false");
+		const light = screen.getByRole("radio", { name: /light/i });
+		const dark = screen.getByRole("radio", { name: /dark/i });
+		expect(light).toHaveAttribute("aria-checked", "true");
+		expect(dark).toHaveAttribute("aria-checked", "false");
 
 		rerender({ currentTheme: "dark", ontoggle: handleToggle });
-		expect(button).toHaveAttribute("aria-pressed", "true");
+		expect(light).toHaveAttribute("aria-checked", "false");
+		expect(dark).toHaveAttribute("aria-checked", "true");
 	});
 
-	it("calls ontoggle when clicked", async () => {
+	it("calls ontoggle when a button is clicked", async () => {
 		render(ThemeToggle, {
 			props: { currentTheme: "light", ontoggle: handleToggle },
 		});
 
-		const button = screen.getByRole("button", { name: /dark mode/i });
-		await fireEvent.click(button);
-
+		await fireEvent.click(screen.getByRole("radio", { name: /dark/i }));
 		expect(toggleCalls).toBe(1);
+
+		await fireEvent.click(screen.getByRole("radio", { name: /light/i }));
+		expect(toggleCalls).toBe(2);
 	});
 });
