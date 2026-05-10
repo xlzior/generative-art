@@ -35,12 +35,8 @@
 
 ## Bug fixes
 
-- [ ] sketch should re-render on toggling the theme from light to dark mode and vice versa
-
-## Gallery view bug fixes
-
-- [ ] Animated sketches thumbnails are not showing, only showing a white screen
-- [ ] Gallery view thumbnails are not respecting dark mode theme
+- [ ] Make a nicer light/dark mode toggle with one side showing a moon and the other side showing a sun, that shows the current state of light/dark mode.
+- [ ] "Back to gallery" button in the sketch view
 
 ## Canvas size
 

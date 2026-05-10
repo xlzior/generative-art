@@ -1,7 +1,7 @@
 <script>
 import SketchThumbnail from "./SketchThumbnail.svelte";
 
-let { sketch, theme, onclick } = $props();
+let { sketch, currentTheme: theme, onclick } = $props();
 </script>
 
 <div class="sketch-card" role="button" tabindex="0" onclick={() => onclick(sketch.id)} onkeydown={(e) => { if (e.key === "Enter" || e.key === " ") onclick(sketch.id); }}>
