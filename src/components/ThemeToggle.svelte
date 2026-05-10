@@ -12,7 +12,7 @@ let { currentTheme, ontoggle } = $props();
 		class:active={currentTheme === "light"}
 		onclick={ontoggle}
 	>
-		<Sun size={16} aria-hidden="true" />
+		<Sun size={14} aria-hidden="true" />
 		<span>Light</span>
 	</button>
 	<button
@@ -22,7 +22,7 @@ let { currentTheme, ontoggle } = $props();
 		class:active={currentTheme === "dark"}
 		onclick={ontoggle}
 	>
-		<Moon size={16} aria-hidden="true" />
+		<Moon size={14} aria-hidden="true" />
 		<span>Dark</span>
 	</button>
 </div>
@@ -34,7 +34,7 @@ let { currentTheme, ontoggle } = $props();
 		border-radius: 10px;
 		overflow: hidden;
 		width: 100%;
-		margin-top: 0.3rem;
+		margin-top: 0.25rem;
 	}
 
 	button {
@@ -42,10 +42,10 @@ let { currentTheme, ontoggle } = $props();
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
-		gap: 0.35rem;
-		padding: 0.55rem 0.6rem;
+		gap: 0.3rem;
+		padding: 0.45rem 0.5rem;
 		font: inherit;
-		font-size: 0.88rem;
+		font-size: 0.82rem;
 		color: var(--muted-ink);
 		background: transparent;
 		border: none;

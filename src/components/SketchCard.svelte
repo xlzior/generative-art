@@ -30,26 +30,26 @@ let { sketch, currentTheme: theme, onclick } = $props();
 	}
 
 	.card-info {
-		padding: 0.8rem 1rem 1rem;
+		padding: 0.65rem 0.8rem 0.8rem;
 	}
 
 	.card-date {
 		margin: 0;
-		font-size: 0.74rem;
+		font-size: 0.7rem;
 		letter-spacing: 0.2em;
 		text-transform: uppercase;
 		color: var(--eyebrow-ink);
 	}
 
 	.card-title {
-		margin: 0.3rem 0 0;
-		font-size: 1.1rem;
+		margin: 0.25rem 0 0;
+		font-size: 1rem;
 		font-weight: 600;
 	}
 
 	.card-desc {
-		margin: 0.3rem 0 0;
-		font-size: 0.86rem;
+		margin: 0.25rem 0 0;
+		font-size: 0.8rem;
 		color: var(--muted-ink);
 		overflow: hidden;
 		text-overflow: ellipsis;

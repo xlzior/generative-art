@@ -117,24 +117,24 @@ function handleDimensionsChange(parameter, event) {
 <style>
   #params-list {
     display: grid;
-    gap: 0.65rem;
+    gap: 0.5rem;
   }
 
   .param-control {
     display: grid;
     grid-template-columns: 1fr auto;
-    gap: 0.35rem 0.5rem;
+    gap: 0.3rem 0.4rem;
     align-items: center;
   }
 
   .param-control label {
-    font-size: 0.86rem;
+    font-size: 0.8rem;
     font-weight: 500;
   }
 
   .param-value {
     font-family: 'IBM Plex Mono', monospace;
-    font-size: 0.78rem;
+    font-size: 0.74rem;
     color: var(--eyebrow-ink);
   }
 
@@ -160,35 +160,35 @@ function handleDimensionsChange(parameter, event) {
     height: 0;
   }
 
-  .toggle-track {
-    position: relative;
-    display: inline-block;
-    width: 40px;
-    height: 22px;
-    background: var(--stroke);
-    border-radius: 11px;
-    transition: background 120ms ease;
-  }
+	.toggle-track {
+		position: relative;
+		display: inline-block;
+		width: 34px;
+		height: 18px;
+		background: var(--stroke);
+		border-radius: 9px;
+		transition: background 120ms ease;
+	}
 
-  .toggle input:checked + .toggle-track {
-    background: var(--accent);
-  }
+	.toggle input:checked + .toggle-track {
+		background: var(--accent);
+	}
 
-  .toggle-thumb {
-    position: absolute;
-    top: 2px;
-    left: 2px;
-    width: 18px;
-    height: 18px;
-    background: white;
-    border-radius: 50%;
-    transition: transform 120ms ease;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
-  }
+	.toggle-thumb {
+		position: absolute;
+		top: 2px;
+		left: 2px;
+		width: 14px;
+		height: 14px;
+		background: white;
+		border-radius: 50%;
+		transition: transform 120ms ease;
+		box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+	}
 
-  .toggle input:checked + .toggle-track .toggle-thumb {
-    transform: translateX(18px);
-  }
+	.toggle input:checked + .toggle-track .toggle-thumb {
+		transform: translateX(16px);
+	}
 
   .toggle:hover .toggle-track {
     background: color-mix(in srgb, var(--stroke), var(--accent) 30%);
@@ -208,7 +208,7 @@ function handleDimensionsChange(parameter, event) {
   }
 
   .dimensions-input input[type='text'] {
-    width: 4.5rem;
+    width: 3.8rem;
     font-family: inherit;
     font-size: inherit;
     padding: 0.15rem 0.3rem;

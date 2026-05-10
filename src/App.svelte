@@ -362,7 +362,7 @@ onMount(() => {
 		display: grid;
 		grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
 		grid-template-rows: 1fr;
-		gap: 0.8rem;
+		gap: 0.65rem;
 		padding: var(--shell-pad);
 	}
 
@@ -371,7 +371,7 @@ onMount(() => {
 		grid-row: 1;
 		display: grid;
 		grid-template-rows: auto 1fr;
-		gap: 0.8rem;
+		gap: 0.65rem;
 		min-height: 0;
 		overflow: auto;
 	}
@@ -383,13 +383,13 @@ onMount(() => {
 	#back-to-gallery {
 		display: inline-flex;
 		align-items: center;
-		gap: 0.3rem;
+		gap: 0.25rem;
 		padding: 0;
-		margin-bottom: 0.7rem;
+		margin-bottom: 0.55rem;
 		border: none;
 		background: none;
 		font: inherit;
-		font-size: 0.82rem;
+		font-size: 0.78rem;
 		color: var(--eyebrow-ink);
 		cursor: pointer;
 		transition: color 150ms ease;
@@ -403,36 +403,36 @@ onMount(() => {
 		margin: 0;
 		letter-spacing: 0.2em;
 		text-transform: uppercase;
-		font-size: 0.74rem;
+		font-size: 0.7rem;
 		color: var(--eyebrow-ink);
 	}
 
 	h1 {
-		margin: 0.3rem 0 0;
-		font-size: clamp(1.8rem, 4vw, 2.7rem);
+		margin: 0.25rem 0 0;
+		font-size: clamp(1.4rem, 3vw, 1.9rem);
 	}
 
 	.subtitle {
 		max-width: 60ch;
-		margin: 0.5rem 0 0;
+		margin: 0.4rem 0 0;
 		color: var(--muted-ink);
 	}
 
 	.panel-actions {
 		display: grid;
-		gap: 0.55rem;
+		gap: 0.45rem;
 		align-content: start;
 	}
 
 	.controls {
-		padding: 0.8rem;
+		padding: 0.65rem;
 		border: 1px solid var(--stroke);
-		border-radius: 14px;
+		border-radius: 12px;
 		background: var(--panel);
 		backdrop-filter: blur(6px);
 		display: grid;
 		grid-template-columns: 1fr;
-		gap: 0.55rem;
+		gap: 0.45rem;
 	}
 
 	label {
@@ -442,9 +442,9 @@ onMount(() => {
 	select,
 	button {
 		font: inherit;
-		border-radius: 10px;
+		border-radius: 8px;
 		border: 1px solid var(--stroke);
-		padding: 0.6rem 0.8rem;
+		padding: 0.5rem 0.65rem;
 		color: var(--ink);
 		background: var(--ui-surface);
 	}
@@ -458,12 +458,12 @@ onMount(() => {
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
-		gap: 0.45rem;
+		gap: 0.35rem;
 	}
 
 	.button-icon {
-		width: 0.95rem;
-		height: 0.95rem;
+		width: 0.82rem;
+		height: 0.82rem;
 		flex-shrink: 0;
 	}
 
@@ -474,16 +474,16 @@ onMount(() => {
 	}
 
 	.params-panel {
-		margin-top: 0.55rem;
-		padding-top: 0.55rem;
+		margin-top: 0.45rem;
+		padding-top: 0.45rem;
 		border-top: 1px solid var(--stroke);
 		display: grid;
-		gap: 0.6rem;
+		gap: 0.5rem;
 	}
 
 	.params-heading {
 		margin: 0;
-		font-size: 0.88rem;
+		font-size: 0.82rem;
 		letter-spacing: 0.05em;
 		text-transform: uppercase;
 		color: var(--eyebrow-ink);
@@ -491,13 +491,13 @@ onMount(() => {
 
 	.params-actions {
 		display: grid;
-		gap: 0.45rem;
+		gap: 0.35rem;
 	}
 
 	#save-status {
 		margin: 0;
-		min-height: 1.1rem;
-		font-size: 0.78rem;
+		min-height: 0.9rem;
+		font-size: 0.74rem;
 		color: var(--eyebrow-ink);
 	}
 

@@ -13,15 +13,15 @@ let { sketches, currentTheme, onnavigate } = $props();
 <style>
 	.gallery-grid {
 		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-		gap: 1.5rem;
-		padding: 1rem 0;
+		grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+		gap: 1.2rem;
+		padding: 0.8rem 0;
 	}
 
 	@media (max-width: 740px) {
 		.gallery-grid {
-			grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-			gap: 1rem;
+			grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+			gap: 0.8rem;
 		}
 	}
 </style>

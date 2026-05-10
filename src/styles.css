@@ -9,8 +9,8 @@
 	--ui-surface-hover: rgba(255, 255, 255, 1);
 	--muted-ink: rgba(0, 0, 0, 0.72);
 	--eyebrow-ink: rgba(0, 0, 0, 0.65);
-	--shell-pad: 1rem;
-	--sidebar-width: clamp(260px, 20vw, 360px);
+	--shell-pad: 0.8rem;
+	--sidebar-width: clamp(260px, 22vw, 350px);
 }
 
 :root[data-theme="dark"] {
@@ -64,7 +64,7 @@ body {
 	display: grid;
 	grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
 	grid-template-rows: auto 1fr;
-	gap: 0.8rem;
+	gap: 0.65rem;
 	padding: var(--shell-pad);
 }
 
@@ -78,18 +78,18 @@ header {
 	margin: 0;
 	letter-spacing: 0.2em;
 	text-transform: uppercase;
-	font-size: 0.74rem;
+	font-size: 0.7rem;
 	color: var(--eyebrow-ink);
 }
 
 h1 {
-	margin: 0.3rem 0 0;
-	font-size: clamp(1.8rem, 4vw, 2.7rem);
+	margin: 0.25rem 0 0;
+	font-size: clamp(1.4rem, 3vw, 1.9rem);
 }
 
 .subtitle {
 	max-width: 60ch;
-	margin: 0.5rem 0 0;
+	margin: 0.4rem 0 0;
 	color: var(--muted-ink);
 }
 
@@ -99,12 +99,12 @@ h1 {
 	align-content: start;
 	display: grid;
 	grid-template-columns: 1fr;
-	gap: 0.55rem;
-	padding: 0.8rem;
+	gap: 0.45rem;
+	padding: 0.65rem;
 	min-height: 0;
 	overflow: auto;
 	border: 1px solid var(--stroke);
-	border-radius: 14px;
+	border-radius: 12px;
 	background: var(--panel);
 	backdrop-filter: blur(6px);
 }
@@ -116,9 +116,9 @@ label {
 select,
 button {
 	font: inherit;
-	border-radius: 10px;
+	border-radius: 8px;
 	border: 1px solid var(--stroke);
-	padding: 0.6rem 0.8rem;
+	padding: 0.5rem 0.65rem;
 	color: var(--ink);
 	background: var(--ui-surface);
 }
@@ -134,12 +134,12 @@ button {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	gap: 0.45rem;
+	gap: 0.35rem;
 }
 
 .button-icon {
-	width: 0.95rem;
-	height: 0.95rem;
+	width: 0.82rem;
+	height: 0.82rem;
 	flex-shrink: 0;
 }
 
@@ -150,16 +150,16 @@ button:hover {
 }
 
 .params-panel {
-	margin-top: 0.55rem;
-	padding-top: 0.55rem;
+	margin-top: 0.45rem;
+	padding-top: 0.45rem;
 	border-top: 1px solid var(--stroke);
 	display: grid;
-	gap: 0.6rem;
+	gap: 0.5rem;
 }
 
 .params-heading {
 	margin: 0;
-	font-size: 0.88rem;
+	font-size: 0.82rem;
 	letter-spacing: 0.05em;
 	text-transform: uppercase;
 	color: var(--eyebrow-ink);
@@ -167,24 +167,24 @@ button:hover {
 
 #params-list {
 	display: grid;
-	gap: 0.65rem;
+	gap: 0.5rem;
 }
 
 .param-control {
 	display: grid;
 	grid-template-columns: 1fr auto;
-	gap: 0.35rem 0.5rem;
+	gap: 0.3rem 0.4rem;
 	align-items: center;
 }
 
 .param-control label {
-	font-size: 0.86rem;
+	font-size: 0.8rem;
 	font-weight: 500;
 }
 
 .param-value {
 	font-family: "IBM Plex Mono", monospace;
-	font-size: 0.78rem;
+	font-size: 0.74rem;
 	color: var(--eyebrow-ink);
 }
 
@@ -196,18 +196,18 @@ button:hover {
 
 .params-actions {
 	display: grid;
-	gap: 0.45rem;
+	gap: 0.35rem;
 }
 
 #save-defaults,
 #reset-params {
-	font-size: 0.85rem;
+	font-size: 0.8rem;
 }
 
 #save-status {
 	margin: 0;
-	min-height: 1.1rem;
-	font-size: 0.78rem;
+	min-height: 0.9rem;
+	font-size: 0.74rem;
 	color: var(--eyebrow-ink);
 }
 
@@ -223,7 +223,7 @@ main {
 #canvas-container {
 	width: 100%;
 	height: 100%;
-	border-radius: 16px;
+	border-radius: 14px;
 	overflow: hidden;
 	border: 1px solid var(--stroke);
 	background: rgba(255, 255, 255, 0.65);
