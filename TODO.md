@@ -35,7 +35,7 @@
 
 ## Bug fixes
 
-- [ ] "Back to gallery" button in the sketch view
+- [ ] Dimensions in ParameterControls.svelte does not respect light/dark mode. background of the input is always white regardless of mode
 
 ## Canvas size
 

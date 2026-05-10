@@ -1,5 +1,5 @@
 <script>
-import { Download, RefreshCw, RotateCcw, Save } from "lucide-svelte";
+import { ArrowLeft, Download, RefreshCw, RotateCcw, Save } from "lucide-svelte";
 import p5 from "p5";
 import { onMount } from "svelte";
 import ParameterControls from "./components/ParameterControls.svelte";
@@ -262,6 +262,14 @@ onMount(() => {
 	<!-- Left panel: always visible -->
 	<div class="left-panel">
 		<header>
+			{#if !isGallery}
+				<button id="back-to-gallery" type="button" onclick={navigateToGallery}>
+					<span class="button-content">
+						<ArrowLeft class="button-icon" aria-hidden="true" />
+						<span>Back to gallery</span>
+					</span>
+				</button>
+			{/if}
 			<p class="eyebrow">Sketchbook</p>
 			<h1>Generative Art Playground</h1>
 			<p class="subtitle">
@@ -370,6 +378,25 @@ onMount(() => {
 
 	header {
 		padding: 0.2rem 0;
+	}
+
+	#back-to-gallery {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.3rem;
+		padding: 0;
+		margin-bottom: 0.7rem;
+		border: none;
+		background: none;
+		font: inherit;
+		font-size: 0.82rem;
+		color: var(--eyebrow-ink);
+		cursor: pointer;
+		transition: color 150ms ease;
+	}
+
+	#back-to-gallery:hover {
+		color: var(--accent);
 	}
 
 	.eyebrow {
