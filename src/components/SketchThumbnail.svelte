@@ -14,9 +14,14 @@ onMount(() => {
 	// Get container size after layout
 	const size = Math.floor(container.getBoundingClientRect().width);
 
-	// Mock animation controller matching SketchAnimationController interface
+	// Render a few frames for animated sketches to settle
+	const THUMBNAIL_FRAMES = 10;
+	let frameRenderer = null;
+
 	const mockAnimation = {
-		onFrame: () => {},
+		onFrame: (renderer) => {
+			frameRenderer = renderer;
+		},
 		stop: () => {},
 	};
 
@@ -34,6 +39,25 @@ onMount(() => {
 			rng,
 			animation: mockAnimation,
 		});
+
+		// After canvas is created by setup(), render thumbnail frames
+		const origSetup = p.setup;
+		if (origSetup) {
+			p.setup = () => {
+				origSetup();
+				if (frameRenderer) {
+					let count = 0;
+					function tick() {
+						frameRenderer(count);
+						count++;
+						if (count < THUMBNAIL_FRAMES) {
+							requestAnimationFrame(tick);
+						}
+					}
+					requestAnimationFrame(tick);
+				}
+			};
+		}
 
 		// Prevent any draw loop
 		p.noLoop();
