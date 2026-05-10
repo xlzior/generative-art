@@ -40,4 +40,3 @@
 ## Canvas size
 
 - [ ] Add support for default parameters which all sketches support
-- [ ] background of the text input is still white in dark mode
