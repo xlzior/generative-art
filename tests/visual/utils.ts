@@ -1,4 +1,18 @@
+import { existsSync, readdirSync } from "node:fs";
+import { join, resolve } from "node:path";
 import type { Page } from "@playwright/test";
+
+const sketchesDir = resolve(process.cwd(), "src/sketches");
+
+/**
+ * Discover all sketch IDs by reading the filesystem.
+ * Filters to only directories containing a sketch.ts file.
+ */
+export function discoverSketchIds(): string[] {
+	return readdirSync(sketchesDir)
+		.filter((entry) => existsSync(join(sketchesDir, entry, "sketch.ts")))
+		.sort();
+}
 
 /**
  * Navigate to a sketch with a specific seed.
@@ -30,74 +44,37 @@ export async function gotoSketch(
 
 /**
  * Wait for sketch rendering to complete.
- * For animated sketches, calls the stored frame callback exactly once.
+ * Tries the animated path first (probes for __TEST_FRAME_CB__), falls back
+ * to a static wait if no animation callback is registered.
  */
-export async function waitForRender(
-	page: Page,
-	sketchId: string,
-): Promise<void> {
-	const animatedSketches = [
-		"flow-field-particles",
-		"cellular-automata",
-		"lightning",
-	];
-
-	if (animatedSketches.includes(sketchId)) {
-		// Wait for frame callback to be registered by the sketch
+export async function waitForRender(page: Page): Promise<void> {
+	// Try animated path first — the test injects __CREATE_TEST_CTRL__ which
+	// animated sketches use to register __TEST_FRAME_CB__
+	try {
 		await page.waitForFunction(() => window.__TEST_FRAME_CB__ !== undefined, {
-			timeout: 5000,
+			timeout: 3000,
 		});
-
 		// Call the frame callback exactly once (frameCount starts at 0, matching p5)
 		await page.evaluate(() => {
 			if (window.__TEST_FRAME_CB__) {
 				window.__TEST_FRAME_CB__(0);
 			}
 		});
-
 		// Wait for the canvas to finish painting
 		await page.waitForTimeout(500);
-	} else if (sketchId === "mona-lisa-circles") {
-		// Wait for image to load
-		await page
-			.waitForFunction(() => {
-				const img = document.querySelector(
-					"img[data-mona-lisa]",
-				) as HTMLImageElement;
-				return img?.complete ?? false;
-			})
-			.catch(() => {});
-		await page.waitForTimeout(1000);
-	} else {
-		// Static sketches: wait for paint
-		await page.waitForTimeout(1000);
+		return;
+	} catch {
+		// Not animated — fall through to static wait
 	}
+
+	// Static sketches: wait for paint (also covers image loading)
+	await page.waitForTimeout(1000);
 }
 
 /**
- * Capture canvas screenshot;
+ * Capture canvas screenshot.
  */
 export async function captureCanvas(page: Page): Promise<Buffer> {
 	const canvas = page.locator("canvas").first();
 	return (await canvas.screenshot({ type: "png" })) as Promise<Buffer>;
-}
-
-/**
- * Get all sketch IDs from the application.
- */
-export async function getAllSketchIds(page: Page): Promise<string[]> {
-	await page.goto("/", { waitUntil: "load" });
-	await page.waitForSelector("#sketch-select", { state: "visible" });
-
-	const sketchIds = await page.$$eval("#sketch-select option", (elements) => {
-		return elements
-			.map((el) => el.getAttribute("value"))
-			.filter((id): id is string => id !== null && id !== "");
-	});
-
-	if (sketchIds.length === 0) {
-		throw new Error("No sketch IDs found on page.");
-	}
-
-	return sketchIds;
 }

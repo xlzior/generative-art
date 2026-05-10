@@ -1,22 +1,16 @@
 import { expect, test } from "@playwright/test";
-import { captureCanvas, gotoSketch, waitForRender } from "./utils";
+import {
+	captureCanvas,
+	discoverSketchIds,
+	gotoSketch,
+	waitForRender,
+} from "./utils";
 
 // Global seed for all visual tests — ensures consistency
 const VISUAL_TEST_SEED = 42;
 
-// Sketch IDs — keep in sync with src/sketches/index.ts auto-discovery
-// TODO: Implement dynamic sketch discovery (Playwright limitation with beforeAll + for loop)
-const sketchIds = [
-	"stereogram",
-	"l-system-plant",
-	"cellular-automata",
-	"mona-lisa-circles",
-	"grid-variations",
-	"changing-circle-line",
-	"flow-field-particles",
-	"fractal-tree",
-	"lightning",
-];
+// Dynamically discover all sketch folders — no manual registration needed
+const sketchIds = discoverSketchIds();
 
 test.describe("Sketch Visual Regression", () => {
 	// Run a test for each sketch
@@ -26,7 +20,7 @@ test.describe("Sketch Visual Regression", () => {
 			await gotoSketch(page, sketchId, VISUAL_TEST_SEED);
 
 			// Wait for rendering to complete (handles animated vs static)
-			await waitForRender(page, sketchId);
+			await waitForRender(page);
 
 			// Capture canvas screenshot
 			const screenshot = await captureCanvas(page);
@@ -39,11 +33,11 @@ test.describe("Sketch Visual Regression", () => {
 	// Test with different seed produces different output
 	test("different seeds produce different output", async ({ page }) => {
 		await gotoSketch(page, "grid-variations", 42);
-		await waitForRender(page, "grid-variations");
+		await waitForRender(page);
 		const screenshot42 = await captureCanvas(page);
 
 		await gotoSketch(page, "grid-variations", 99);
-		await waitForRender(page, "grid-variations");
+		await waitForRender(page);
 		const screenshot99 = await captureCanvas(page);
 
 		// Should be different (unless extremely unlucky with hash collision)
@@ -55,7 +49,7 @@ test.describe("Sketch Visual Regression", () => {
 		await gotoSketch(page, "grid-variations", VISUAL_TEST_SEED);
 		// Toggle dark mode via UI
 		await page.click(".theme-toggle button");
-		await waitForRender(page, "grid-variations");
+		await waitForRender(page);
 
 		const screenshot = await captureCanvas(page);
 		expect(screenshot).toMatchSnapshot(`grid-variations-dark-render.png`);
@@ -74,7 +68,7 @@ test.describe("Image Mocking", () => {
 
 	test("mona-lisa-circles loads mocked image", async ({ page }) => {
 		await gotoSketch(page, "mona-lisa-circles", VISUAL_TEST_SEED);
-		await waitForRender(page, "mona-lisa-circles");
+		await waitForRender(page);
 		const screenshot = await captureCanvas(page);
 		expect(screenshot).toMatchSnapshot("mona-lisa-circles-render.png");
 	});
@@ -82,7 +76,7 @@ test.describe("Image Mocking", () => {
 
 test("canvas has consistent dimensions", async ({ page }) => {
 	await gotoSketch(page, "grid-variations", 42);
-	await waitForRender(page, "grid-variations");
+	await waitForRender(page);
 
 	const canvasSize = await page.evaluate(() => {
 		const canvas = document.querySelector("canvas");
