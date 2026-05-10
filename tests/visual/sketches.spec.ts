@@ -15,6 +15,7 @@ const sketchIds = [
 	"changing-circle-line",
 	"flow-field-particles",
 	"fractal-tree",
+	"lightning",
 ];
 
 test.describe("Sketch Visual Regression", () => {

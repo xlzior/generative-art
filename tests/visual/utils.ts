@@ -36,7 +36,11 @@ export async function waitForRender(
 	page: Page,
 	sketchId: string,
 ): Promise<void> {
-	const animatedSketches = ["flow-field-particles", "cellular-automata"];
+	const animatedSketches = [
+		"flow-field-particles",
+		"cellular-automata",
+		"lightning",
+	];
 
 	if (animatedSketches.includes(sketchId)) {
 		// Wait for frame callback to be registered by the sketch
