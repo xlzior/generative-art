@@ -13,7 +13,7 @@ const mockSketches: AnySketch[] = [
 		description: "Beta",
 		parameters: [],
 		defaults: {},
-		defaultsFile: "",
+
 		filePath: "",
 	} as unknown as AnySketch,
 	{
@@ -23,7 +23,7 @@ const mockSketches: AnySketch[] = [
 		description: "Alpha",
 		parameters: [],
 		defaults: {},
-		defaultsFile: "",
+
 		filePath: "",
 	} as unknown as AnySketch,
 ];

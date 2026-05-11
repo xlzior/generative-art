@@ -195,7 +195,7 @@ async function handleSaveDefaults() {
 
 	const params = getParamsForSketch(sketch);
 	const payload = {
-		defaultsFile: sketch.defaultsFile,
+		defaultsFile: `${currentSketchId}/defaults.json`,
 		defaults: params,
 	};
 

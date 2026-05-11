@@ -34,7 +34,6 @@ describe("discoverSketches()", () => {
 			expect(result).toHaveLength(1);
 			expect(result[0].id).toBe("sketch-a");
 			expect(result[0].defaults).toEqual({ param1: 10 });
-			expect(result[0].defaultsFile).toBe("sketch-a/defaults.json");
 			expect(result[0].filePath).toBe("./sketch-a/sketch.ts");
 		});
 

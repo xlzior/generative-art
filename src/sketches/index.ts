@@ -36,7 +36,6 @@ export function discoverSketches(
 			...sketch,
 			id: folder,
 			defaults,
-			defaultsFile: `${folder}/defaults.json`,
 			filePath: path,
 		};
 	});

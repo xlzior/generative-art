@@ -78,7 +78,6 @@ export interface SketchModuleWithDefaults<
 > extends SketchDefinition<TParams> {
 	id: string;
 	defaults: TParams;
-	defaultsFile: string;
 	filePath: string;
 }
 

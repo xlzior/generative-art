@@ -24,7 +24,6 @@ function createMockSketch(parameters: SketchParameter[]) {
 		description: "Test",
 		parameters,
 		defaults,
-		defaultsFile: "",
 		filePath: "",
 	} as unknown as AnySketch;
 }

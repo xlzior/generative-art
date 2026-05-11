@@ -28,7 +28,6 @@ vi.mock("../sketches/index.js", () => ({
 			description: "Test",
 			parameters: [],
 			defaults: {},
-			defaultsFile: "test-sketch/defaults.json",
 			filePath: "./test-sketch/sketch.ts",
 			create: vi.fn(),
 		} as unknown as SketchModuleWithDefaults<Record<string, unknown>>,
