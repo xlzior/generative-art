@@ -1,6 +1,6 @@
 import type { IncomingMessage } from "node:http";
 import { describe, expect, it } from "vitest";
-import { isWithinSketchesRoot, readJsonBody } from "../endpoint-utils.js";
+import { readJsonBody } from "../endpoint-utils.js";
 
 describe("readJsonBody()", () => {
 	const createMockRequest = (body: string) => {
@@ -39,13 +39,11 @@ describe("readJsonBody()", () => {
 	};
 
 	it("should parse valid JSON", async () => {
-		const req = createMockRequest(
-			'{"size": 50, "defaultsFile": "test/defaults.json"}',
-		);
+		const req = createMockRequest('{"size": 50, "id": "test-sketch"}');
 		const result = await readJsonBody(req);
 		expect(result).toEqual({
 			size: 50,
-			defaultsFile: "test/defaults.json",
+			id: "test-sketch",
 		});
 	});
 
@@ -64,40 +62,5 @@ describe("readJsonBody()", () => {
 		const largeBody = "x".repeat(2000001);
 		const req = createMockRequest(largeBody);
 		await expect(readJsonBody(req)).rejects.toThrow("Request body too large");
-	});
-});
-
-describe("isWithinSketchesRoot()", () => {
-	const mockRoot = "/Users/test/project/src/sketches";
-
-	it("should return true for valid path within sketches root", () => {
-		expect(
-			isWithinSketchesRoot(`${mockRoot}/my-sketch/defaults.json`, mockRoot),
-		).toBe(true);
-	});
-
-	it("should return false for path traversal", () => {
-		expect(
-			isWithinSketchesRoot(`${mockRoot}/../other/defaults.json`, mockRoot),
-		).toBe(false);
-	});
-
-	it("should return false for absolute path outside root", () => {
-		expect(isWithinSketchesRoot("/etc/passwd", mockRoot)).toBe(false);
-	});
-
-	it("should return false for relative traversal", () => {
-		expect(
-			isWithinSketchesRoot(
-				`${mockRoot}/my-sketch/../../defaults.json`,
-				mockRoot,
-			),
-		).toBe(false);
-	});
-
-	it("should return true for nested sketch paths", () => {
-		expect(
-			isWithinSketchesRoot(`${mockRoot}/nested/sketch/defaults.json`, mockRoot),
-		).toBe(true);
 	});
 });

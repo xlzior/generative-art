@@ -5,8 +5,8 @@ import { fileURLToPath } from "node:url";
 const projectRoot = path.dirname(fileURLToPath(import.meta.url));
 const sketchesRoot = path.resolve(projectRoot, "..", "sketches");
 
-export interface DefaultsPayload {
-	defaultsFile: string;
+interface DefaultsPayload {
+	id: string;
 	defaults: Record<
 		string,
 		number | string | boolean | Record<string, number | null> | null
@@ -40,15 +40,6 @@ export function readJsonBody(req: IncomingMessage): Promise<DefaultsPayload> {
 	});
 }
 
-export function isWithinSketchesRoot(
-	filePath: string,
-	root: string = sketchesRoot,
-): boolean {
-	const normalizedRoot = path.resolve(root);
-	const normalizedPath = path.resolve(filePath);
-	return normalizedPath.startsWith(normalizedRoot + path.sep);
-}
-
 export function createSaveDefaultsHandler() {
 	return async (
 		req: IncomingMessage,
@@ -61,10 +52,14 @@ export function createSaveDefaultsHandler() {
 		}
 
 		try {
-			const { defaultsFile, defaults } = await readJsonBody(req);
+			const { id, defaults } = await readJsonBody(req);
 
-			if (typeof defaultsFile !== "string" || defaultsFile.trim() === "") {
-				throw new Error("defaultsFile is required");
+			if (typeof id !== "string" || id.trim() === "") {
+				throw new Error("Sketch id is required");
+			}
+
+			if (!/^[a-z0-9-]+$/.test(id)) {
+				throw new Error("Invalid sketch id");
 			}
 
 			if (!defaults || typeof defaults !== "object") {
@@ -100,14 +95,7 @@ export function createSaveDefaultsHandler() {
 				);
 			}
 
-			const outputPath = path.resolve(sketchesRoot, defaultsFile);
-
-			if (
-				!isWithinSketchesRoot(outputPath) ||
-				path.basename(outputPath) !== "defaults.json"
-			) {
-				throw new Error("Invalid defaults file path");
-			}
+			const outputPath = path.resolve(sketchesRoot, id, "defaults.json");
 
 			const fs = await import("node:fs/promises");
 			await fs.writeFile(

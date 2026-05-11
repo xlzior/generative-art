@@ -12,6 +12,7 @@ import {
 } from "./sketches/global-parameters.js";
 import { sketches } from "./sketches/index.js";
 import { createAnimationController } from "./utils/animation-controller.js";
+import { store } from "./utils/defaults-store.js";
 import { getSeedFromUrl } from "./utils/seed.js";
 import { createRng } from "./utils/seeded-random.js";
 
@@ -66,7 +67,8 @@ function cloneDefaults(sketch) {
 
 function getParamsForSketch(sketch) {
 	if (!paramsBySketch.has(sketch.id)) {
-		paramsBySketch.set(sketch.id, cloneDefaults(sketch));
+		const stored = store.load(sketch.id);
+		paramsBySketch.set(sketch.id, stored ?? cloneDefaults(sketch));
 		paramsBySketch = new Map(paramsBySketch);
 	}
 	return paramsBySketch.get(sketch.id);
@@ -194,28 +196,9 @@ async function handleSaveDefaults() {
 	if (!sketch) return;
 
 	const params = getParamsForSketch(sketch);
-	const payload = {
-		defaultsFile: `${currentSketchId}/defaults.json`,
-		defaults: params,
-	};
 
 	try {
-		const response = await fetch("/__sketch-defaults", {
-			method: "POST",
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify(payload),
-		});
-
-		if (!response.ok) {
-			let message = "Failed to persist defaults";
-			const contentType = response.headers.get("content-type") || "";
-			if (contentType.includes("application/json")) {
-				const data = await response.json();
-				message = data.message || message;
-			}
-			throw new Error(message);
-		}
-
+		await store.save(currentSketchId, params);
 		sketch.defaults = { ...params };
 	} catch (error) {
 		console.error("Failed to save defaults:", error);
