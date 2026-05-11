@@ -30,7 +30,6 @@ const parameters = [
 type Params = InferParams<typeof parameters>;
 
 export default defineSketch({
-	id: "grid-variations",
 	title: "Grid Variations",
 	description: "Controlled randomness on a geometric grid.",
 	date: "2026-04-26",

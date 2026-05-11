@@ -90,8 +90,7 @@ describe("validateDefaultValue()", () => {
 });
 
 describe("validateSketchModule()", () => {
-	const createSketch = (id: string, parameters: SketchParameter[]) => ({
-		id,
+	const createSketch = (parameters: SketchParameter[]) => ({
 		title: "Test",
 		date: "2026-01-01",
 		description: "Test sketch",
@@ -100,36 +99,44 @@ describe("validateSketchModule()", () => {
 	});
 
 	it("should pass with matching defaults", () => {
-		const sketch = createSketch("test", [
-			{ type: "number", key: "size", label: "Size", min: 0, max: 100 },
-		]);
-		expect(() => validateSketchModule(sketch, { size: 50 })).not.toThrow();
-	});
-
-	it("should throw when defaults key is missing", () => {
-		const sketch = createSketch("test", [
-			{ type: "number", key: "size", label: "Size", min: 0, max: 100 },
-		]);
-		expect(() => validateSketchModule(sketch, {})).toThrow("missing key");
-	});
-
-	it("should throw when defaults value type mismatches", () => {
-		const sketch = createSketch("test", [
+		const sketch = createSketch([
 			{ type: "number", key: "size", label: "Size", min: 0, max: 100 },
 		]);
 		expect(() =>
-			validateSketchModule(sketch, { size: "not a number" }),
+			validateSketchModule("test", sketch, { size: 50 }),
+		).not.toThrow();
+	});
+
+	it("should throw when defaults key is missing", () => {
+		const sketch = createSketch([
+			{ type: "number", key: "size", label: "Size", min: 0, max: 100 },
+		]);
+		expect(() => validateSketchModule("test", sketch, {})).toThrow(
+			"missing key",
+		);
+	});
+
+	it("should throw when defaults value type mismatches", () => {
+		const sketch = createSketch([
+			{ type: "number", key: "size", label: "Size", min: 0, max: 100 },
+		]);
+		expect(() =>
+			validateSketchModule("test", sketch, { size: "not a number" }),
 		).toThrow("must be a finite number");
 	});
 
 	it("should handle multiple parameters", () => {
-		const sketch = createSketch("test", [
+		const sketch = createSketch([
 			{ type: "number", key: "size", label: "Size", min: 0, max: 100 },
 			{ type: "string", key: "name", label: "Name" },
 			{ type: "boolean", key: "enabled", label: "Enabled" },
 		]);
 		expect(() =>
-			validateSketchModule(sketch, { size: 50, name: "test", enabled: true }),
+			validateSketchModule("test", sketch, {
+				size: 50,
+				name: "test",
+				enabled: true,
+			}),
 		).not.toThrow();
 	});
 });

@@ -110,7 +110,6 @@ const parameters = [
 type Params = InferParams<typeof parameters>;
 
 export default defineSketch({
-	id: "stereogram",
 	title: "Parallel Stereogram",
 	description:
 		"A random-dot autostereogram for parallel viewing. Toggle to show the depth map.",

@@ -51,7 +51,6 @@ const parameters = [
 type Params = InferParams<typeof parameters>;
 
 export default defineSketch({
-	id: "mona-lisa-circles",
 	title: "Mona Lisa Circles",
 	description:
 		"Random circles colored by the Mona Lisa painting at their coordinates.",

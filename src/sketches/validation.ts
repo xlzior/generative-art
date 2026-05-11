@@ -1,4 +1,4 @@
-import type { SketchModule, SketchParameter } from "../types/sketch.js";
+import type { SketchDefinition, SketchParameter } from "../types/sketch.js";
 
 export function validateDefaultValue(
 	sketchId: string,
@@ -53,17 +53,18 @@ export function validateDefaultValue(
 }
 
 export function validateSketchModule(
-	sketch: SketchModule<Record<string, unknown>>,
+	id: string,
+	sketch: SketchDefinition<Record<string, unknown>>,
 	defaults: Record<string, unknown>,
 ): void {
 	for (const parameter of sketch.parameters) {
 		if (!Object.hasOwn(defaults, parameter.key)) {
 			throw new TypeError(
-				`Sketch ${sketch.id} defaults.json is missing key: ${parameter.key}`,
+				`Sketch ${id} defaults.json is missing key: ${parameter.key}`,
 			);
 		}
 
-		validateDefaultValue(sketch.id, parameter, defaults[parameter.key]);
+		validateDefaultValue(id, parameter, defaults[parameter.key]);
 	}
 }
 

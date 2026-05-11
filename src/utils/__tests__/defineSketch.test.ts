@@ -16,7 +16,6 @@ describe("defineSketch()", () => {
 	describe("valid sketch", () => {
 		it("should pass with all required fields and valid number parameter", () => {
 			const sketch = defineSketch({
-				id: "test-sketch",
 				title: "Test Sketch",
 				date: "2026-01-01",
 				description: "Test sketch for contract validation",
@@ -24,13 +23,11 @@ describe("defineSketch()", () => {
 				create: validCreate,
 			});
 
-			expect(sketch.id).toBe("test-sketch");
 			expect(sketch.parameters).toHaveLength(1);
 		});
 
 		it("should return a mutable object", () => {
 			const sketch = defineSketch({
-				id: "mutable-test",
 				title: "Mutable Test",
 				date: "2026-01-01",
 				description: "Test mutable object",
@@ -43,35 +40,9 @@ describe("defineSketch()", () => {
 	});
 
 	describe("missing required fields", () => {
-		it("should throw when id is missing", () => {
-			expect(() =>
-				defineSketch({
-					title: "No ID",
-					date: "2026-01-01",
-					description: "Missing id",
-					parameters: [],
-					create: validCreate,
-				} as never),
-			).toThrow("must be a non-empty string");
-		});
-
-		it("should throw when id is empty string", () => {
-			expect(() =>
-				defineSketch({
-					id: "",
-					title: "Empty ID",
-					date: "2026-01-01",
-					description: "Empty id",
-					parameters: [],
-					create: validCreate,
-				} as never),
-			).toThrow("must be a non-empty string");
-		});
-
 		it("should throw when title is missing", () => {
 			expect(() =>
 				defineSketch({
-					id: "no-title",
 					date: "2026-01-01",
 					description: "Missing title",
 					parameters: [],
@@ -83,7 +54,6 @@ describe("defineSketch()", () => {
 		it("should throw when date is missing", () => {
 			expect(() =>
 				defineSketch({
-					id: "no-date",
 					title: "No Date",
 					description: "Missing date",
 					parameters: [],
@@ -95,7 +65,6 @@ describe("defineSketch()", () => {
 		it("should throw when description is missing", () => {
 			expect(() =>
 				defineSketch({
-					id: "no-desc",
 					title: "No Description",
 					date: "2026-01-01",
 					parameters: [],
@@ -107,7 +76,6 @@ describe("defineSketch()", () => {
 		it("should throw when parameters is not an array", () => {
 			expect(() =>
 				defineSketch({
-					id: "bad-params",
 					title: "Bad Params",
 					date: "2026-01-01",
 					description: "Bad parameters",
@@ -120,7 +88,6 @@ describe("defineSketch()", () => {
 		it("should throw when create is not a function", () => {
 			expect(() =>
 				defineSketch({
-					id: "no-create",
 					title: "No Create",
 					date: "2026-01-01",
 					description: "Missing create",
@@ -135,7 +102,6 @@ describe("defineSketch()", () => {
 		it("should throw for invalid parameter type", () => {
 			expect(() =>
 				defineSketch({
-					id: "bad-type",
 					title: "Bad Type",
 					date: "2026-01-01",
 					description: "Invalid parameter type",
@@ -154,7 +120,6 @@ describe("defineSketch()", () => {
 		it("should throw when parameter type is missing", () => {
 			expect(() =>
 				defineSketch({
-					id: "no-type",
 					title: "No Type",
 					date: "2026-01-01",
 					description: "Missing parameter type",
@@ -167,7 +132,6 @@ describe("defineSketch()", () => {
 		it("should throw when parameter key is not a string", () => {
 			expect(() =>
 				defineSketch({
-					id: "bad-key",
 					title: "Bad Key",
 					date: "2026-01-01",
 					description: "Non-string key",
@@ -188,7 +152,6 @@ describe("defineSketch()", () => {
 		it("should throw when parameter key is empty", () => {
 			expect(() =>
 				defineSketch({
-					id: "empty-key",
 					title: "Empty Key",
 					date: "2026-01-01",
 					description: "Empty key",
@@ -209,7 +172,6 @@ describe("defineSketch()", () => {
 		it("should throw when parameter label is missing", () => {
 			expect(() =>
 				defineSketch({
-					id: "no-label",
 					title: "No Label",
 					date: "2026-01-01",
 					description: "Missing label",
@@ -231,7 +193,6 @@ describe("defineSketch()", () => {
 		it("should throw when two parameters have the same key", () => {
 			expect(() =>
 				defineSketch({
-					id: "dupes",
 					title: "Duplicates",
 					date: "2026-01-01",
 					description: "Duplicate keys",
@@ -249,7 +210,6 @@ describe("defineSketch()", () => {
 		it("should throw when min >= max", () => {
 			expect(() =>
 				defineSketch({
-					id: "bad-minmax",
 					title: "Bad MinMax",
 					date: "2026-01-01",
 					description: "min >= max",
@@ -271,7 +231,6 @@ describe("defineSketch()", () => {
 		it("should throw when step is 0", () => {
 			expect(() =>
 				defineSketch({
-					id: "bad-step",
 					title: "Bad Step",
 					date: "2026-01-01",
 					description: "step is 0",
@@ -293,7 +252,6 @@ describe("defineSketch()", () => {
 		it("should throw when step is negative", () => {
 			expect(() =>
 				defineSketch({
-					id: "negative-step",
 					title: "Negative Step",
 					date: "2026-01-01",
 					description: "negative step",
@@ -315,7 +273,6 @@ describe("defineSketch()", () => {
 		it("should throw when min is not finite", () => {
 			expect(() =>
 				defineSketch({
-					id: "nonfinite-min",
 					title: "Nonfinite Min",
 					date: "2026-01-01",
 					description: "min is NaN",
@@ -337,7 +294,6 @@ describe("defineSketch()", () => {
 		it("should pass with valid number parameter", () => {
 			expect(() =>
 				defineSketch({
-					id: "valid-num",
 					title: "Valid Number",
 					date: "2026-01-01",
 					description: "Valid number param",
@@ -361,7 +317,6 @@ describe("defineSketch()", () => {
 		it("should pass with valid string parameter", () => {
 			expect(() =>
 				defineSketch({
-					id: "string-param",
 					title: "String Param",
 					date: "2026-01-01",
 					description: "Valid string param",
@@ -374,7 +329,6 @@ describe("defineSketch()", () => {
 		it("should pass with valid boolean parameter", () => {
 			expect(() =>
 				defineSketch({
-					id: "bool-param",
 					title: "Boolean Param",
 					date: "2026-01-01",
 					description: "Valid boolean param",

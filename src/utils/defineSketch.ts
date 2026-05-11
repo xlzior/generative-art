@@ -1,4 +1,4 @@
-import type { SketchModule, SketchParameter } from "../types/sketch.js";
+import type { SketchDefinition, SketchParameter } from "../types/sketch.js";
 
 const VALID_TYPES = [
 	"number",
@@ -8,28 +8,24 @@ const VALID_TYPES = [
 	"dimensions",
 ] as const;
 
-function validateParameter(sketchId: string, parameter: SketchParameter): void {
+function validateParameter(parameter: SketchParameter): void {
+	const label = `${parameter.key || "unknown"}`;
+
 	if (!parameter || typeof parameter !== "object") {
-		throw new TypeError(
-			`Sketch module ${sketchId} has an invalid parameter definition.`,
-		);
+		throw new TypeError("Sketch has an invalid parameter definition.");
 	}
 
 	if (typeof parameter.key !== "string" || parameter.key.trim() === "") {
-		throw new TypeError(
-			`Sketch module ${sketchId} parameter key must be a non-empty string.`,
-		);
+		throw new TypeError("Sketch parameter key must be a non-empty string.");
 	}
 
 	if (typeof parameter.label !== "string" || parameter.label.trim() === "") {
-		throw new TypeError(
-			`Sketch module ${sketchId} parameter ${parameter.key} must include a label.`,
-		);
+		throw new TypeError(`Sketch parameter ${label} must include a label.`);
 	}
 
 	if (!VALID_TYPES.includes(parameter.type as (typeof VALID_TYPES)[number])) {
 		throw new TypeError(
-			`Sketch module ${sketchId} parameter ${parameter.key} has invalid type "${parameter.type}". Must be one of: ${VALID_TYPES.join(
+			`Sketch parameter ${label} has invalid type "${parameter.type}". Must be one of: ${VALID_TYPES.join(
 				", ",
 			)}.`,
 		);
@@ -39,67 +35,63 @@ function validateParameter(sketchId: string, parameter: SketchParameter): void {
 		const { min, max, step } = parameter;
 		if (!Number.isFinite(min) || !Number.isFinite(max)) {
 			throw new TypeError(
-				`Sketch module ${sketchId} parameter ${parameter.key} must use numeric min/max.`,
+				`Sketch parameter ${parameter.key} must use numeric min/max.`,
 			);
 		}
 
 		if (min >= max) {
 			throw new TypeError(
-				`Sketch module ${sketchId} parameter ${parameter.key} requires min < max.`,
+				`Sketch parameter ${parameter.key} requires min < max.`,
 			);
 		}
 
 		if (step !== undefined && (!Number.isFinite(step) || step <= 0)) {
 			throw new TypeError(
-				`Sketch module ${sketchId} parameter ${parameter.key} uses an invalid step.`,
+				`Sketch parameter ${parameter.key} uses an invalid step.`,
 			);
 		}
 	}
 }
 
 export function defineSketch<TParams extends Record<string, unknown>>(
-	sketch: SketchModule<TParams>,
-): SketchModule<TParams> {
+	sketch: SketchDefinition<TParams>,
+): SketchDefinition<TParams> {
 	if (!sketch || typeof sketch !== "object") {
-		throw new TypeError("Sketch module must be an object.");
+		throw new TypeError("Sketch must be an object.");
 	}
 
-	const { id, title, description, date, parameters, create } = sketch;
-
-	if (typeof id !== "string" || id.trim() === "") {
-		throw new TypeError("Sketch module id must be a non-empty string.");
-	}
+	const { title, description, date, parameters, create } = sketch;
 
 	if (typeof title !== "string" || title.trim() === "") {
-		throw new TypeError(`Sketch module ${id} is missing a title.`);
+		throw new TypeError("Sketch is missing a title.");
 	}
 
 	if (typeof description !== "string" || description.trim() === "") {
-		throw new TypeError(`Sketch module ${id} is missing a description.`);
+		throw new TypeError("Sketch is missing a description.");
 	}
 
 	if (typeof date !== "string" || date.trim() === "") {
-		throw new TypeError(`Sketch module ${id} is missing a date.`);
+		throw new TypeError("Sketch is missing a date.");
 	}
 
 	if (!Array.isArray(parameters)) {
-		throw new TypeError(`Sketch module ${id} must provide a parameters array.`);
+		throw new TypeError("Sketch must provide a parameters array.");
 	}
 
 	const seenKeys = new Set<string>();
 	for (const parameter of parameters) {
-		validateParameter(id, parameter);
+		validateParameter(parameter);
 
 		if (seenKeys.has(parameter.key)) {
 			throw new TypeError(
-				`Sketch module ${id} has duplicate parameter key: ${parameter.key}`,
+				`Sketch has duplicate parameter key: ${parameter.key}`,
 			);
 		}
 		seenKeys.add(parameter.key);
 	}
 
 	if (typeof create !== "function") {
-		throw new TypeError(`Sketch module ${id} must provide a create function.`);
+		throw new TypeError("Sketch must provide a create function.");
 	}
 
 	return sketch;

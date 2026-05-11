@@ -1,14 +1,13 @@
-import type { SketchModuleWithDefaults } from "../types/sketch.js";
-import {
-	checkDuplicateIds,
-	sortSketches,
-	validateSketchModule,
-} from "./validation.js";
+import type {
+	SketchDefinition,
+	SketchModuleWithDefaults,
+} from "../types/sketch.js";
+import { sortSketches, validateSketchModule } from "./validation.js";
 
 export function discoverSketches(
 	sketchEntries: [
 		string,
-		{ default: SketchModuleWithDefaults<Record<string, unknown>> },
+		{ default: SketchDefinition<Record<string, unknown>> },
 	][],
 	defaultsByFolder: Record<string, Record<string, unknown>>,
 ): SketchModuleWithDefaults<Record<string, unknown>>[] {
@@ -31,24 +30,23 @@ export function discoverSketches(
 		}
 
 		const sketch = module.default;
-		validateSketchModule(sketch, defaults);
+		validateSketchModule(folder, sketch, defaults);
 
 		return {
 			...sketch,
+			id: folder,
 			defaults,
 			defaultsFile: `${folder}/defaults.json`,
 			filePath: path,
 		};
 	});
 
-	checkDuplicateIds(sketchModules);
-
 	return sortSketches(sketchModules);
 }
 
 const sketchEntries = Object.entries(
 	import.meta.glob<{
-		default: SketchModuleWithDefaults<Record<string, unknown>>;
+		default: SketchDefinition<Record<string, unknown>>;
 	}>("./*/sketch.ts", { eager: true }),
 );
 

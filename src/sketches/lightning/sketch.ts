@@ -84,7 +84,6 @@ interface LightningBolt {
 }
 
 export default defineSketch({
-	id: "lightning",
 	title: "Lightning",
 	description: "Procedural lightning strikes with recursive branching.",
 	date: "2026-05-10",

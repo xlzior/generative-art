@@ -51,7 +51,6 @@ interface Rules {
 }
 
 export default defineSketch({
-	id: "l-system-plant",
 	title: "L-System Plant",
 	description: "String-rewriting fractal grown with turtle graphics.",
 	date: "2026-04-26",

@@ -87,7 +87,6 @@ interface Particle {
 }
 
 export default defineSketch({
-	id: "flow-field-particles",
 	title: "Flow Field Particles",
 	description: "Particle trails following a noise-driven vector field.",
 	date: "2026-04-26",

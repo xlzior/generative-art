@@ -79,7 +79,6 @@ const parameters = [
 type Params = InferParams<typeof parameters>;
 
 export default defineSketch({
-	id: "changing-circle-line",
 	title: "Changing Circle Line",
 	description:
 		"Circles along a line with sizes that increase and randomly reverse direction.",

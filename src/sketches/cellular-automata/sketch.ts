@@ -60,7 +60,6 @@ interface Board {
 }
 
 export default defineSketch({
-	id: "cellular-automata",
 	title: "Cellular Automata",
 	description: "A Game of Life variant with periodic reseeding.",
 	date: "2026-04-26",

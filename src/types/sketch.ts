@@ -65,8 +65,7 @@ export interface SketchContext<TParams extends Record<string, unknown>> {
 	animation?: SketchAnimationController;
 }
 
-export interface SketchModule<TParams extends Record<string, unknown>> {
-	id: string;
+export interface SketchDefinition<TParams extends Record<string, unknown>> {
 	title: string;
 	description: string;
 	date: string;
@@ -76,7 +75,8 @@ export interface SketchModule<TParams extends Record<string, unknown>> {
 
 export interface SketchModuleWithDefaults<
 	TParams extends Record<string, unknown>,
-> extends SketchModule<TParams> {
+> extends SketchDefinition<TParams> {
+	id: string;
 	defaults: TParams;
 	defaultsFile: string;
 	filePath: string;
