@@ -3,9 +3,13 @@ export interface DefaultsStore {
 	save(sketchId: string, defaults: Record<string, unknown>): Promise<void>;
 }
 
+const devCache = new Map<string, Record<string, unknown>>();
+
 export const devServerStore: DefaultsStore = {
-	load: () => null,
+	load: (id) => devCache.get(id) ?? null,
 	save: async (id, defaults) => {
+		devCache.set(id, { ...defaults });
+
 		const response = await fetch("/__sketch-defaults", {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },

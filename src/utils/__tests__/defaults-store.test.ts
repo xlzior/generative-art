@@ -35,13 +35,7 @@ describe.each(stores)("$name", ({ store }) => {
 		await store.save("test-sketch", defaults);
 		const loaded = store.load("test-sketch");
 
-		if (store === devServerStore) {
-			// Dev server persists to disk, not to browser storage.
-			// Load is a no-op — only save goes to the server.
-			expect(loaded).toBeNull();
-		} else {
-			expect(loaded).toEqual(defaults);
-		}
+		expect(loaded).toEqual(defaults);
 	});
 
 	it("load returns null for unknown sketch id", () => {
@@ -54,19 +48,11 @@ describe.each(stores)("$name", ({ store }) => {
 
 		const loaded = store.load("test-sketch");
 
-		if (store === devServerStore) {
-			expect(loaded).toBeNull();
-		} else {
-			expect(loaded).toEqual({ size: 2 });
-		}
+		expect(loaded).toEqual({ size: 2 });
 	});
 });
 
 describe("devServerStore", () => {
-	it("load always returns null", () => {
-		expect(devServerStore.load("any-sketch")).toBeNull();
-	});
-
 	it("save sends POST to /__sketch-defaults with id and defaults", async () => {
 		const mockFetch = vi.fn().mockResolvedValue({
 			ok: true,
