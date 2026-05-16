@@ -6,6 +6,7 @@ const VALID_TYPES = [
 	"boolean",
 	"colour",
 	"dimensions",
+	"select",
 ] as const;
 
 function validateParameter(parameter: SketchParameter): void {
@@ -49,6 +50,34 @@ function validateParameter(parameter: SketchParameter): void {
 			throw new TypeError(
 				`Sketch parameter ${parameter.key} uses an invalid step.`,
 			);
+		}
+	}
+
+	if (parameter.type === "select") {
+		if (!Array.isArray(parameter.options) || parameter.options.length === 0) {
+			throw new TypeError(
+				`Sketch parameter ${parameter.key} must have a non-empty options array.`,
+			);
+		}
+
+		const seenValues = new Set<string>();
+		for (const opt of parameter.options) {
+			if (typeof opt.label !== "string" || opt.label.trim() === "") {
+				throw new TypeError(
+					`Sketch parameter ${parameter.key} has an option with a missing or empty label.`,
+				);
+			}
+			if (typeof opt.value !== "string" || opt.value === "") {
+				throw new TypeError(
+					`Sketch parameter ${parameter.key} has an option with a missing or empty value.`,
+				);
+			}
+			if (seenValues.has(opt.value)) {
+				throw new TypeError(
+					`Sketch parameter ${parameter.key} has duplicate option value: "${opt.value}".`,
+				);
+			}
+			seenValues.add(opt.value);
 		}
 	}
 }

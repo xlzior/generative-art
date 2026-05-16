@@ -27,6 +27,10 @@ function handleStringChange(parameter, event) {
 	onchange(parameter.key, event.target.value);
 }
 
+function handleSelectChange(parameter, event) {
+	onchange(parameter.key, event.target.value);
+}
+
 function handleDimensionsChange(parameter, event) {
 	const raw = event.target.value.trim();
 	const value = raw === "" ? null : Number.parseInt(raw, 10);
@@ -96,6 +100,21 @@ function handleDimensionsChange(parameter, event) {
           value={themeAccent(params[parameter.key] ?? '#000000', theme)}
           oninput={(e) => onchange(parameter.key, themeAccent(e.target.value, theme))}
         />
+      {:else if parameter.type === 'select'}
+        <label for="param-{sketch.id}-{parameter.key}">{parameter.label}</label>
+        <select
+          id="param-{sketch.id}-{parameter.key}"
+          onchange={(e) => handleSelectChange(parameter, e)}
+        >
+          {#each parameter.options as option}
+            <option
+              value={option.value}
+              selected={params[parameter.key] === option.value}
+            >
+              {option.label}
+            </option>
+          {/each}
+        </select>
       {:else if parameter.type === 'dimensions'}
         <label for="param-{sketch.id}-{parameter.key}">{parameter.label}</label>
         <div class="dimensions-input">
@@ -156,6 +175,17 @@ function handleDimensionsChange(parameter, event) {
 
   input[type='text'] {
     font: inherit;
+  }
+
+  select {
+    grid-column: 1 / span 2;
+    width: 100%;
+    font: inherit;
+    padding: 0.15rem 0.3rem;
+    border: 1px solid var(--stroke);
+    border-radius: 4px;
+    background: var(--surface);
+    color: var(--ink);
   }
 
   .toggle {

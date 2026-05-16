@@ -34,7 +34,13 @@ export type SketchParameter =
 	| { type: "string"; key: string; label: string }
 	| { type: "boolean"; key: string; label: string }
 	| { type: "colour"; key: string; label: string }
-	| { type: "dimensions"; key: string; label: string };
+	| { type: "dimensions"; key: string; label: string }
+	| {
+			type: "select";
+			key: string;
+			label: string;
+			options: ReadonlyArray<{ label: string; value: string }>;
+	  };
 
 export type DimensionsValue = { width: number | null; height: number | null };
 
@@ -49,7 +55,11 @@ export type InferParams<T extends readonly SketchParameter[]> = {
 					? string
 					: K extends { type: "dimensions" }
 						? DimensionsValue
-						: never;
+						: K extends { type: "select" }
+							? K["options"] extends ReadonlyArray<{ value: infer V }>
+								? V
+								: never
+							: never;
 };
 
 export interface SketchContext<TParams extends Record<string, unknown>> {

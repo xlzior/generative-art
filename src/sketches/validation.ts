@@ -49,6 +49,18 @@ export function validateDefaultValue(
 				`Sketch ${sketchId} defaults.json key ${parameter.key} must be an object with width and height as numbers or null.`,
 			);
 		}
+	} else if (parameter.type === "select") {
+		if (typeof value !== "string") {
+			throw new TypeError(
+				`Sketch ${sketchId} defaults.json key ${parameter.key} must be a string matching one of the select options.`,
+			);
+		}
+		const validValues = parameter.options.map((o) => o.value);
+		if (!validValues.includes(value)) {
+			throw new TypeError(
+				`Sketch ${sketchId} defaults.json key ${parameter.key} has value "${value}" which is not a valid option. Valid options: ${validValues.join(", ")}`,
+			);
+		}
 	}
 }
 

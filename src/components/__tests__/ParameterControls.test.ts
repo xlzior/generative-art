@@ -14,6 +14,7 @@ function createMockSketch(parameters: SketchParameter[]) {
 		if (p.type === "number") defaults[p.key] = 50;
 		else if (p.type === "string") defaults[p.key] = "hello";
 		else if (p.type === "boolean") defaults[p.key] = true;
+		else if (p.type === "select") defaults[p.key] = p.options[0].value;
 		else if (p.type === "dimensions")
 			defaults[p.key] = { width: null, height: null };
 	}
@@ -53,6 +54,17 @@ const dimensionsParam: SketchParameter = {
 	key: "dimensions",
 	label: "Canvas Size",
 	type: "dimensions",
+};
+
+const selectParam: SketchParameter = {
+	key: "viewMode",
+	label: "View Mode",
+	type: "select",
+	options: [
+		{ label: "Parallel View", value: "parallel" },
+		{ label: "Depth Map", value: "depth" },
+		{ label: "Cross View", value: "cross" },
+	],
 };
 
 describe("ParameterControls", () => {
@@ -280,6 +292,46 @@ describe("ParameterControls", () => {
 
 			const labels = screen.getAllByText(/Size|Enabled|Label/i);
 			expect(labels).toHaveLength(3);
+		});
+	});
+
+	describe("select parameter", () => {
+		it("renders select element with options", () => {
+			const sketch = createMockSketch([selectParam]);
+			render(ParameterControls, {
+				props: {
+					sketch,
+					params: { viewMode: "parallel" },
+					onchange: handleChange,
+				},
+			});
+
+			expect(screen.getByLabelText("View Mode")).toBeInTheDocument();
+			expect(screen.getByDisplayValue("Parallel View")).toBeInTheDocument();
+
+			const select = screen.getByLabelText("View Mode");
+			const options = select.querySelectorAll("option");
+			expect(options).toHaveLength(3);
+			expect(options[0]).toHaveValue("parallel");
+			expect(options[1]).toHaveValue("depth");
+			expect(options[2]).toHaveValue("cross");
+		});
+
+		it("calls onchange with correct key/value when select changes", async () => {
+			const sketch = createMockSketch([selectParam]);
+			render(ParameterControls, {
+				props: {
+					sketch,
+					params: { viewMode: "parallel" },
+					onchange: handleChange,
+				},
+			});
+
+			const select = screen.getByLabelText("View Mode");
+			await fireEvent.change(select, { target: { value: "depth" } });
+
+			expect(onChangeCalls).toHaveLength(1);
+			expect(onChangeCalls[0]).toEqual(["viewMode", "depth"]);
 		});
 	});
 });
