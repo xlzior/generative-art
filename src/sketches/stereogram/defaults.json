@@ -1,5 +1,5 @@
 {
-	"viewMode": false,
+	"viewMode": "parallel",
 	"patternPeriod": 120,
 	"maxOffset": 12,
 	"objectScale": 0.26,

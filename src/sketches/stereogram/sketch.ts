@@ -55,7 +55,16 @@ function depthBlob(
 }
 
 const parameters = [
-	{ type: "boolean", key: "viewMode", label: "Show Depth Map" },
+	{
+		type: "select",
+		key: "viewMode",
+		label: "View Mode",
+		options: [
+			{ label: "Parallel View", value: "parallel" },
+			{ label: "Cross View", value: "cross" },
+			{ label: "Depth Map", value: "depth" },
+		],
+	},
 	{
 		type: "number",
 		key: "patternPeriod",
@@ -112,7 +121,7 @@ type Params = InferParams<typeof parameters>;
 export default defineSketch({
 	title: "Parallel Stereogram",
 	description:
-		"A random-dot autostereogram for parallel viewing. Toggle to show the depth map.",
+		"A random-dot autostereogram. Switch between parallel view, depth map, and cross view.",
 	date: "2026-04-28",
 	parameters,
 	create({ p, params, global }: SketchContext<Params>) {
@@ -193,8 +202,7 @@ export default defineSketch({
 			p.loadPixels();
 			const pixels = p.pixels;
 
-			if (!params.viewMode) {
-				// Stereogram rendering
+			if (params.viewMode === "parallel") {
 				for (let y = 0; y < height; y += 1) {
 					const rowOffset = y * width;
 					const rowPixels = new Uint8Array(width);
@@ -225,8 +233,7 @@ export default defineSketch({
 						pixels[pixelIndex + 3] = 255;
 					}
 				}
-			} else {
-				// Depth map rendering
+			} else if (params.viewMode === "depth") {
 				for (let y = 0; y < height; y += 1) {
 					const rowOffset = y * width;
 					for (let x = 0; x < width; x += 1) {
@@ -237,6 +244,38 @@ export default defineSketch({
 						pixels[pixelIndex] = gray;
 						pixels[pixelIndex + 1] = gray;
 						pixels[pixelIndex + 2] = gray;
+						pixels[pixelIndex + 3] = 255;
+					}
+				}
+			} else if (params.viewMode === "cross") {
+				for (let y = 0; y < height; y += 1) {
+					const rowOffset = y * width;
+					const rowPixels = new Uint8Array(width);
+
+					for (let x = 0; x < Math.min(period, width); x += 1) {
+						rowPixels[x] = rowTone(params.seed, y, x);
+					}
+
+					for (let x = 0; x < width; x += 1) {
+						const invertedDepth = 1 - depthMap[rowOffset + x];
+						const shift = Math.round(invertedDepth * maxOffset);
+						const repeatDistance = Math.max(1, period - shift);
+						const sourceX = x - repeatDistance;
+
+						if (x >= period && sourceX >= 0) {
+							rowPixels[x] = rowPixels[sourceX];
+						} else if (x >= period) {
+							rowPixels[x] = rowTone(params.seed, y, x);
+						}
+					}
+
+					for (let x = 0; x < width; x += 1) {
+						const tone = rowPixels[x];
+						const pixelIndex = (rowOffset + x) * 4;
+
+						pixels[pixelIndex] = tone;
+						pixels[pixelIndex + 1] = tone;
+						pixels[pixelIndex + 2] = tone;
 						pixels[pixelIndex + 3] = 255;
 					}
 				}
