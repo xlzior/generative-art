@@ -3,6 +3,7 @@ import { defineConfig } from "vite";
 import { createSaveDefaultsHandler } from "./src/vite/endpoint-utils.js";
 
 export default defineConfig({
+	base: "./",
 	plugins: [
 		svelte(),
 		{
