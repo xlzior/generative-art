@@ -39,3 +39,5 @@
 ## Features
 
 - [ ] Cross-view mode for stereogram
+- [ ] Publish repository
+- [ ] Deploy on GitHub Pages

@@ -1,68 +1,47 @@
-# Generative Art Sketchbook
+# Generative Art Playground
 
-A small sketchbook repo for learning code-based generative art with p5.js.
+A p5.js + Svelte 5 sketchbook framework for exploring code-based generative art.
 
-## Why this setup
+## Quick Start
 
-- Fast iteration in-browser with p5.js + Vite.
-- One place to collect many sketch ideas over time.
-- Designed for parameter tweaking and variation hunting.
+```bash
+pnpm install
+pnpm dev        # start Vite dev server
+pnpm build      # production build
+pnpm test:run   # unit tests (Vitest)
+pnpm test:visual # visual regression (Playwright)
+```
 
-## Quick start (pnpm)
+## Adding a New Sketch
 
-1. Install dependencies:
+1. Create `src/sketches/<name>/sketch.ts` and `defaults.json`
+2. Export a default `defineSketch({ title, description, date, parameters, create })` from `sketch.ts`
+3. Place numeric parameter defaults in `defaults.json` matching your parameter keys
+4. That's it — sketches are auto-discovered via `import.meta.glob`, no registry to update
 
-   ```bash
-   pnpm install
-   ```
+The sketch contract (`defineSketch` in `src/utils/defineSketch.ts`) validates that your module has a title, description, date, parameters array with valid types, and a create function. Duplicate IDs and missing defaults keys are caught at import time.
 
-2. Start the dev server:
+## Key Concepts
 
-   ```bash
-   pnpm dev
-   ```
+- **Seeded Randomness** — All sketches use `createRng()` from `src/utils/seeded-random.ts` instead of `Math.random()` or `p.random()`. Pass `?seed=N` in the URL for deterministic output, used by Playwright visual tests for stable snapshots. Falls back to `Math.random()` in normal usage.
 
-3. Open the local URL shown in the terminal.
+- **Animation Controller** — Animated sketches use an external `requestAnimationFrame` loop via `SketchAnimationController` instead of p5's internal draw loop. Sketches receive `animation` in their context and register a frame callback via `animation.onFrame()`. The controller calls `p.noLoop()` to prevent p5 from starting its own loop. Static sketches simply call `p.noLoop()` in their setup.
 
-## Included starter sketches
+- **Global Parameters** — Framework-managed parameters (currently `dimensions` for canvas width/height) are auto-injected into every sketch via `context.global`. Pass them to `attachResponsiveCanvas()` for fixed or auto-sized canvases. The global parameter list is extensible in `src/sketches/global-parameters.ts`.
 
-- 01 Grid Variations
-- 02 Flow Field Particles
-- 03 Fractal Tree
-- 04 L-System Plant
-- 05 Cellular Automata
+- **Theme Awareness** — Each sketch receives the current theme (`"dark"` | `"light"`) in its context. Use `themeAccent()` from `src/utils/colour.ts` to invert accent colours via HSL for the light theme. The theme is toggled in the UI and persisted to `localStorage`.
 
-Use the sketch selector and Regenerate button to quickly explore variations.
+- **Defaults Persistence** — Each sketch has a `defaults.json` with its default parameter values. Users can save overrides via the "Save As Default" button, which writes back through a Vite dev server endpoint (`/__sketch-defaults`). For static deployments, the `localStorageStore` is used instead.
 
-## Sketchbook workflow
+## Testing
 
-1. Create a folder under `src/sketches/<sketch-name>`.
-2. Add `sketch.ts` and `defaults.json` inside that folder.
-3. Export a default `defineSketch(...)` module from `sketch.ts`.
-4. The app auto-discovers `./*/sketch.ts`, so no manual registry entry is required.
-5. Save strong outputs as PNGs and curate your favorite series.
+- **Unit tests** — Vitest with `@testing-library/svelte`, run via `pnpm test:run`
+- **Visual regression** — Playwright (Chromium only), uses `?seed=N` for deterministic output. Run with `pnpm test:visual` or update snapshots with `pnpm test:visual:update`
 
-## Sketch contract
+## Toolchain
 
-The sketch contract is enforced in code by [src/utils/defineSketch.ts](src/utils/defineSketch.ts). App-shell changes should primarily touch shared helpers such as [src/utils/canvas-size.ts](src/utils/canvas-size.ts) and [src/utils/responsive-canvas.ts](src/utils/responsive-canvas.ts), while each sketch only owns its own drawing logic and theme-aware styling.
-
-Each sketch also defines numeric slider metadata (`parameters`) in `sketch.ts`, while default values live in `defaults.json`.
-
-## Folder split
-
-- `src/sketches` contains artwork modules and the sketch registry.
-- `src/utils` contains shared helpers used by sketches and shell wiring.
-
-## Parameters UI
-
-- The left panel renders sliders from each sketch's `parameters` array.
-- `Reset To Defaults` restores values from that sketch's `defaults.json`.
-- `Save As Default` writes updated defaults back to `src/sketches/<sketch>/defaults.json` through the local Vite dev server endpoint.
-
-## Next ideas to add
-
-- Reaction diffusion
-- Voronoi / Delaunay studies
-- Signed distance field patterns
-- Audio-reactive visuals
-- Plotter-friendly SVG exports
+- **Package manager**: pnpm
+- **Framework**: Svelte 5 (runes), Vite, p5.js
+- **Language**: TypeScript (strict mode, `moduleResolution: "bundler"`)
+- **Formatter/linter**: Biome (tabs, double quotes in JS)
+- **Git hooks**: lefthook — pre-commit runs Biome check, then `tsc --noEmit`, then `svelte-check --threshold warning`, then tests
