@@ -35,7 +35,3 @@
 ## Bug fixes
 
 - [ ] Add sketch specific speed multiplier so that each animated sketch can be scaled to animate at a speed that makes sense for it rather than a constant frame rate for all animated sketches
-
-## Features
-
-- [ ] Cross-view mode for stereogram
