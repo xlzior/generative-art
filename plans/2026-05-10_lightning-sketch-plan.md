@@ -2,7 +2,7 @@
 
 ## Overview
 
-An animated generative-art sketch that simulates lightning strikes using recursive midpoint displacement with branching. Based on `plans/lightning-sketch.md`.
+An animated generative-art sketch that simulates lightning strikes using recursive midpoint displacement with branching. Based on `plans/2026-05-10_lightning-sketch.md`.
 
 ## New Files
 

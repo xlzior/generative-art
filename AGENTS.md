@@ -69,6 +69,13 @@ All sketches MUST use `rng()` from `src/utils/seeded-random.ts` for any randomne
 - Use `rng` passed in `SketchContext` — never use `Math.random()` or `p.random()`
 - The seed is only used in Playwright tests; normal app usage falls back to `Math.random()`
 
+## Plans
+
+Plan documents in `plans/` follow this naming convention:
+- All lowercase, kebab-case
+- Prefixed with the date in `YYYY-MM-DD_` format
+- Example: `2026-05-03_sketch-gallery-homepage.md`
+
 ## Agent conventions
 
 - Clean up Vite dev servers you start (use `kill` or similar when done).
