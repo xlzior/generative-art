@@ -19,20 +19,23 @@ beforeEach(() => {
 });
 
 // Mock sketches index to prevent loading real sketches
-vi.mock("../sketches/index.js", () => ({
-	sketches: [
-		{
-			id: "test-sketch",
-			title: "Test Sketch",
-			date: "2026-01-01",
-			description: "Test",
-			parameters: [],
-			defaults: {},
-			filePath: "./test-sketch/sketch.ts",
-			create: vi.fn(),
-		} as unknown as SketchModuleWithDefaults<Record<string, unknown>>,
-	],
-}));
+vi.mock("../sketches/index.js", () => {
+	const sketch = {
+		id: "test-sketch",
+		title: "Test Sketch",
+		date: "2026-01-01",
+		description: "Test",
+		parameters: [],
+		defaults: {},
+		filePath: "./test-sketch/sketch.ts",
+		create: vi.fn(),
+	} as unknown as SketchModuleWithDefaults<Record<string, unknown>>;
+
+	return {
+		sketches: [sketch],
+		getSketchById: (id: string) => (id === "test-sketch" ? sketch : undefined),
+	};
+});
 
 // Mock p5 module
 vi.mock("p5", () => {

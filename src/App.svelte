@@ -7,10 +7,15 @@ import ParameterControls from "./components/ParameterControls.svelte";
 import SketchGallery from "./components/SketchGallery.svelte";
 import ThemeToggle from "./components/ThemeToggle.svelte";
 import {
+	initRouter,
+	navigateToGallery,
+	navigateToSketch,
+} from "./sketch-router.svelte.js";
+import {
 	globalDefaults,
 	globalParameters,
 } from "./sketches/global-parameters.js";
-import { sketches } from "./sketches/index.js";
+import { getSketchById, sketches } from "./sketches/index.js";
 import { createAnimationController } from "./utils/animation-controller.js";
 import { store } from "./utils/defaults-store.js";
 import { getSeedFromUrl } from "./utils/seed.js";
@@ -18,13 +23,13 @@ import { createRng } from "./utils/seeded-random.js";
 
 let currentTheme = $state("dark");
 let currentSketchId = $state(null);
+let lastMountedSketchId = $state(null);
 let currentP5 = $state(null);
 let currentController = $state(null);
 let paramsBySketch = $state(new Map());
 let currentParams = $state(null);
 let currentSketchModule = $state(null);
 let isGallery = $derived(currentSketchId === null);
-let lastMountedSketchId = $state(null);
 
 // --- Reactivity ---
 
@@ -40,13 +45,7 @@ $effect(() => {
 	}
 });
 
-const prefersDark = window.matchMedia("(prefers-color-scheme: dark)");
-
 // --- Helper functions ---
-
-function getSketchById(sketchId) {
-	return sketches.find((entry) => entry.id === sketchId);
-}
 
 function resolveInitialTheme() {
 	const stored = window.localStorage.getItem("theme");
@@ -74,37 +73,12 @@ function getParamsForSketch(sketch) {
 	return paramsBySketch.get(sketch.id);
 }
 
-function resolveSketchFromUrl() {
-	const params = new URLSearchParams(window.location.search);
-	const sketchFromUrl = params.get("sketch");
-	if (sketchFromUrl && getSketchById(sketchFromUrl)) {
-		return sketchFromUrl;
-	}
-	return null;
-}
-
-// --- Navigation ---
-
-function navigateToSketch(sketchId) {
-	const url = new URL(window.location.href);
-	url.searchParams.set("sketch", sketchId);
-	window.history.pushState({}, "", url);
-	currentSketchId = sketchId;
-}
-
-function navigateToGallery() {
-	const url = new URL(window.location.href);
-	url.searchParams.delete("sketch");
-	window.history.pushState({}, "", url);
-	currentSketchId = null;
-}
-
 function handleThemeToggle() {
 	const nextTheme = currentTheme === "dark" ? "light" : "dark";
 	applyTheme(nextTheme);
 	window.localStorage.setItem("theme", nextTheme);
 	if (currentSketchId) {
-		mountSketch(currentSketchId, { updateUrl: false, redrawControls: false });
+		mountSketch(currentSketchId);
 	}
 }
 
@@ -212,10 +186,6 @@ function handleSavePNG() {
 	}
 }
 
-function handleSketchChange(sketchId) {
-	navigateToSketch(sketchId);
-}
-
 function handleParamChange(key, value) {
 	const sketch = getSketchById(currentSketchId);
 	if (!sketch) return;
@@ -241,12 +211,10 @@ function handleGlobalParamChange(key, value) {
 
 onMount(() => {
 	applyTheme(resolveInitialTheme());
-	currentSketchId = resolveSketchFromUrl();
 
-	function handlePopState() {
-		currentSketchId = resolveSketchFromUrl();
-	}
-	window.addEventListener("popstate", handlePopState);
+	const cleanupRouter = initRouter((id) => {
+		currentSketchId = id;
+	});
 
 	const handleKeyDown = (event) => {
 		if (
@@ -254,14 +222,14 @@ onMount(() => {
 			(event.key.toLowerCase() === "r" || event.code === "Space")
 		) {
 			event.preventDefault();
-			mountSketch(currentSketchId, { updateUrl: false });
+			mountSketch(currentSketchId);
 		}
 	};
 	document.addEventListener("keydown", handleKeyDown);
 
 	return () => {
 		document.removeEventListener("keydown", handleKeyDown);
-		window.removeEventListener("popstate", handlePopState);
+		cleanupRouter();
 		unmountSketch();
 	};
 });
@@ -297,7 +265,7 @@ onMount(() => {
 					<select
 						id="sketch-select"
 						value={currentSketchId}
-						onchange={(e) => handleSketchChange(e.target.value)}
+						onchange={(e) => navigateToSketch(e.target.value)}
 					>
 						{#each sketches as sketch (sketch.id)}
 							<option value={sketch.id}>{sketch.title}</option>
