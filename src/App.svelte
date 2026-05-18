@@ -7,6 +7,12 @@ import ParameterControls from "./components/ParameterControls.svelte";
 import SketchGallery from "./components/SketchGallery.svelte";
 import ThemeToggle from "./components/ThemeToggle.svelte";
 import {
+	getParamsForSketch,
+	resetParams,
+	saveDefaults,
+	updateParam,
+} from "./sketch-params.svelte.js";
+import {
 	initRouter,
 	navigateToGallery,
 	navigateToSketch,
@@ -17,7 +23,6 @@ import {
 } from "./sketches/global-parameters.js";
 import { getSketchById, sketches } from "./sketches/index.js";
 import { createAnimationController } from "./utils/animation-controller.js";
-import { store } from "./utils/defaults-store.js";
 import { getSeedFromUrl } from "./utils/seed.js";
 import { createRng } from "./utils/seeded-random.js";
 
@@ -26,7 +31,6 @@ let currentSketchId = $state(null);
 let lastMountedSketchId = $state(null);
 let currentP5 = $state(null);
 let currentController = $state(null);
-let paramsBySketch = $state(new Map());
 let currentParams = $state(null);
 let currentSketchModule = $state(null);
 let isGallery = $derived(currentSketchId === null);
@@ -60,19 +64,6 @@ function applyTheme(theme) {
 	document.documentElement.setAttribute("data-theme", theme);
 }
 
-function cloneDefaults(sketch) {
-	return { ...sketch.defaults };
-}
-
-function getParamsForSketch(sketch) {
-	if (!paramsBySketch.has(sketch.id)) {
-		const stored = store.load(sketch.id);
-		paramsBySketch.set(sketch.id, stored ?? cloneDefaults(sketch));
-		paramsBySketch = new Map(paramsBySketch);
-	}
-	return paramsBySketch.get(sketch.id);
-}
-
 function handleThemeToggle() {
 	const nextTheme = currentTheme === "dark" ? "light" : "dark";
 	applyTheme(nextTheme);
@@ -100,7 +91,7 @@ function mountSketch(sketchId, options = {}) {
 	const sketch = getSketchById(sketchId);
 	if (!sketch) return;
 
-	const allParams = getParamsForSketch(sketch);
+	const allParams = getParamsForSketch(sketchId);
 
 	const globalParams = {};
 	for (const param of globalParameters) {
@@ -158,25 +149,14 @@ function handleRegenerate() {
 }
 
 function handleResetParams() {
-	const sketch = getSketchById(currentSketchId);
-	if (!sketch) return;
-	paramsBySketch.set(sketch.id, cloneDefaults(sketch));
-	paramsBySketch = new Map(paramsBySketch);
+	if (!currentSketchId) return;
+	resetParams(currentSketchId);
 	mountSketch(currentSketchId, { updateUrl: false });
 }
 
 async function handleSaveDefaults() {
-	const sketch = sketches.find((entry) => entry.id === currentSketchId);
-	if (!sketch) return;
-
-	const params = getParamsForSketch(sketch);
-
-	try {
-		await store.save(currentSketchId, params);
-		sketch.defaults = { ...params };
-	} catch (error) {
-		console.error("Failed to save defaults:", error);
-	}
+	if (!currentSketchId) return;
+	await saveDefaults(currentSketchId);
 }
 
 function handleSavePNG() {
@@ -187,27 +167,10 @@ function handleSavePNG() {
 }
 
 function handleParamChange(key, value) {
-	const sketch = getSketchById(currentSketchId);
-	if (!sketch) return;
-	const params = getParamsForSketch(sketch);
-	params[key] = value;
-	paramsBySketch.set(sketch.id, { ...params });
-	paramsBySketch = new Map(paramsBySketch);
+	if (!currentSketchId) return;
+	updateParam(currentSketchId, key, value);
 	mountSketch(currentSketchId, { updateUrl: false, redrawControls: false });
 }
-
-function handleGlobalParamChange(key, value) {
-	const sketch = getSketchById(currentSketchId);
-	if (!sketch) return;
-	const params = getParamsForSketch(sketch);
-	params[key] = value;
-	paramsBySketch.set(sketch.id, { ...params });
-	paramsBySketch = new Map(paramsBySketch);
-	mountSketch(currentSketchId, { updateUrl: false, redrawControls: false });
-}
-
-// --- Reactivity ---
-// Removed $effect - using explicit mount calls in navigateToSketch and popstate handler
 
 onMount(() => {
 	applyTheme(resolveInitialTheme());
@@ -300,7 +263,7 @@ onMount(() => {
 						{#if currentSketchModule}
 							<DimensionsControl
 								dimensions={(currentParams?.dimensions ?? globalDefaults.dimensions)}
-								onchange={(d) => handleGlobalParamChange("dimensions", d)}
+								onchange={(d) => handleParamChange("dimensions", d)}
 							/>
 						{/if}
 
