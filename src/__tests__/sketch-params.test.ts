@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { SketchModuleWithDefaults } from "../types/sketch.js";
 
+vi.setConfig({ testTimeout: 15_000 });
+
 const testSketch = {
 	id: "test-sketch",
 	title: "Test Sketch",

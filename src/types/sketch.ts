@@ -20,6 +20,14 @@ export interface SketchAnimationController {
 	 * Stop the animation loop.
 	 */
 	stop: () => void;
+	/**
+	 * Stop the animation loop and clean up.
+	 */
+	destroy: () => void;
+	/**
+	 * Attach to a p5 instance, stopping p5's internal draw loop.
+	 */
+	attachToP5: (p: p5) => void;
 }
 
 export type SketchParameter =

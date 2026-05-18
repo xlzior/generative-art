@@ -1,13 +1,18 @@
 <script>
 import { ArrowLeft, Download, RefreshCw, RotateCcw, Save } from "lucide-svelte";
-import p5 from "p5";
 import { onMount } from "svelte";
 import DimensionsControl from "./components/DimensionsControl.svelte";
 import ParameterControls from "./components/ParameterControls.svelte";
 import SketchGallery from "./components/SketchGallery.svelte";
 import ThemeToggle from "./components/ThemeToggle.svelte";
 import {
-	getParamsForSketch,
+	lifecycle,
+	mountSketch,
+	regenerate,
+	savePNG,
+	unmountSketch,
+} from "./sketch-lifecycle.svelte.js";
+import {
 	resetParams,
 	saveDefaults,
 	updateParam,
@@ -17,22 +22,12 @@ import {
 	navigateToGallery,
 	navigateToSketch,
 } from "./sketch-router.svelte.js";
-import {
-	globalDefaults,
-	globalParameters,
-} from "./sketches/global-parameters.js";
-import { getSketchById, sketches } from "./sketches/index.js";
-import { createAnimationController } from "./utils/animation-controller.js";
-import { getSeedFromUrl } from "./utils/seed.js";
-import { createRng } from "./utils/seeded-random.js";
+import { globalDefaults } from "./sketches/global-parameters.js";
+import { sketches } from "./sketches/index.js";
 
 let currentTheme = $state("dark");
 let currentSketchId = $state(null);
 let lastMountedSketchId = $state(null);
-let currentP5 = $state(null);
-let currentController = $state(null);
-let currentParams = $state(null);
-let currentSketchModule = $state(null);
 let isGallery = $derived(currentSketchId === null);
 
 // --- Reactivity ---
@@ -41,7 +36,7 @@ $effect(() => {
 	if (currentSketchId) {
 		if (currentSketchId !== lastMountedSketchId) {
 			lastMountedSketchId = currentSketchId;
-			mountSketch(currentSketchId);
+			mountSketch(currentSketchId, currentTheme);
 		}
 	} else {
 		lastMountedSketchId = null;
@@ -69,89 +64,20 @@ function handleThemeToggle() {
 	applyTheme(nextTheme);
 	window.localStorage.setItem("theme", nextTheme);
 	if (currentSketchId) {
-		mountSketch(currentSketchId);
-	}
-}
-
-// --- Sketch lifecycle ---
-
-function unmountSketch() {
-	if (currentController) {
-		currentController.destroy();
-		currentController = null;
-	}
-	if (currentP5) {
-		currentP5.remove();
-		currentP5 = null;
-	}
-}
-
-function mountSketch(sketchId, options = {}) {
-	const { redrawControls = true, updateUrl = true } = options;
-	const sketch = getSketchById(sketchId);
-	if (!sketch) return;
-
-	const allParams = getParamsForSketch(sketchId);
-
-	const globalParams = {};
-	for (const param of globalParameters) {
-		globalParams[param.key] = allParams[param.key] ?? globalDefaults[param.key];
-	}
-
-	const sketchParams = {};
-	for (const param of sketch.parameters) {
-		sketchParams[param.key] = allParams[param.key];
-	}
-
-	unmountSketch();
-
-	currentSketchModule = sketch;
-	currentParams = allParams;
-
-	const container = document.getElementById("canvas-container");
-	if (!container) return;
-
-	const seed = getSeedFromUrl();
-	const rng = seed !== undefined ? createRng(seed) : () => Math.random();
-	const isTest = !!window.__CREATE_TEST_CTRL__;
-	const controller = isTest
-		? window.__CREATE_TEST_CTRL__()
-		: createAnimationController();
-
-	if (!isTest) {
-		currentController = controller;
-	}
-
-	currentP5 = new p5((p) => {
-		if (!isTest) {
-			controller.attachToP5(p);
-		}
-		sketch.create({
-			p,
-			theme: currentTheme,
-			params: sketchParams,
-			global: globalParams,
-			rng,
-			animation: controller,
-		});
-	}, container);
-	document.title = sketch.title;
-
-	if (redrawControls && currentSketchModule && currentParams) {
-		currentParams = { ...currentParams };
+		mountSketch(currentSketchId, nextTheme);
 	}
 }
 
 // --- Event handlers ---
 
 function handleRegenerate() {
-	mountSketch(currentSketchId, { updateUrl: false });
+	regenerate(currentSketchId, currentTheme);
 }
 
 function handleResetParams() {
 	if (!currentSketchId) return;
 	resetParams(currentSketchId);
-	mountSketch(currentSketchId, { updateUrl: false });
+	mountSketch(currentSketchId, currentTheme);
 }
 
 async function handleSaveDefaults() {
@@ -160,16 +86,13 @@ async function handleSaveDefaults() {
 }
 
 function handleSavePNG() {
-	if (currentP5) {
-		const stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-");
-		currentP5.saveCanvas(`sketch-${currentSketchId}-${stamp}`, "png");
-	}
+	savePNG(currentSketchId);
 }
 
 function handleParamChange(key, value) {
 	if (!currentSketchId) return;
 	updateParam(currentSketchId, key, value);
-	mountSketch(currentSketchId, { updateUrl: false, redrawControls: false });
+	mountSketch(currentSketchId, currentTheme, { redrawControls: false });
 }
 
 onMount(() => {
@@ -185,7 +108,7 @@ onMount(() => {
 			(event.key.toLowerCase() === "r" || event.code === "Space")
 		) {
 			event.preventDefault();
-			mountSketch(currentSketchId);
+			regenerate(currentSketchId, currentTheme);
 		}
 	};
 	document.addEventListener("keydown", handleKeyDown);
@@ -251,18 +174,18 @@ onMount(() => {
 
 					<section class="params-panel" aria-label="Sketch parameters">
 						<p class="params-heading">Parameters</p>
-						{#if currentSketchModule && currentParams}
+						{#if lifecycle.currentSketchModule && lifecycle.currentParams}
 							<ParameterControls
-								sketch={currentSketchModule}
-								params={currentParams}
+								sketch={lifecycle.currentSketchModule}
+								params={lifecycle.currentParams}
 								onchange={handleParamChange}
 								theme={currentTheme}
 							/>
 						{/if}
 
-						{#if currentSketchModule}
+						{#if lifecycle.currentSketchModule}
 							<DimensionsControl
-								dimensions={(currentParams?.dimensions ?? globalDefaults.dimensions)}
+								dimensions={(lifecycle.currentParams?.dimensions ?? globalDefaults.dimensions)}
 								onchange={(d) => handleParamChange("dimensions", d)}
 							/>
 						{/if}
