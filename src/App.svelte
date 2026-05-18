@@ -131,7 +131,7 @@ onMount(() => {
 			{#if !isGallery}
 				<button id="back-to-gallery" type="button" onclick={navigateToGallery}>
 					<span class="button-content">
-						<ArrowLeft class="button-icon" aria-hidden="true" />
+						<ArrowLeft aria-hidden="true" />
 						<span>Back to gallery</span>
 					</span>
 				</button>
@@ -163,14 +163,14 @@ onMount(() => {
 
 					<button id="regenerate" type="button" onclick={handleRegenerate}>
 						<span class="button-content">
-							<RefreshCw class="button-icon" aria-hidden="true" />
+							<RefreshCw aria-hidden="true" />
 							<span>Regenerate</span>
 						</span>
 					</button>
 
 					<button id="save-frame" type="button" onclick={handleSavePNG}>
 						<span class="button-content">
-							<Download class="button-icon" aria-hidden="true" />
+							<Download aria-hidden="true" />
 							<span>Save PNG</span>
 						</span>
 					</button>
@@ -196,13 +196,13 @@ onMount(() => {
 						<div class="params-actions">
 							<button id="reset-params" type="button" onclick={handleResetParams}>
 								<span class="button-content">
-									<RotateCcw class="button-icon" aria-hidden="true" />
+									<RotateCcw aria-hidden="true" />
 									<span>Reset To Defaults</span>
 								</span>
 							</button>
 							<button id="save-defaults" type="button" onclick={handleSaveDefaults}>
 								<span class="button-content">
-									<Save class="button-icon" aria-hidden="true" />
+									<Save aria-hidden="true" />
 									<span id="save-defaults-label">Save As Default</span>
 								</span>
 							</button>
@@ -335,7 +335,7 @@ onMount(() => {
 		gap: 0.35rem;
 	}
 
-	.button-icon {
+	.button-content :global(svg) {
 		width: 0.82rem;
 		height: 0.82rem;
 		flex-shrink: 0;
