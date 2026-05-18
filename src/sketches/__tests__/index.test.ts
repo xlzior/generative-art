@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { SketchDefinition } from "../../types/sketch.js";
-import { discoverSketches } from "../index.js";
+import { discoverSketches, getSketchById } from "../index.js";
 
 // Helper to create a mock sketch module
 function createMockSketch(date: string, title: string) {
@@ -159,5 +159,15 @@ describe("discoverSketches()", () => {
 				"Missing defaults.json for sketch folder: bad-defaults",
 			);
 		});
+	});
+});
+
+describe("getSketchById()", () => {
+	it("returns undefined for unknown id with empty sketches array", () => {
+		expect(getSketchById("nonexistent")).toBeUndefined();
+	});
+
+	it("returns undefined for empty string", () => {
+		expect(getSketchById("")).toBeUndefined();
 	});
 });

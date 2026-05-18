@@ -70,3 +70,9 @@ const defaultsByFolder = Object.fromEntries(
 
 export const sketches: SketchModuleWithDefaults<Record<string, unknown>>[] =
 	discoverSketches(sketchEntries, defaultsByFolder);
+
+export function getSketchById(
+	id: string,
+): SketchModuleWithDefaults<Record<string, unknown>> | undefined {
+	return sketches.find((s) => s.id === id);
+}
