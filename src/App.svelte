@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
 import { ArrowLeft, Download, RefreshCw, RotateCcw, Save } from "lucide-svelte";
 import { onMount } from "svelte";
 import DimensionsControl from "./components/DimensionsControl.svelte";
@@ -24,10 +24,11 @@ import {
 } from "./sketch-router.svelte.js";
 import { globalDefaults } from "./sketches/global-parameters.js";
 import { sketches } from "./sketches/index.js";
+import type { DimensionsValue, Theme } from "./types/sketch.js";
 
-let currentTheme = $state("dark");
-let currentSketchId = $state(null);
-let lastMountedSketchId = $state(null);
+let currentTheme = $state<Theme>("dark");
+let currentSketchId = $state<string | null>(null);
+let lastMountedSketchId = $state<string | null>(null);
 let isGallery = $derived(currentSketchId === null);
 
 // --- Reactivity ---
@@ -46,7 +47,7 @@ $effect(() => {
 
 // --- Helper functions ---
 
-function resolveInitialTheme() {
+function resolveInitialTheme(): Theme {
 	const stored = window.localStorage.getItem("theme");
 	if (stored === "light" || stored === "dark") {
 		return stored;
@@ -54,7 +55,7 @@ function resolveInitialTheme() {
 	return "dark";
 }
 
-function applyTheme(theme) {
+function applyTheme(theme: Theme) {
 	currentTheme = theme;
 	document.documentElement.setAttribute("data-theme", theme);
 }
@@ -71,6 +72,7 @@ function handleThemeToggle() {
 // --- Event handlers ---
 
 function handleRegenerate() {
+	if (!currentSketchId) return;
 	regenerate(currentSketchId, currentTheme);
 }
 
@@ -86,10 +88,11 @@ async function handleSaveDefaults() {
 }
 
 function handleSavePNG() {
+	if (!currentSketchId) return;
 	savePNG(currentSketchId);
 }
 
-function handleParamChange(key, value) {
+function handleParamChange(key: string, value: unknown) {
 	if (!currentSketchId) return;
 	updateParam(currentSketchId, key, value);
 	mountSketch(currentSketchId, currentTheme, { redrawControls: false });
@@ -98,11 +101,11 @@ function handleParamChange(key, value) {
 onMount(() => {
 	applyTheme(resolveInitialTheme());
 
-	const cleanupRouter = initRouter((id) => {
+	const cleanupRouter = initRouter((id: string | null) => {
 		currentSketchId = id;
 	});
 
-	const handleKeyDown = (event) => {
+	const handleKeyDown = (event: KeyboardEvent) => {
 		if (
 			currentSketchId &&
 			(event.key.toLowerCase() === "r" || event.code === "Space")
@@ -151,7 +154,7 @@ onMount(() => {
 					<select
 						id="sketch-select"
 						value={currentSketchId}
-						onchange={(e) => navigateToSketch(e.target.value)}
+						onchange={(e: Event) => navigateToSketch((e.target as HTMLSelectElement).value)}
 					>
 						{#each sketches as sketch (sketch.id)}
 							<option value={sketch.id}>{sketch.title}</option>
@@ -186,7 +189,7 @@ onMount(() => {
 						{#if lifecycle.currentSketchModule}
 							<DimensionsControl
 								dimensions={(lifecycle.currentParams?.dimensions ?? globalDefaults.dimensions)}
-								onchange={(d) => handleParamChange("dimensions", d)}
+								onchange={(d: DimensionsValue) => handleParamChange("dimensions", d)}
 							/>
 						{/if}
 
