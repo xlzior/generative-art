@@ -27,7 +27,6 @@ describe("animation-controller", () => {
 		const callback = vi.fn();
 		controller.onFrame(callback);
 
-		// Trigger the scheduled RAF callback
 		expect(global.requestAnimationFrame).toHaveBeenCalled();
 		expect(rafCallbacks.length).toBeGreaterThan(0);
 	});
@@ -37,14 +36,50 @@ describe("animation-controller", () => {
 		const frames: number[] = [];
 		controller.onFrame((fc) => frames.push(fc));
 
-		// Simulate multiple animation frames
+		// First rAF initializes lastTime, no renderer call
 		rafCallbacks[0]?.(0);
-		rafCallbacks[1]?.(1);
-		rafCallbacks[2]?.(2);
+		// Second rAF with sufficient elapsed time triggers first tick
+		rafCallbacks[1]?.(20);
+		// Third rAF triggers second tick
+		rafCallbacks[2]?.(40);
 
 		expect(frames[0]).toBe(0);
 		expect(frames[1]).toBe(1);
-		expect(frames[2]).toBe(2);
+		expect(frames[2]).toBeUndefined(); // only 2 ticks with these timestamps
+	});
+
+	it("respects speed < 1 (fewer ticks per real time)", () => {
+		const controller = createAnimationController();
+		const frames: number[] = [];
+		controller.speed = 0.5;
+		controller.onFrame((fc) => frames.push(fc));
+
+		// First rAF initializes lastTime
+		rafCallbacks[0]?.(0);
+		// With speed=0.5, 20ms accumulates to 10 — below TICK_DURATION
+		rafCallbacks[1]?.(20);
+		expect(frames.length).toBe(0);
+
+		// Another 20ms = 20 accumulated → triggers tick
+		rafCallbacks[2]?.(40);
+		expect(frames[0]).toBe(0);
+	});
+
+	it("respects speed > 1 (more ticks per real time)", () => {
+		const controller = createAnimationController();
+		const frames: number[] = [];
+		controller.speed = 2;
+		controller.onFrame((fc) => frames.push(fc));
+
+		// First rAF initializes lastTime
+		rafCallbacks[0]?.(0);
+		// 10ms * 2 = 20 accumulated → triggers 1 tick
+		rafCallbacks[1]?.(10);
+		expect(frames[0]).toBe(0);
+
+		// Another 10ms * 2 = 20 accumulated → triggers another tick
+		rafCallbacks[2]?.(20);
+		expect(frames[1]).toBe(1);
 	});
 
 	it("stop() stops calling callback", () => {
@@ -52,12 +87,18 @@ describe("animation-controller", () => {
 		const callback = vi.fn();
 		controller.onFrame(callback);
 
-		// First frame
+		// First rAF initializes lastTime
 		rafCallbacks[0]?.(0);
+		// Second rAF triggers first tick
+		rafCallbacks[1]?.(20);
 		expect(callback).toHaveBeenCalledTimes(1);
 
 		controller.stop();
 		expect(global.cancelAnimationFrame).toHaveBeenCalled();
+
+		// Further rAF callbacks should not fire (animating = false)
+		rafCallbacks[2]?.(40);
+		expect(callback).toHaveBeenCalledTimes(1);
 	});
 
 	it("destroy() stops animation and nulls callback", () => {
@@ -83,10 +124,8 @@ describe("animation-controller", () => {
 		controller.destroy();
 		expect(global.cancelAnimationFrame).toHaveBeenCalled();
 
-		// Reset mock and call destroy again - should not throw
 		vi.clearAllMocks();
 		controller.destroy();
-		// Second destroy should not call cancelAnimationFrame again (rafId is null)
 		expect(global.cancelAnimationFrame).not.toHaveBeenCalled();
 	});
 
@@ -96,5 +135,24 @@ describe("animation-controller", () => {
 
 		controller.attachToP5(p as unknown as p5);
 		expect(p.noLoop).toHaveBeenCalled();
+	});
+
+	it("speed defaults to 1", () => {
+		const controller = createAnimationController();
+		expect(controller.speed).toBe(1);
+	});
+
+	it("speed is clamped to minimum of 0.01", () => {
+		const controller = createAnimationController();
+		controller.speed = 0;
+		expect(controller.speed).toBe(0.01);
+	});
+
+	it("speed accepts valid values", () => {
+		const controller = createAnimationController();
+		controller.speed = 0.5;
+		expect(controller.speed).toBe(0.5);
+		controller.speed = 2;
+		expect(controller.speed).toBe(2);
 	});
 });

@@ -66,6 +66,14 @@ const parameters = [
 		max: 4,
 		step: 0.25,
 	},
+	{
+		type: "number",
+		key: "speed",
+		label: "Speed",
+		min: 0.05,
+		max: 2,
+		step: 0.05,
+	},
 	{ type: "colour", key: "accentColour", label: "Accent Colour" },
 ] as const satisfies readonly SketchParameter[];
 
@@ -257,6 +265,7 @@ export default defineSketch({
 		});
 
 		if (animation) {
+			animation.speed = params.speed;
 			animation.onFrame(() => {
 				p.background(backgroundColor);
 

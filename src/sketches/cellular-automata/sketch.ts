@@ -28,11 +28,11 @@ const parameters = [
 	},
 	{
 		type: "number",
-		key: "frameRate",
-		label: "Frame Rate",
-		min: 2,
-		max: 30,
-		step: 1,
+		key: "speed",
+		label: "Speed",
+		min: 0.05,
+		max: 2,
+		step: 0.05,
 	},
 	{
 		type: "number",
@@ -94,7 +94,6 @@ export default defineSketch({
 			cols = Math.max(1, Math.floor(p.width / cellSize));
 			rows = Math.max(1, Math.floor(p.height / cellSize));
 			board = randomBoard();
-			p.frameRate(Math.max(1, Math.floor(params.frameRate)));
 		}
 
 		function countNeighbors(x: number, y: number): number {
@@ -126,6 +125,7 @@ export default defineSketch({
 
 		// Animated sketch: use animation controller (no fallback - static mode not supported)
 		if (animation) {
+			animation.speed = params.speed;
 			animation.onFrame((frameCount) => {
 				p.background(backgroundColor);
 

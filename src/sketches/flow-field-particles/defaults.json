@@ -7,5 +7,6 @@
 	"strokeWeight": 2.4,
 	"trailAlpha": 12,
 	"strokeAlpha": 90,
+	"speed": 1,
 	"accentColour": "#ffffff"
 }

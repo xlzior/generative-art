@@ -17,6 +17,11 @@ export interface SketchAnimationController {
 	 */
 	onFrame: (renderer: (frameCount: number) => void) => void;
 	/**
+	 * Speed multiplier for the animation (default: 1).
+	 * Clamped to >= 0.01. 0.5 = half-speed, 2 = double-speed.
+	 */
+	speed: number;
+	/**
 	 * Stop the animation loop.
 	 */
 	stop: () => void;

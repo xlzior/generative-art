@@ -26,6 +26,7 @@ export async function gotoSketch(
 	// The controller stores the callback without calling it immediately
 	await page.addInitScript(() => {
 		window.__CREATE_TEST_CTRL__ = () => ({
+			speed: 1,
 			onFrame: (cb: (frameCount: number) => void) => {
 				// Store callback for later invocation by waitForRender
 				window.__TEST_FRAME_CB__ = cb;
