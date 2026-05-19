@@ -5,7 +5,7 @@
 	"ttlMin": 100,
 	"ttlMax": 280,
 	"strokeWeight": 2.4,
-	"trailAlpha": 12,
+	"trailAlpha": 25,
 	"strokeAlpha": 90,
 	"speed": 1,
 	"accentColour": "#ffffff"
