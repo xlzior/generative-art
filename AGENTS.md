@@ -88,5 +88,6 @@ Plan documents in `plans/` follow this naming convention:
 ## Agent conventions
 
 - Clean up Vite dev servers you start (use `kill` or similar when done).
-- Never kill the Vite server on port 5173 — that is the user's dev server.
+- Never kill the Vite server on port 5173 without asking. To kill it safely, use `./bin/kill-port 5173` or `pnpm kill:port 5173` — this verifies the process is Vite before killing.
+- `bin/kill-port` can kill Vite on any port: `./bin/kill-port 4173`
 - If you change the application in a way that makes this file outdated, update `AGENTS.md` to match.

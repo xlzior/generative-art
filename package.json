@@ -13,7 +13,8 @@
 		"test:run": "vitest run",
 		"test:visual": "playwright test",
 		"test:visual:update": "playwright test --update-snapshots",
-		"test:visual:ui": "playwright test --ui"
+		"test:visual:ui": "playwright test --ui",
+		"kill:port": "./bin/kill-port"
 	},
 	"dependencies": {
 		"lucide": "^1.11.0",

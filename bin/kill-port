@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+port="${1:-5173}"
+pid=$(lsof -ti :"$port" 2>/dev/null || true)
+
+if [ -z "$pid" ]; then
+	echo "Nothing running on port $port"
+	exit 1
+fi
+
+cmd=$(ps -p "$pid" -o command= 2>/dev/null || true)
+
+if echo "$cmd" | grep -qi vite; then
+	kill "$pid" && echo "Killed Vite (PID $pid) on port $port"
+else
+	echo "PID $pid on port $port is not Vite — refusing to kill: $cmd" >&2
+	exit 1
+fi
