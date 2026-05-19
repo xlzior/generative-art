@@ -20,19 +20,18 @@ let {
 </script>
 
 <div class="dimensions-control" data-theme={theme}>
-	<label>
-		{parameter.label}
-		<DimensionsInput
-			width={value.width}
-			height={value.height}
-			oninput={(dimension, event) => {
-				const raw = (event.target as HTMLInputElement).value.trim();
-				const parsed = raw === "" ? null : Number.parseInt(raw, 10);
-				const v = Number.isFinite(parsed) ? parsed : null;
-				onchange({ ...value, [dimension]: v });
-			}}
-		/>
-	</label>
+	<label for="param-{parameter.key}">{parameter.label}</label>
+	<DimensionsInput
+		width={value.width}
+		height={value.height}
+		inputId="param-{parameter.key}"
+		oninput={(dimension, event) => {
+			const raw = (event.target as HTMLInputElement).value.trim();
+			const parsed = raw === "" ? null : Number.parseInt(raw, 10);
+			const v = Number.isFinite(parsed) ? parsed : null;
+			onchange({ ...value, [dimension]: v });
+		}}
+	/>
 </div>
 
 <style>

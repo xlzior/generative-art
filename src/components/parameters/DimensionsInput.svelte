@@ -5,10 +5,12 @@ let {
 	width,
 	height,
 	oninput,
+	inputId,
 }: {
 	width: DimensionsValue["width"];
 	height: DimensionsValue["height"];
 	oninput: (dimension: "width" | "height", event: Event) => void;
+	inputId?: string;
 } = $props();
 </script>
 
@@ -19,6 +21,7 @@ let {
 		value={width ?? ""}
 		oninput={(e) => oninput("width", e)}
 		placeholder="W"
+		id={inputId}
 	/>
 	<span class="dimensions-separator">×</span>
 	<input
@@ -45,6 +48,11 @@ let {
 		font-family: inherit;
 		font-size: inherit;
 		padding: 0.15rem 0.3rem;
+		font: inherit;
+		border-radius: 8px;
+		border: 1px solid var(--stroke);
+		color: var(--ink);
+		background: var(--ui-surface);
 	}
 
 	.dimensions-separator {
