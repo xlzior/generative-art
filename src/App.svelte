@@ -1,8 +1,8 @@
 <script lang="ts">
 import { ArrowLeft, Download, RefreshCw, RotateCcw, Save } from "lucide-svelte";
 import { onMount } from "svelte";
-import DimensionsControl from "./components/DimensionsControl.svelte";
 import ParameterControls from "./components/ParameterControls.svelte";
+import DimensionsControl from "./components/parameters/DimensionsControl.svelte";
 import SketchGallery from "./components/SketchGallery.svelte";
 import ThemeToggle from "./components/ThemeToggle.svelte";
 import {
@@ -188,8 +188,10 @@ onMount(() => {
 
 						{#if lifecycle.currentSketchModule}
 							<DimensionsControl
-								dimensions={(lifecycle.currentParams?.dimensions ?? globalDefaults.dimensions)}
+								parameter={{ type: "dimensions", key: "dimensions", label: "Canvas Size" }}
+								value={(lifecycle.currentParams?.dimensions ?? globalDefaults.dimensions) as DimensionsValue}
 								onchange={(d: DimensionsValue) => handleParamChange("dimensions", d)}
+								theme={currentTheme}
 							/>
 						{/if}
 
