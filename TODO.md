@@ -22,16 +22,15 @@
 - [ ] **Cache Mona Lisa image** — `mona-lisa-circles` fetches the image from Wikipedia on every sketch mount. Add caching (in-memory or service worker) to avoid repeated network requests.
 - [ ] **Reuse particle array on resize** — `flow-field-particles/sketch.ts:120` creates a new array on every resize. Consider reusing/mutating the existing array instead.
 
-## Code Quality
-
-- [ ] **Add explicit type to `paramsBySketch` Map** — `App.svelte` uses `new Map()` without type parameters. Add: `new Map<string, Record<string, number | string | boolean>>()`.
-
 ## Developer Experience
 
 - [ ] **Add UI feedback for save defaults** — `App.svelte` has a `#save-status` element but never updates it. Show success/error message to user when saving defaults succeeds or fails.
 
-- [ ] **Add sketch generator script** — Create a script or CLI command to scaffold new sketches (create folder, `sketch.ts`, `defaults.json`) following the established pattern.
-
 ## Bug fixes
 
 - [ ] Add sketch specific speed multiplier so that each animated sketch can be scaled to animate at a speed that makes sense for it rather than a constant frame rate for all animated sketches
+
+## Features
+
+- [ ] take in an image as the depth map
+- [ ] patterned stereogram instead of random dot stereogram
